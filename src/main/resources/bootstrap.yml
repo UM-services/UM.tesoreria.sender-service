@@ -1,0 +1,46 @@
+app:
+  logging: debug
+  port: 0
+  mail:
+    username: uid
+    password: pwd
+
+server:
+  port: ${app.port}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://eureka:@eureka-service:8761/eureka
+
+spring:
+  application:
+    name: tesoreria-sender-service
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${app.mail.username}
+    password: ${app.mail.password}
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+            required: true
+          auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+logging:
+  um.tesoreria.report: ${app.logging}
+  level:
+    web: ${app.logging}
+    org:
+      hibernate:
+        SQL: ${app.logging}
+
