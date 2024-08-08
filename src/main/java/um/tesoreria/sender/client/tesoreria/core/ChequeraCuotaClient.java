@@ -13,14 +13,19 @@ import java.util.List;
 public interface ChequeraCuotaClient {
 
     @GetMapping("/chequera/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")
-    List<ChequeraCuotaDto> findAllByChequera(@PathVariable Integer facultadId,
-                                             @PathVariable Integer tipoChequeraId,
-                                             @PathVariable Long chequeraSerieId,
-                                             @PathVariable Integer alternativaId);
+    List<ChequeraCuotaDto> findAllByFacultadIdAndTipoChequeraIdAndChequeraSerieIdAndAlternativaId(@PathVariable Integer facultadId,
+                                                                                                  @PathVariable Integer tipoChequeraId,
+                                                                                                  @PathVariable Long chequeraSerieId,
+                                                                                                  @PathVariable Integer alternativaId);
 
     @GetMapping("/inconsistencias/{desde}/{hasta}")
     List<ChequeraCuotaDto> findAllInconsistencias(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime desde,
                                                   @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime hasta);
+
+    @GetMapping("/updateBarras/{facultadId}/{tipoChequeraId}/{chequeraSerieId}")
+    List<ChequeraCuotaDto> updateBarras(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
+                                        @PathVariable Long chequeraSerieId);
+
 
     @GetMapping("/{chequeraCuotaId}")
     ChequeraCuotaDto findByChequeraCuotaId(@PathVariable Long chequeraCuotaId);
