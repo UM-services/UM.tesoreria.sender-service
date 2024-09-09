@@ -11,8 +11,15 @@ import java.text.MessageFormat;
 @Slf4j
 public class ChequeraService {
 
+    private final FormulariosToPdfService formulariosToPdfService;
+
+    public ChequeraService(FormulariosToPdfService formulariosToPdfService) {
+        this.formulariosToPdfService = formulariosToPdfService;
+    }
+
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
                                Boolean copiaInformes, Boolean incluyeMatricula) throws MessagingException {
+        String filename = "";
         return "";
     }
 
