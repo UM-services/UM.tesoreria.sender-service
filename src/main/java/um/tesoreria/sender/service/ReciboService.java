@@ -764,8 +764,6 @@ public class ReciboService {
             return errorString;
         }
 
-        String data = "";
-
         DomicilioDto domicilio = chequeraSerie.getDomicilio();
         if (domicilio == null) {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
@@ -779,6 +777,8 @@ public class ReciboService {
             String errorString = MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", chequeraString);
             return errorString;
         }
+
+        String data = "";
 
         data = "Estimad@ Estudiante:" + (char) 10;
         data = data + (char) 10;

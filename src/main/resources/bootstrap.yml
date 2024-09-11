@@ -1,6 +1,6 @@
 app:
-  logging: debug
   port: 0
+  logging: debug
   mail:
     username: uid
     password: pwd
