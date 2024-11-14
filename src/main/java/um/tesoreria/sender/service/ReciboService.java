@@ -760,22 +760,19 @@ public class ReciboService {
         if (filenameRecibo.isEmpty()) {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            String errorString = MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
-            return errorString;
+            return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
         }
 
         DomicilioDto domicilio = chequeraSerie.getDomicilio();
         if (domicilio == null) {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            String errorString = MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
-            return errorString;
+            return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
         }
         if (domicilio.getEmailPersonal().isEmpty() && domicilio.getEmailInstitucional().isEmpty()) {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            String errorString = MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", chequeraString);
-            return errorString;
+            return MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", chequeraString);
         }
 
         String data = "";
