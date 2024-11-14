@@ -234,7 +234,7 @@ public class FormulariosToPdfService {
             for (ChequeraCuotaDto cuota : chequeraCuotaClient
                     .findAllByFacultadIdAndTipoChequeraIdAndChequeraSerieIdAndAlternativaId(serie.getFacultadId(),
                             serie.getTipoChequeraId(), serie.getChequeraSerieId(), serie.getAlternativaId())) {
-                Boolean printCuota = false;
+                boolean printCuota = false;
                 if (completa) {
                     if (cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
                         printCuota = true;
