@@ -52,8 +52,8 @@ public class MercadoPagoService {
         String data = "<html>" +
                 "<head>" +
                 "<style>" +
-                "body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }" +
-                ".container { background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }" +
+                "body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; }" +
+                ".container { background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }" +
                 ".header { background-color: #007BFF; color: white; padding: 20px; text-align: center; }" +
                 ".header h1 { margin: 0; font-size: 24px; }" +
                 ".content { padding: 20px; }" +
@@ -64,6 +64,12 @@ public class MercadoPagoService {
                 ".details-table th { background-color: #007BFF; color: white; }" +
                 ".footer { background-color: #e9ecef; padding: 10px; text-align: center; font-size: 12px; color: #333; }" +
                 ".qr-section { text-align: center; margin-top: 20px; }" +
+                "@media only screen and (max-width: 600px) {" +
+                "    .container { width: 100%; padding: 0; }" +
+                "    .header h1 { font-size: 20px; }" +
+                "    .content, .info-section { padding: 10px; }" +
+                "    .details-table th, .details-table td { font-size: 14px; padding: 8px; }" +
+                "}" +
                 "</style>" +
                 "</head>" +
                 "<body>" +
