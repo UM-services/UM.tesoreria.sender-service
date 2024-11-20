@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import um.tesoreria.sender.client.tesoreria.core.*;
 import um.tesoreria.sender.client.tesoreria.core.facade.SincronizeClient;
+import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
 
 import java.io.File;
@@ -45,12 +46,13 @@ public class FormulariosToPdfService {
     private final SincronizeClient sincronizeClient;
     private final ChequeraSerieReemplazoClient chequeraSerieReemplazoClient;
     private final ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient;
+    private final PreferenceClient preferenceClient;
 
     public FormulariosToPdfService(Environment environment, RestTemplateBuilder restTemplateBuilder, ChequeraSerieClient chequeraSerieClient,
                                    ChequeraCuotaClient chequeraCuotaClient, FacultadClient facultadClient, TipoChequeraClient tipoChequeraClient,
                                    PersonaClient personaClient, LectivoClient lectivoClient, LegajoClient legajoClient, CarreraClient carreraClient,
                                    LectivoAlternativaClient lectivoAlternativaClient, SincronizeClient sincronizeClient,
-                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient) {
+                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient, PreferenceClient preferenceClient) {
         this.environment = environment;
         this.restTemplateBuilder = restTemplateBuilder;
         this.chequeraSerieClient = chequeraSerieClient;
@@ -65,6 +67,7 @@ public class FormulariosToPdfService {
         this.sincronizeClient = sincronizeClient;
         this.chequeraSerieReemplazoClient = chequeraSerieReemplazoClient;
         this.chequeraCuotaReemplazoClient = chequeraCuotaReemplazoClient;
+        this.preferenceClient = preferenceClient;
     }
 
     public String generateChequeraPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
@@ -243,6 +246,7 @@ public class FormulariosToPdfService {
                     if (cuota.getPagado() == 0 && cuota.getBaja() == 0
                             && cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
                         printCuota = true;
+                        preferenceClient.createPreference(cuota.getChequeraCuotaId());
                     }
                 }
                 try {
