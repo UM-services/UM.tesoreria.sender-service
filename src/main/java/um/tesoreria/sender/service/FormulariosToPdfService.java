@@ -321,25 +321,26 @@ public class FormulariosToPdfService {
                     cell.setBorder(Rectangle.TOP);
                     table.addCell(cell);
 
-//                    BarcodeInter25 code25 = new BarcodeInter25();
-//                    code25.setGenerateChecksum(false);
-//                    code25.setCode(cuota.getCodigoBarras());
-//                    code25.setX(1.3f);
-//
-//                    image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
-//                    cell = new PdfPCell(image);
-//                    cell.setColspan(4);
-//                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-//                    cell.setBorder(Rectangle.BOTTOM);
-//                    table.addCell(cell);
-
                     // Crear un enlace clicable
                     Chunk link = new Chunk("https://portal.um.edu.ar/#/login", new Font(Font.HELVETICA, 10, Font.BOLD, new Color(0, 0, 255)));
                     link.setAnchor("https://portal.um.edu.ar/#/login"); // Establecer el enlace
-                    paragraph = new Paragraph(new Phrase("\nEnlace de PAGO disponible en ", new Font(Font.HELVETICA, 10)));
+                    paragraph = new Paragraph(new Phrase("\nEnlace de MERCADOPAGO disponible en ", new Font(Font.HELVETICA, 10)));
                     paragraph.add(link); // Agregar el enlace al párrafo
                     paragraph.add(new Phrase("\n\n"));
                     cell = new PdfPCell(paragraph);
+                    cell.setColspan(4);
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setBorder(Rectangle.NO_BORDER);
+                    table.addCell(cell);
+
+                    // código de barras
+                    BarcodeInter25 code25 = new BarcodeInter25();
+                    code25.setGenerateChecksum(false);
+                    code25.setCode(cuota.getCodigoBarras());
+                    code25.setX(1.3f);
+
+                    image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
+                    cell = new PdfPCell(image);
                     cell.setColspan(4);
                     cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cell.setBorder(Rectangle.BOTTOM);
@@ -361,7 +362,7 @@ public class FormulariosToPdfService {
     }
 
     public String generateChequeraReemplazoPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
-                                      Integer alternativaId, Boolean completa) {
+                                               Integer alternativaId, Boolean completa) {
         ChequeraSerieReemplazoDto serie = chequeraSerieReemplazoClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
         try {
             log.debug("ChequeraSerieReemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
