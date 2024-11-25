@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.common.io.Files;
 import com.lowagie.text.*;
+import com.lowagie.text.Font;
+import com.lowagie.text.Image;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.BarcodeInter25;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -16,9 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import um.tesoreria.sender.client.tesoreria.core.*;
 import um.tesoreria.sender.client.tesoreria.core.facade.SincronizeClient;
-import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,13 +49,12 @@ public class FormulariosToPdfService {
     private final SincronizeClient sincronizeClient;
     private final ChequeraSerieReemplazoClient chequeraSerieReemplazoClient;
     private final ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient;
-    private final PreferenceClient preferenceClient;
 
     public FormulariosToPdfService(Environment environment, RestTemplateBuilder restTemplateBuilder, ChequeraSerieClient chequeraSerieClient,
                                    ChequeraCuotaClient chequeraCuotaClient, FacultadClient facultadClient, TipoChequeraClient tipoChequeraClient,
                                    PersonaClient personaClient, LectivoClient lectivoClient, LegajoClient legajoClient, CarreraClient carreraClient,
                                    LectivoAlternativaClient lectivoAlternativaClient, SincronizeClient sincronizeClient,
-                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient, PreferenceClient preferenceClient) {
+                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient) {
         this.environment = environment;
         this.restTemplateBuilder = restTemplateBuilder;
         this.chequeraSerieClient = chequeraSerieClient;
@@ -67,7 +69,6 @@ public class FormulariosToPdfService {
         this.sincronizeClient = sincronizeClient;
         this.chequeraSerieReemplazoClient = chequeraSerieReemplazoClient;
         this.chequeraCuotaReemplazoClient = chequeraCuotaReemplazoClient;
-        this.preferenceClient = preferenceClient;
     }
 
     public String generateChequeraPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
@@ -246,7 +247,6 @@ public class FormulariosToPdfService {
                     if (cuota.getPagado() == 0 && cuota.getBaja() == 0
                             && cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
                         printCuota = true;
-                        preferenceClient.createPreference(cuota.getChequeraCuotaId());
                     }
                 }
                 try {
@@ -321,13 +321,25 @@ public class FormulariosToPdfService {
                     cell.setBorder(Rectangle.TOP);
                     table.addCell(cell);
 
-                    BarcodeInter25 code25 = new BarcodeInter25();
-                    code25.setGenerateChecksum(false);
-                    code25.setCode(cuota.getCodigoBarras());
-                    code25.setX(1.3f);
+//                    BarcodeInter25 code25 = new BarcodeInter25();
+//                    code25.setGenerateChecksum(false);
+//                    code25.setCode(cuota.getCodigoBarras());
+//                    code25.setX(1.3f);
+//
+//                    image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
+//                    cell = new PdfPCell(image);
+//                    cell.setColspan(4);
+//                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+//                    cell.setBorder(Rectangle.BOTTOM);
+//                    table.addCell(cell);
 
-                    image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
-                    cell = new PdfPCell(image);
+                    // Crear un enlace clicable
+                    Chunk link = new Chunk("https://portal.um.edu.ar/#/login", new Font(Font.HELVETICA, 10, Font.BOLD, new Color(0, 0, 255)));
+                    link.setAnchor("https://portal.um.edu.ar/#/login"); // Establecer el enlace
+                    paragraph = new Paragraph(new Phrase("\nEnlace de PAGO disponible en ", new Font(Font.HELVETICA, 10)));
+                    paragraph.add(link); // Agregar el enlace al párrafo
+                    paragraph.add(new Phrase("\n\n"));
+                    cell = new PdfPCell(paragraph);
                     cell.setColspan(4);
                     cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cell.setBorder(Rectangle.BOTTOM);

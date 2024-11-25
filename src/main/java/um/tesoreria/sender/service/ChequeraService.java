@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraCuotaClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
 import um.tesoreria.sender.client.tesoreria.core.MercadoPagoContextClient;
+import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraCuotaDto;
 
 import java.math.BigDecimal;
@@ -31,13 +32,15 @@ public class ChequeraService {
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraCuotaClient chequeraCuotaClient;
     private final MercadoPagoContextClient mercadoPagoContextClient;
+    private final PreferenceClient preferenceClient;
 
-    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraCuotaClient chequeraCuotaClient, MercadoPagoContextClient mercadoPagoContextClient) {
+    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraCuotaClient chequeraCuotaClient, MercadoPagoContextClient mercadoPagoContextClient, PreferenceClient preferenceClient) {
         this.formulariosToPdfService = formulariosToPdfService;
         this.javaMailSender = javaMailSender;
         this.chequeraSerieClient = chequeraSerieClient;
         this.chequeraCuotaClient = chequeraCuotaClient;
         this.mercadoPagoContextClient = mercadoPagoContextClient;
+        this.preferenceClient = preferenceClient;
     }
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
@@ -109,6 +112,7 @@ public class ChequeraService {
                         chequeraSerie.getTipoChequeraId(), chequeraSerie.getChequeraSerieId(), chequeraSerie.getAlternativaId())) {
             if (chequeraCuota.getPagado() == 0 && chequeraCuota.getBaja() == 0
                     && chequeraCuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
+                preferenceClient.createPreference(chequeraCuota.getChequeraCuotaId());
                 var mercadoPagoContext = mercadoPagoContextClient.findActivoByChequeraCuotaId(chequeraCuota.getChequeraCuotaId());
                 // Formatear la fecha de vencimiento
                 String fechaVencimientoFormatted = mercadoPagoContext.getFechaVencimiento()
