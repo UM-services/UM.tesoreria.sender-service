@@ -72,7 +72,7 @@ public class FormulariosToPdfService {
     }
 
     public String generateChequeraPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
-                                      Integer alternativaId, Boolean completa) {
+                                      Integer alternativaId, Boolean codigoBarras, Boolean completa) {
         ChequeraSerieDto serie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
         try {
             log.debug("ChequeraSerie -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
@@ -330,21 +330,27 @@ public class FormulariosToPdfService {
                     cell = new PdfPCell(paragraph);
                     cell.setColspan(4);
                     cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    cell.setBorder(Rectangle.NO_BORDER);
+                    var tipoBorde = Rectangle.BOTTOM;
+                    if (codigoBarras) {
+                        tipoBorde = Rectangle.NO_BORDER;
+                    }
+                    cell.setBorder(tipoBorde);
                     table.addCell(cell);
 
                     // código de barras
-                    BarcodeInter25 code25 = new BarcodeInter25();
-                    code25.setGenerateChecksum(false);
-                    code25.setCode(cuota.getCodigoBarras());
-                    code25.setX(1.3f);
+                    if (codigoBarras) {
+                        BarcodeInter25 code25 = new BarcodeInter25();
+                        code25.setGenerateChecksum(false);
+                        code25.setCode(cuota.getCodigoBarras());
+                        code25.setX(1.3f);
 
-                    image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
-                    cell = new PdfPCell(image);
-                    cell.setColspan(4);
-                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    cell.setBorder(Rectangle.BOTTOM);
-                    table.addCell(cell);
+                        image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
+                        cell = new PdfPCell(image);
+                        cell.setColspan(4);
+                        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        cell.setBorder(Rectangle.BOTTOM);
+                        table.addCell(cell);
+                    }
 
                     document.add(table);
                 }
