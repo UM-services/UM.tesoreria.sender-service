@@ -1,8 +1,5 @@
 package um.tesoreria.sender.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.lowagie.text.Image;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +7,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraCuotaClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
 import um.tesoreria.sender.client.tesoreria.core.MercadoPagoContextClient;
@@ -18,7 +14,6 @@ import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraCuotaDto;
 
 import java.math.BigDecimal;
-import java.text.MessageFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +39,12 @@ public class ChequeraService {
     }
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
-                               Boolean copiaInformes, Boolean incluyeMatricula) throws MessagingException {
+                               Boolean copiaInformes, Boolean codigoBarras, Boolean incluyeMatricula) throws MessagingException {
 
         var chequeraSerie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
         var domicilio = chequeraSerie.getDomicilio();
 
-        String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, false);
+        String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false);
         // Obtener el nombre del alumno
         String nombreAlumno = chequeraSerie.getPersona().getApellidoNombre();
 

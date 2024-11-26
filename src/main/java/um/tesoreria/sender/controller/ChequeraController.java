@@ -33,11 +33,12 @@ public class ChequeraController {
         this.chequeraCuotaClient = chequeraCuotaClient;
     }
 
-    @GetMapping("/generatePdf/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")
+    @GetMapping("/generatePdf/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{codigoBarras}")
     public ResponseEntity<Resource> generatePdf(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
-                                                @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId) throws FileNotFoundException {
+                                                @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
+                                                @PathVariable Boolean codigoBarras) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
-                alternativaId, false);
+                alternativaId, codigoBarras, false);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
@@ -49,11 +50,12 @@ public class ChequeraController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
     }
 
-    @GetMapping("/generatePdf/completa/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")
+    @GetMapping("/generatePdf/completa/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{codigoBarras}")
     public ResponseEntity<Resource> generatePdfCompleta(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
-                                                @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId) throws FileNotFoundException {
+                                                        @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
+                                                        @PathVariable Boolean codigoBarras) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
-                alternativaId, true);
+                alternativaId, codigoBarras, true);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
@@ -67,7 +69,7 @@ public class ChequeraController {
 
     @GetMapping("/generatePdf/reemplazo/completa/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")
     public ResponseEntity<Resource> generatePdfReemplazoCompleta(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
-                                                        @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId) throws FileNotFoundException {
+                                                                 @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraReemplazoPdf(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, true);
         File file = new File(filename);
@@ -98,13 +100,13 @@ public class ChequeraController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
     }
 
-    @GetMapping("/sendChequera/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{copiaInformes}")
+    @GetMapping("/sendChequera/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{copiaInformes}/{codigoBarras}")
     public ResponseEntity<String> sendChequera(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
                                                @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
-                                               @PathVariable Boolean copiaInformes) throws MessagingException {
+                                               @PathVariable Boolean copiaInformes, @PathVariable Boolean codigoBarras) throws MessagingException {
         chequeraCuotaClient.updateBarras(facultadId, tipoChequeraId, chequeraSerieId);
         return new ResponseEntity<>(service.sendChequera(facultadId, tipoChequeraId, chequeraSerieId,
-                alternativaId, copiaInformes, true), HttpStatus.OK);
+                alternativaId, copiaInformes, codigoBarras, true), HttpStatus.OK);
     }
 
 }
