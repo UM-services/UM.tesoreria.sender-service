@@ -55,8 +55,9 @@ public class ChequeraService {
                 "<style>" +
                 "body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; }" +
                 ".container { background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }" +
-                ".header { background-color: #007BFF; color: white; padding: 20px; text-align: center; }" +
+                ".header { background-color: #007BFF; color: white; padding: 20px; text-align: center; position: relative; }" +
                 ".header h1 { margin: 0; font-size: 24px; }" +
+                ".header img { position: absolute; top: 10px; right: 50px; height: 120px; }" +
                 ".content { padding: 20px; }" +
                 ".info-section { background-color: #f4f4f4; padding: 15px; margin-bottom: 20px; border-radius: 8px; }" +
                 ".info-section p { margin: 5px 0; }" +
@@ -77,6 +78,7 @@ public class ChequeraService {
                 "<div class='container'>" +
                 "<div class='header'>" +
                 "<h1>Universidad de Mendoza te envió un enlace de pago</h1>" +
+                "<img src='cid:logoImage' alt='Logo'/>" +
                 "</div>" +
                 "<div class='content'>" +
                 "<p><strong>Estimad@ " + nombreAlumno + ",</strong></p>" +
