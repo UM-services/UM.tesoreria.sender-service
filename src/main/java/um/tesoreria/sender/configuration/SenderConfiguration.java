@@ -10,6 +10,5 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "um.tesoreria.sender.client")
 @PropertySource("classpath:config/reports.properties")
-@EnableAsync
 public class SenderConfiguration {
 }

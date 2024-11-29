@@ -36,7 +36,6 @@ public class ChequeraService {
         this.chequeraClient = chequeraClient;
     }
 
-    @Async
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
                                Boolean copiaInformes, Boolean codigoBarras, Boolean incluyeMatricula) throws MessagingException {
 
