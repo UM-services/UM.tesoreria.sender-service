@@ -38,7 +38,7 @@ public class ChequeraController {
                                                 @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
                                                 @PathVariable Boolean codigoBarras) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
-                alternativaId, codigoBarras, false);
+                alternativaId, codigoBarras, false, null);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
@@ -55,7 +55,7 @@ public class ChequeraController {
                                                         @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
                                                         @PathVariable Boolean codigoBarras) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
-                alternativaId, codigoBarras, true);
+                alternativaId, codigoBarras, true, null);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
