@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraCuotaClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
@@ -35,6 +36,7 @@ public class ChequeraService {
         this.chequeraClient = chequeraClient;
     }
 
+    @Async
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
                                Boolean copiaInformes, Boolean codigoBarras, Boolean incluyeMatricula) throws MessagingException {
 
