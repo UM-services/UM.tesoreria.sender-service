@@ -19,6 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import um.tesoreria.sender.client.tesoreria.core.*;
 import um.tesoreria.sender.client.tesoreria.core.facade.SincronizeClient;
+import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
+import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
+import um.tesoreria.sender.domain.dto.MercadoPagoContextDto;
+import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
 
 import java.awt.*;
@@ -30,6 +34,7 @@ import java.text.DecimalFormat;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -49,12 +54,16 @@ public class FormulariosToPdfService {
     private final SincronizeClient sincronizeClient;
     private final ChequeraSerieReemplazoClient chequeraSerieReemplazoClient;
     private final ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient;
+    private final PreferenceClient preferenceClient;
+    private final MercadoPagoService mercadoPagoService;
+    private final MercadoPagoContextClient mercadoPagoContextClient;
+    private final ChequeraClient chequeraClient;
 
     public FormulariosToPdfService(Environment environment, RestTemplateBuilder restTemplateBuilder, ChequeraSerieClient chequeraSerieClient,
                                    ChequeraCuotaClient chequeraCuotaClient, FacultadClient facultadClient, TipoChequeraClient tipoChequeraClient,
                                    PersonaClient personaClient, LectivoClient lectivoClient, LegajoClient legajoClient, CarreraClient carreraClient,
                                    LectivoAlternativaClient lectivoAlternativaClient, SincronizeClient sincronizeClient,
-                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient) {
+                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient, PreferenceClient preferenceClient, MercadoPagoService mercadoPagoService, MercadoPagoContextClient mercadoPagoContextClient, ChequeraClient chequeraClient) {
         this.environment = environment;
         this.restTemplateBuilder = restTemplateBuilder;
         this.chequeraSerieClient = chequeraSerieClient;
@@ -69,18 +78,24 @@ public class FormulariosToPdfService {
         this.sincronizeClient = sincronizeClient;
         this.chequeraSerieReemplazoClient = chequeraSerieReemplazoClient;
         this.chequeraCuotaReemplazoClient = chequeraCuotaReemplazoClient;
+        this.mercadoPagoService = mercadoPagoService;
+        this.mercadoPagoContextClient = mercadoPagoContextClient;
+        this.preferenceClient = preferenceClient;
+        this.chequeraClient = chequeraClient;
     }
 
     public String generateChequeraPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
-                                      Integer alternativaId, Boolean codigoBarras, Boolean completa) {
+                                      Integer alternativaId, Boolean codigoBarras, Boolean completa, List<UMPreferenceMPDto> preferences) {
         ChequeraSerieDto serie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
         try {
             log.debug("ChequeraSerie -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
         } catch (JsonProcessingException e) {
             log.debug("ChequeraSerie -> {}", e.getMessage());
         }
-        List<ChequeraCuotaDto> cuotas = chequeraCuotaClient
-                .findAllByFacultadIdAndTipoChequeraIdAndChequeraSerieIdAndAlternativaId(serie.getFacultadId(), serie.getTipoChequeraId(), serie.getChequeraSerieId(), serie.getAlternativaId());
+        if (preferences == null) {
+            preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
+        }
+        List<ChequeraCuotaDto> cuotas = preferences.stream().map(UMPreferenceMPDto::getChequeraCuota).collect(Collectors.toList());
         try {
             log.debug("Cuotas -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
         } catch (JsonProcessingException e) {
@@ -235,9 +250,8 @@ public class FormulariosToPdfService {
             document.add(paragraph);
             document.add(new Paragraph(" ", new Font(Font.HELVETICA, 8)));
 
-            for (ChequeraCuotaDto cuota : chequeraCuotaClient
-                    .findAllByFacultadIdAndTipoChequeraIdAndChequeraSerieIdAndAlternativaId(serie.getFacultadId(),
-                            serie.getTipoChequeraId(), serie.getChequeraSerieId(), serie.getAlternativaId())) {
+            for (var umPreferenceMPDto : preferences) {
+                var cuota = umPreferenceMPDto.getChequeraCuota();
                 boolean printCuota = false;
                 if (completa) {
                     if (cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
@@ -322,20 +336,23 @@ public class FormulariosToPdfService {
                     table.addCell(cell);
 
                     // Crear un enlace clicable
-                    Chunk link = new Chunk("https://portal.um.edu.ar/#/login", new Font(Font.HELVETICA, 10, Font.BOLD, new Color(0, 0, 255)));
-                    link.setAnchor("https://portal.um.edu.ar/#/login"); // Establecer el enlace
-                    paragraph = new Paragraph(new Phrase("\nEnlace de MERCADOPAGO disponible en ", new Font(Font.HELVETICA, 10)));
-                    paragraph.add(link); // Agregar el enlace al párrafo
-                    paragraph.add(new Phrase("\n\n"));
-                    cell = new PdfPCell(paragraph);
-                    cell.setColspan(4);
-                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    var tipoBorde = Rectangle.BOTTOM;
-                    if (codigoBarras) {
-                        tipoBorde = Rectangle.NO_BORDER;
+                    if (umPreferenceMPDto.getMercadoPagoContext() != null) {
+                        var mercadoPagoContext = umPreferenceMPDto.getMercadoPagoContext();
+                        Chunk link = new Chunk("Click aquí para pagar", new Font(Font.HELVETICA, 10, Font.BOLD, new Color(0, 0, 255)));
+                        link.setAnchor(mercadoPagoContext.getInitPoint()); // Establecer el enlace
+                        paragraph = new Paragraph(new Phrase("\nEnlace de MERCADOPAGO en ", new Font(Font.HELVETICA, 10)));
+                        paragraph.add(link); // Agregar el enlace al párrafo
+                        paragraph.add(new Phrase("\n\n"));
+                        cell = new PdfPCell(paragraph);
+                        cell.setColspan(4);
+                        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        var tipoBorde = Rectangle.BOTTOM;
+                        if (codigoBarras) {
+                            tipoBorde = Rectangle.NO_BORDER;
+                        }
+                        cell.setBorder(tipoBorde);
+                        table.addCell(cell);
                     }
-                    cell.setBorder(tipoBorde);
-                    table.addCell(cell);
 
                     // código de barras
                     if (codigoBarras) {
