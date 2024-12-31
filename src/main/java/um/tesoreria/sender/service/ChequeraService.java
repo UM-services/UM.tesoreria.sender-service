@@ -82,7 +82,8 @@ public class ChequeraService {
                 "</div>" +
                 "<div class='content'>" +
                 "<p><strong>Estimad@ " + nombreAlumno + ",</strong></p>" +
-                "<p>Le compartimos los detalles de las próximas cuotas a vencer:</p>" +
+                "<p>Para agilizar tu gestión de pago te acercamos los enlaces de las próximas cuotas a vencer:</p>" +
+                "<p><strong>¡Que tengas un excelente 2025 y que concretes todos tus proyectos!</strong></p>" +
                 "<table class='details-table'>" +
                 "<tr>" +
                 "<th>Producto</th>" +
@@ -131,6 +132,9 @@ public class ChequeraService {
                 "</div>" +
                 "</div>" +
                 "<div class='footer'>" +
+                "<p>Hasta pronto, seguimos en contacto</p>" +
+                "<p>Si ya has cancelado tu cuota desestima este recordatorio. </p>" +
+                "<br/>" +
                 "<p>Universidad de Mendoza</p>" +
                 "<p><small>Por favor no responda este mail, fue generado automáticamente. Su respuesta no será leída.</small></p>" +
                 "</div>" +
@@ -165,7 +169,7 @@ public class ChequeraService {
         }
 
         helper.setTo(addresses.toArray(new String[0]));
-        helper.setSubject("Envío de Enlace de MercadoPago -> " + nombreAlumno);
+        helper.setSubject("Recordatorio - Pago cuota UM -> " + nombreAlumno);
         helper.setReplyTo("no-reply@um.edu.ar");
         helper.setText(data, true); // Permitir el envío de contenido HTML
 
