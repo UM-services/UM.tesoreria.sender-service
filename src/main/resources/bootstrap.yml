@@ -35,12 +35,21 @@ spring:
           connectiontimeout: 15000
           timeout: 15000
           writetimeout: 15000
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin
+
 
 logging:
   um.tesoreria.report: ${app.logging}
   level:
+    um.tesoreria.sender: ${app.logging}
     web: ${app.logging}
     org:
       hibernate:
         SQL: ${app.logging}
+      springframework:
+        amqp: ${app.logging}
 

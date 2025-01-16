@@ -36,9 +36,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Hashtable;
+import java.util.*;
 import java.util.List;
 
 @Service
@@ -72,12 +70,13 @@ public class ReciboService {
         BitMatrix byteMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, size, size, hintMap);
         // Make the BufferedImage that are to hold the QRCode
         int matrixWidth = byteMatrix.getWidth();
-        BufferedImage image = new BufferedImage(matrixWidth, matrixWidth, BufferedImage.TYPE_INT_RGB);
+        var matrixHeight = matrixWidth;
+        BufferedImage image = new BufferedImage(matrixWidth, matrixHeight, BufferedImage.TYPE_INT_RGB);
         image.createGraphics();
 
         Graphics2D graphics = (Graphics2D) image.getGraphics();
         graphics.setColor(Color.WHITE);
-        graphics.fillRect(0, 0, matrixWidth, matrixWidth);
+        graphics.fillRect(0, 0, matrixWidth, matrixHeight);
         // Paint and save the image using the ByteMatrix
         graphics.setColor(Color.BLACK);
 
@@ -104,6 +103,7 @@ public class ReciboService {
         }
         ComprobanteDto comprobante = facturacionElectronica.getComprobante();
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
+        assert chequeraPago != null;
         ChequeraCuotaDto chequeraCuota = chequeraCuotaClient.findByUnique(chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getProductoId(), chequeraPago.getAlternativaId(), chequeraPago.getCuotaId());
         if (chequeraSerie == null) {
             chequeraSerie = chequeraSerieClient.findByUnique(chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId());
@@ -123,8 +123,9 @@ public class ReciboService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("ver", 1);
             jsonObject.put("fecha", DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                    .format(facturacionElectronica.getFechaRecibo()));
-            jsonObject.put("cuit", Long.parseLong(empresaCuit.replaceAll("\\-", "")));
+                    .format(Objects.requireNonNull(facturacionElectronica.getFechaRecibo())));
+            jsonObject.put("cuit", Long.parseLong(empresaCuit.replaceAll("-", "")));
+            assert comprobante != null;
             jsonObject.put("ptoVta", comprobante.getPuntoVenta());
             jsonObject.put("tipoCmp", comprobante.getComprobanteAfipId());
             jsonObject.put("nroCmp", facturacionElectronica.getNumeroComprobante());
@@ -134,7 +135,7 @@ public class ReciboService {
             jsonObject.put("tipoDocRec", facturacionElectronica.getTipoDocumento());
             jsonObject.put("nroDocRec", facturacionElectronica.getPersonaId());
             jsonObject.put("tipoCodAut", "E");
-            jsonObject.put("codAut", new BigDecimal(facturacionElectronica.getCae()));
+            jsonObject.put("codAut", new BigDecimal(Objects.requireNonNull(facturacionElectronica.getCae())));
             String datos = new String(Base64.getEncoder().encode(jsonObject.toString().getBytes()));
             String fileType = "png";
             String filePath = path + facturacionElectronica.getCae() + "." + fileType;
@@ -142,11 +143,7 @@ public class ReciboService {
             File qrFile = new File(filePath);
             createQRImage(qrFile, url + datos, size, fileType);
             imageQr = Image.getInstance(filePath);
-        } catch (BadElementException e) {
-            log.debug("Sin Imagen");
-        } catch (WriterException e) {
-            log.debug("Sin Imagen");
-        } catch (IOException e) {
+        } catch (BadElementException | WriterException | IOException e) {
             log.debug("Sin Imagen");
         }
 
@@ -245,12 +242,12 @@ public class ReciboService {
             cell.addElement(paragraph);
             paragraph = new Paragraph(new Phrase("Cod: ", new Font(Font.HELVETICA, 6, Font.NORMAL)));
             paragraph.add(
-                    new Phrase(comprobante.getComprobanteAfipId().toString(), new Font(Font.HELVETICA, 6, Font.BOLD)));
+                    new Phrase(Objects.requireNonNull(comprobante.getComprobanteAfipId()).toString(), new Font(Font.HELVETICA, 6, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_CENTER);
             cell.addElement(paragraph);
             table.addCell(cell);
             cell = new PdfPCell();
-            paragraph = new Paragraph(comprobante.getComprobanteAfip().getLabel(), new Font(Font.HELVETICA, 14, Font.BOLD));
+            paragraph = new Paragraph(Objects.requireNonNull(comprobante.getComprobanteAfip()).getLabel(), new Font(Font.HELVETICA, 14, Font.BOLD));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             paragraph.setIndentationLeft(20);
             cell.addElement(paragraph);
@@ -264,7 +261,7 @@ public class ReciboService {
             paragraph.setIndentationLeft(20);
             cell.addElement(paragraph);
             paragraph = new Paragraph(new Phrase("Fecha de Emisión: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(facturacionElectronica.getFechaRecibo()
+            paragraph.add(new Phrase(Objects.requireNonNull(facturacionElectronica.getFechaRecibo())
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             paragraph.setIndentationLeft(20);
@@ -296,7 +293,7 @@ public class ReciboService {
             paragraph.setIndentationLeft(20);
             cell.addElement(paragraph);
             paragraph = new Paragraph(new Phrase("Domicilio: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            String domicilio = MessageFormat.format("{0} {1} {2}", chequeraSerie.getDomicilio().getCalle(), chequeraSerie.getDomicilio().getPuerta(), chequeraSerie.getDomicilio().getObservaciones());
+            String domicilio = MessageFormat.format("{0} {1} {2}", Objects.requireNonNull(chequeraSerie.getDomicilio()).getCalle(), chequeraSerie.getDomicilio().getPuerta(), chequeraSerie.getDomicilio().getObservaciones());
             paragraph.add(new Phrase(domicilio, new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             paragraph.setIndentationLeft(20);
@@ -369,7 +366,7 @@ public class ReciboService {
             cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
             paragraph = new Paragraph(new Phrase("Alumno: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(chequeraSerie.getPersona().getApellidoNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
+            paragraph.add(new Phrase(Objects.requireNonNull(chequeraSerie.getPersona()).getApellidoNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             cell.addElement(paragraph);
             table.addCell(cell);
@@ -412,7 +409,7 @@ public class ReciboService {
             cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
             paragraph = new Paragraph(new Phrase("Tipo: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(chequeraCuota.getProducto().getNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
+            paragraph.add(new Phrase(Objects.requireNonNull(chequeraCuota.getProducto()).getNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             cell.addElement(paragraph);
             table.addCell(cell);
@@ -451,7 +448,7 @@ public class ReciboService {
             cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
             paragraph = new Paragraph(new Phrase("Unidad Académica: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(chequeraCuota.getFacultad().getNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
+            paragraph.add(new Phrase(Objects.requireNonNull(chequeraCuota.getFacultad()).getNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             cell.addElement(paragraph);
             table.addCell(cell);
@@ -490,7 +487,7 @@ public class ReciboService {
             cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
             paragraph = new Paragraph(new Phrase("Sede: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(chequeraCuota.getTipoChequera().getGeografica().getNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
+            paragraph.add(new Phrase(Objects.requireNonNull(Objects.requireNonNull(chequeraCuota.getTipoChequera()).getGeografica()).getNombre(), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             cell.addElement(paragraph);
             table.addCell(cell);
@@ -568,7 +565,7 @@ public class ReciboService {
             cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
             paragraph = new Paragraph(new Phrase("Tipo de Arancel: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(chequeraSerie.getArancelTipo().getDescripcion(), new Font(Font.HELVETICA, 8, Font.BOLD)));
+            paragraph.add(new Phrase(Objects.requireNonNull(chequeraSerie.getArancelTipo()).getDescripcion(), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             cell.addElement(paragraph);
             table.addCell(cell);
@@ -646,7 +643,7 @@ public class ReciboService {
             cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
             paragraph = new Paragraph(new Phrase("Fecha Pago: ", new Font(Font.HELVETICA, 8, Font.NORMAL)));
-            paragraph.add(new Phrase(chequeraPago.getFecha()
+            paragraph.add(new Phrase(Objects.requireNonNull(chequeraPago.getFecha())
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), new Font(Font.HELVETICA, 8, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_LEFT);
             cell.addElement(paragraph);
@@ -723,7 +720,7 @@ public class ReciboService {
             paragraph.add(new Phrase(facturacionElectronica.getCae(), new Font(Font.HELVETICA, 10, Font.BOLD)));
             paragraph.add(new Phrase("\n", new Font(Font.COURIER, 10, Font.NORMAL)));
             paragraph.add(new Phrase("Vencimiento CAE: ", new Font(Font.COURIER, 10, Font.NORMAL)));
-            paragraph.add(new Phrase(facturacionElectronica.getFechaVencimientoCae()
+            paragraph.add(new Phrase(Objects.requireNonNull(facturacionElectronica.getFechaVencimientoCae())
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), new Font(Font.HELVETICA, 10, Font.BOLD)));
             cell = new PdfPCell(paragraph);
             cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -744,7 +741,7 @@ public class ReciboService {
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
         }
-        ChequeraSerieDto chequeraSerie = chequeraSerieClient.findByUnique(facturacionElectronica.getChequeraPago().getFacultadId(), facturacionElectronica.getChequeraPago().getTipoChequeraId(), facturacionElectronica.getChequeraPago().getChequeraSerieId());
+        ChequeraSerieDto chequeraSerie = chequeraSerieClient.findByUnique(Objects.requireNonNull(facturacionElectronica.getChequeraPago()).getFacultadId(), facturacionElectronica.getChequeraPago().getTipoChequeraId(), facturacionElectronica.getChequeraPago().getChequeraSerieId());
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
         String chequeraString = MessageFormat.format("Chequera {0}/{1}/{2}/{3}/{4}/{5}", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
         ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica = null;
@@ -794,20 +791,20 @@ public class ReciboService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         List<String> addresses = new ArrayList<String>();
 
-        if (!domicilio.getEmailPersonal().equals("")) {
+        if (!domicilio.getEmailPersonal().isEmpty()) {
             addresses.add(domicilio.getEmailPersonal());
         }
-        if (!domicilio.getEmailInstitucional().equals("")) {
+        if (!domicilio.getEmailInstitucional().isEmpty()) {
             addresses.add(domicilio.getEmailInstitucional());
         }
-        if (!chequeraFacturacionElectronica.getEmail().equals("")) {
+        if (!chequeraFacturacionElectronica.getEmail().isEmpty()) {
             addresses.add(chequeraFacturacionElectronica.getEmail());
         }
 
 //		addresses.add("daniel.quinterospinto@gmail.com");
 
         try {
-            helper.setTo(addresses.toArray(new String[addresses.size()]));
+            helper.setTo(addresses.toArray(new String[0]));
             helper.setText(data);
             helper.setReplyTo("no-reply@um.edu.ar");
             helper.setSubject("Envío Automático de Recibo -> " + filenameRecibo);
@@ -818,8 +815,7 @@ public class ReciboService {
         } catch (MessagingException e) {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            String errorString = MessageFormat.format("ERROR: {0} No pudo ENVIARSE", chequeraString);
-            return errorString;
+            return MessageFormat.format("ERROR: {0} No pudo ENVIARSE", chequeraString);
         }
 
         javaMailSender.send(message);
@@ -831,8 +827,7 @@ public class ReciboService {
         } catch (JsonProcessingException e) {
             json = "";
         }
-        String okString = MessageFormat.format("{0} Envío de Correo Ok!!!", chequeraString);
-        return okString;
+        return MessageFormat.format("{0} Envío de Correo Ok!!!", chequeraString);
     }
 
     public String sendNext() {
@@ -840,6 +835,7 @@ public class ReciboService {
         try {
             log.info("SendNext: {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facturacionElectronica));
         } catch (JsonProcessingException e) {
+            log.info("SendNext jsonify error: {}", e.getMessage());
         }
         try {
             return this.send(facturacionElectronica.getFacturacionElectronicaId(), facturacionElectronica);
@@ -852,8 +848,8 @@ public class ReciboService {
                 log.info("SendError: JSON Exception");
             }
             ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
-            String chequeraStringError = MessageFormat.format("ERROR: Chequera {0}/{1}/{2}/{3}/{4}/{5} Problemas de Envío", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
-            return chequeraStringError;
+            assert chequeraPago != null;
+            return MessageFormat.format("ERROR: Chequera {0}/{1}/{2}/{3}/{4}/{5} Problemas de Envío", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
         }
     }
 }
