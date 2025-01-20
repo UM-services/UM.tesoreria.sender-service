@@ -7,6 +7,7 @@ import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import um.tesoreria.sender.configuration.RabbitMQConfig;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.FacturacionElectronicaDto;
 import um.tesoreria.sender.service.ReciboService;
@@ -40,6 +41,7 @@ public class ReciboConsumer {
     }
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_INVOICE)
+    @Transactional
     public void handleInvoiceMessage(FacturacionElectronicaDto facturacionElectronica) throws MessagingException {
         log.info("Processing invoice shipment");
         logFacturacionElectronica(facturacionElectronica);
