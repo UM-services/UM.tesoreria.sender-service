@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -46,7 +47,7 @@ public class ChequeraService {
 
         String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
         // Obtener el nombre del alumno
-        String nombreAlumno = chequeraSerie.getPersona().getApellidoNombre();
+        String nombreAlumno = Objects.requireNonNull(chequeraSerie.getPersona()).getApellidoNombre();
 
         // Crear tabla con los detalles
         // Código HTML para el cuerpo del correo electrónico
@@ -83,7 +84,6 @@ public class ChequeraService {
                 "<div class='content'>" +
                 "<p><strong>Estimad@ " + nombreAlumno + ",</strong></p>" +
                 "<p>Para agilizar tu gestión de pago te acercamos los enlaces de las próximas cuotas a vencer:</p>" +
-                "<p><strong>¡Que tengas un excelente 2025 y que concretes todos tus proyectos!</strong></p>" +
                 "<table class='details-table'>" +
                 "<tr>" +
                 "<th>Producto</th>" +
@@ -102,7 +102,7 @@ public class ChequeraService {
                             .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
                     data = data + "<tr>" +
-                            "<td>" + chequeraCuota.getProducto().getNombre() + "</td>" +
+                            "<td>" + Objects.requireNonNull(chequeraCuota.getProducto()).getNombre() + "</td>" +
                             "<td>" + chequeraCuota.getMes() + "/" + chequeraCuota.getAnho() + "</td>" +
                             "<td>" + fechaVencimientoFormatted + "</td>" +
                             "<td>$" + String.format("%.2f", umPreferenceMPDto.getMercadoPagoContext().getImporte()) + "</td>" +
@@ -114,15 +114,15 @@ public class ChequeraService {
         data = data + "</table>" +
                 "<div class='info-section'>" +
                     "<div class='info-details'>" +
-                        "<p>Unidad Académica: <strong>" + chequeraSerie.getFacultad().getNombre() + "</strong></p>" +
+                        "<p>Unidad Académica: <strong>" + Objects.requireNonNull(chequeraSerie.getFacultad()).getNombre() + "</strong></p>" +
                         "<br/>" +
-                        "<p>Tipo de Chequera: <strong>" + chequeraSerie.getTipoChequera().getNombre() + "</strong></p>" +
+                        "<p>Tipo de Chequera: <strong>" + Objects.requireNonNull(chequeraSerie.getTipoChequera()).getNombre() + "</strong></p>" +
                         "<br/>" +
-                        "<p>Sede: <strong>" + chequeraSerie.getGeografica().getNombre() + "</strong></p>" +
+                        "<p>Sede: <strong>" + Objects.requireNonNull(chequeraSerie.getGeografica()).getNombre() + "</strong></p>" +
                         "<br/>" +
-                        "<p>Ciclo Lectivo: <strong>" + chequeraSerie.getLectivo().getNombre() + "</strong></p>" +
+                        "<p>Ciclo Lectivo: <strong>" + Objects.requireNonNull(chequeraSerie.getLectivo()).getNombre() + "</strong></p>" +
                         "<br/>" +
-                        "<p>Tipo de Arancel: <strong>" + chequeraSerie.getArancelTipo().getDescripcion() + "</strong></p>" +
+                        "<p>Tipo de Arancel: <strong>" + Objects.requireNonNull(chequeraSerie.getArancelTipo()).getDescripcion() + "</strong></p>" +
                         "<br/>" +
                         "<p>Alternativa: <strong>" + chequeraSerie.getAlternativaId() + "</strong></p>" +
                     "</div>" +
@@ -153,6 +153,7 @@ public class ChequeraService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         List<String> addresses = new ArrayList<>();
 
+        assert domicilio != null;
         if (!domicilio.getEmailPersonal().isEmpty()) {
             addresses.add(domicilio.getEmailPersonal());
             log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
