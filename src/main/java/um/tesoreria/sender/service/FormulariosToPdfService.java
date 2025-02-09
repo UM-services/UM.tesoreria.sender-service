@@ -20,8 +20,6 @@ import org.springframework.web.client.HttpServerErrorException;
 import um.tesoreria.sender.client.tesoreria.core.*;
 import um.tesoreria.sender.client.tesoreria.core.facade.SincronizeClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
-import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
-import um.tesoreria.sender.domain.dto.MercadoPagoContextDto;
 import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
 
@@ -34,6 +32,7 @@ import java.text.DecimalFormat;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,16 +53,23 @@ public class FormulariosToPdfService {
     private final SincronizeClient sincronizeClient;
     private final ChequeraSerieReemplazoClient chequeraSerieReemplazoClient;
     private final ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient;
-    private final PreferenceClient preferenceClient;
-    private final MercadoPagoService mercadoPagoService;
-    private final MercadoPagoContextClient mercadoPagoContextClient;
     private final ChequeraClient chequeraClient;
 
-    public FormulariosToPdfService(Environment environment, RestTemplateBuilder restTemplateBuilder, ChequeraSerieClient chequeraSerieClient,
-                                   ChequeraCuotaClient chequeraCuotaClient, FacultadClient facultadClient, TipoChequeraClient tipoChequeraClient,
-                                   PersonaClient personaClient, LectivoClient lectivoClient, LegajoClient legajoClient, CarreraClient carreraClient,
-                                   LectivoAlternativaClient lectivoAlternativaClient, SincronizeClient sincronizeClient,
-                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient, ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient, PreferenceClient preferenceClient, MercadoPagoService mercadoPagoService, MercadoPagoContextClient mercadoPagoContextClient, ChequeraClient chequeraClient) {
+    public FormulariosToPdfService(Environment environment,
+                                   RestTemplateBuilder restTemplateBuilder,
+                                   ChequeraSerieClient chequeraSerieClient,
+                                   ChequeraCuotaClient chequeraCuotaClient,
+                                   FacultadClient facultadClient,
+                                   TipoChequeraClient tipoChequeraClient,
+                                   PersonaClient personaClient,
+                                   LectivoClient lectivoClient,
+                                   LegajoClient legajoClient,
+                                   CarreraClient carreraClient,
+                                   LectivoAlternativaClient lectivoAlternativaClient,
+                                   SincronizeClient sincronizeClient,
+                                   ChequeraSerieReemplazoClient chequeraSerieReemplazoClient,
+                                   ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient,
+                                   ChequeraClient chequeraClient) {
         this.environment = environment;
         this.restTemplateBuilder = restTemplateBuilder;
         this.chequeraSerieClient = chequeraSerieClient;
@@ -78,29 +84,24 @@ public class FormulariosToPdfService {
         this.sincronizeClient = sincronizeClient;
         this.chequeraSerieReemplazoClient = chequeraSerieReemplazoClient;
         this.chequeraCuotaReemplazoClient = chequeraCuotaReemplazoClient;
-        this.mercadoPagoService = mercadoPagoService;
-        this.mercadoPagoContextClient = mercadoPagoContextClient;
-        this.preferenceClient = preferenceClient;
         this.chequeraClient = chequeraClient;
     }
 
-    public String generateChequeraPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
-                                      Integer alternativaId, Boolean codigoBarras, Boolean completa, List<UMPreferenceMPDto> preferences) {
+    public String generateChequeraPdf(Integer facultadId,
+                                      Integer tipoChequeraId,
+                                      Long chequeraSerieId,
+                                      Integer alternativaId,
+                                      Boolean codigoBarras,
+                                      Boolean completa,
+                                      List<UMPreferenceMPDto> preferences) {
+        log.debug("Processing FormulariosToPdfService.generateChequeraPdf");
         ChequeraSerieDto serie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
-        try {
-            log.debug("ChequeraSerie -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
-        } catch (JsonProcessingException e) {
-            log.debug("ChequeraSerie -> {}", e.getMessage());
-        }
+        logChequeraSerie(serie);
         if (preferences == null) {
             preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
         }
         List<ChequeraCuotaDto> cuotas = preferences.stream().map(UMPreferenceMPDto::getChequeraCuota).collect(Collectors.toList());
-        try {
-            log.debug("Cuotas -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
-        } catch (JsonProcessingException e) {
-            log.debug("Cuotas -> {}", e.getMessage());
-        }
+        logChequeraCuotas(cuotas);
         boolean hayAlgoParaImprimir = false;
         for (ChequeraCuotaDto cuota : cuotas) {
             if (cuota.getPagado() == 0 && cuota.getBaja() == 0 && cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
@@ -113,71 +114,46 @@ public class FormulariosToPdfService {
         }
 
         FacultadDto facultad = facultadClient.findByFacultadId(serie.getFacultadId());
-        try {
-            log.debug("Facultad -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facultad));
-        } catch (JsonProcessingException e) {
-            log.debug("Facultad -> {}", e.getMessage());
-        }
+        logFacultad(facultad);
         TipoChequeraDto tipoChequera = tipoChequeraClient.findByTipoChequeraId(serie.getTipoChequeraId());
-        try {
-            log.debug("TipoChequera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(tipoChequera));
-        } catch (JsonProcessingException e) {
-            log.debug("TipoChequera -> {}", e.getMessage());
-        }
-        PersonaDto persona = null;
+        logTipoChequera(tipoChequera);
+        PersonaDto persona;
         try {
             persona = personaClient.findByUnique(serie.getPersonaId(), serie.getDocumentoId());
         } catch (Exception e) {
             persona = new PersonaDto();
         }
-        try {
-            log.debug("Persona -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(persona));
-        } catch (JsonProcessingException e) {
-            log.debug("Persona -> {}", e.getMessage());
-        }
-        LectivoDto lectivo = null;
+        logPersona(persona);
+        LectivoDto lectivo;
         try {
             lectivo = lectivoClient.findByLectivoId(serie.getLectivoId());
         } catch (Exception e) {
             lectivo = new LectivoDto();
         }
-        try {
-            log.debug("Lectivo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(lectivo));
-        } catch (JsonProcessingException e) {
-            log.debug("Lectivo -> {}", e.getMessage());
-        }
+        logLectivo(lectivo);
         // Sincroniza carrera
         try {
             sincronizeClient.sincronizeCarreraAlumno(facultadId, persona.getPersonaId(), persona.getDocumentoId());
         } catch (Exception e) {
-            log.debug("Sin sincronizar");
+            log.debug("Sin sincronizar carrera");
         }
-        log.debug("Antes");
 
-        LegajoDto legajo = null;
+        LegajoDto legajo;
         try {
             legajo = legajoClient.findByFacultadIdAndPersonaIdAndDocumentoId(serie.getFacultadId(),
                     serie.getPersonaId(), serie.getDocumentoId());
         } catch (Exception e) {
             legajo = new LegajoDto();
         }
-        try {
-            log.debug("Legajo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(legajo));
-        } catch (JsonProcessingException e) {
-            log.debug("Legajo -> {}", e.getMessage());
-        }
-        CarreraDto carrera = null;
+        logLegajo(legajo);
+        CarreraDto carrera;
         try {
             carrera = carreraClient.findByFacultadIdAndPlanIdAndCarreraId(legajo.getFacultadId(), legajo.getPlanId(),
                     legajo.getCarreraId());
         } catch (Exception e) {
             carrera = new CarreraDto();
         }
-        try {
-            log.debug("Carrera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(carrera));
-        } catch (JsonProcessingException e) {
-            log.debug("Carrera -> {}", e.getMessage());
-        }
+        logCarrera(carrera);
 
         String path = environment.getProperty("path.reports");
 
@@ -234,7 +210,7 @@ public class FormulariosToPdfService {
                 paragraph.add(new Phrase(" - (" + carrera.getNombre() + ")", new Font(Font.HELVETICA, 11)));
             document.add(paragraph);
             paragraph = new Paragraph(new Phrase("Chequera: ", new Font(Font.HELVETICA, 11)));
-            paragraph.add(new Phrase(serie.getChequeraSerieId().toString(),
+            paragraph.add(new Phrase(Objects.requireNonNull(serie.getChequeraSerieId()).toString(),
                     new Font(Font.HELVETICA, 11, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_RIGHT);
             document.add(paragraph);
@@ -263,16 +239,13 @@ public class FormulariosToPdfService {
                         printCuota = true;
                     }
                 }
-                try {
-                    log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuota));
-                } catch (JsonProcessingException e) {
-                    log.debug("print -> {} - cuota -> {}", printCuota, e.getMessage());
-                }
+                logPrintCuota(printCuota, cuota);
                 if (printCuota) {
                     LectivoAlternativaDto lectivoAlternativa = lectivoAlternativaClient
                             .findByFacultadIdAndLectivoIdAndTipochequeraIdAndProductoIdAndAlternativaId(
                                     serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(),
                                     cuota.getProductoId(), serie.getAlternativaId());
+                    logLectivoAlternativa(lectivoAlternativa);
 
                     float[] columnCuota = {1, 1, 1, 1};
                     table = new PdfPTable(columnCuota);
@@ -295,21 +268,21 @@ public class FormulariosToPdfService {
                     paragraph = new Paragraph(new Phrase("Primer Vencimiento: ", new Font(Font.HELVETICA, 8)));
                     paragraph.add(new Phrase(
                             DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                    .format(cuota.getVencimiento1().withOffsetSameInstant(ZoneOffset.UTC)),
+                                    .format(Objects.requireNonNull(cuota.getVencimiento1()).withOffsetSameInstant(ZoneOffset.UTC)),
                             new Font(Font.HELVETICA, 8, Font.BOLD)));
                     paragraph.setAlignment(Element.ALIGN_RIGHT);
                     cell.addElement(paragraph);
                     paragraph = new Paragraph(new Phrase("Segundo Vencimiento: ", new Font(Font.HELVETICA, 8)));
                     paragraph.add(new Phrase(
                             DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                    .format(cuota.getVencimiento2().withOffsetSameInstant(ZoneOffset.UTC)),
+                                    .format(Objects.requireNonNull(cuota.getVencimiento2()).withOffsetSameInstant(ZoneOffset.UTC)),
                             new Font(Font.HELVETICA, 8, Font.BOLD)));
                     paragraph.setAlignment(Element.ALIGN_RIGHT);
                     cell.addElement(paragraph);
                     paragraph = new Paragraph(new Phrase("Tercer Vencimiento: ", new Font(Font.HELVETICA, 8)));
                     paragraph.add(new Phrase(
                             DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                    .format(cuota.getVencimiento3().withOffsetSameInstant(ZoneOffset.UTC)),
+                                    .format(Objects.requireNonNull(cuota.getVencimiento3()).withOffsetSameInstant(ZoneOffset.UTC)),
                             new Font(Font.HELVETICA, 8, Font.BOLD)));
                     paragraph.setAlignment(Element.ALIGN_RIGHT);
                     cell.addElement(paragraph);
@@ -337,6 +310,7 @@ public class FormulariosToPdfService {
 
                     // Crear un enlace clicable
                     if (umPreferenceMPDto.getMercadoPagoContext() != null) {
+                        log.debug("Generando enlace MP");
                         var mercadoPagoContext = umPreferenceMPDto.getMercadoPagoContext();
                         Chunk link = new Chunk("Click aquí para pagar", new Font(Font.HELVETICA, 10, Font.BOLD, new Color(0, 0, 255)));
                         link.setAnchor(mercadoPagoContext.getInitPoint()); // Establecer el enlace
@@ -356,6 +330,7 @@ public class FormulariosToPdfService {
 
                     // código de barras
                     if (codigoBarras) {
+                        log.debug("Generando código de barras");
                         BarcodeInter25 code25 = new BarcodeInter25();
                         code25.setGenerateChecksum(false);
                         code25.setCode(cuota.getCodigoBarras());
@@ -377,6 +352,7 @@ public class FormulariosToPdfService {
 
             // Finalizamos el documento
             document.close();
+            log.debug("Documento finalizado");
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -384,21 +360,21 @@ public class FormulariosToPdfService {
         return filename;
     }
 
+    private void logLectivoAlternativa(LectivoAlternativaDto lectivoAlternativa) {
+        try {
+            log.debug("LectivoAlternativa -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(lectivoAlternativa));
+        } catch (JsonProcessingException e) {
+            log.debug("LectivoAlternativa -> {}", e.getMessage());
+        }
+    }
+
     public String generateChequeraReemplazoPdf(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId,
                                                Integer alternativaId, Boolean completa) {
         ChequeraSerieReemplazoDto serie = chequeraSerieReemplazoClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
-        try {
-            log.debug("ChequeraSerieReemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
-        } catch (JsonProcessingException e) {
-            log.debug("ChequeraSerieReemplazo -> {}", e.getMessage());
-        }
+        logChequeraSerieReemplazo(serie);
         List<ChequeraCuotaReemplazoDto> cuotas = chequeraCuotaReemplazoClient
                 .findAllByFacultadIdAndTipoChequeraIdAndChequeraSerieIdAndAlternativaId(serie.getFacultadId(), serie.getTipoChequeraId(), serie.getChequeraSerieId(), serie.getAlternativaId());
-        try {
-            log.debug("Cuotas Reemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
-        } catch (JsonProcessingException e) {
-            log.debug("Cuotas Reemplazo -> {}", e.getMessage());
-        }
+        logChequeraCuotasReemplazo(cuotas);
         boolean hayAlgoParaImprimir = false;
         for (ChequeraCuotaReemplazoDto cuota : cuotas) {
             if (cuota.getPagado() == 0 && cuota.getBaja() == 0 && cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
@@ -411,64 +387,40 @@ public class FormulariosToPdfService {
         }
 
         FacultadDto facultad = facultadClient.findByFacultadId(serie.getFacultadId());
-        try {
-            log.debug("Facultad -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facultad));
-        } catch (JsonProcessingException e) {
-            log.debug("Facultad -> {}", e.getMessage());
-        }
+        logFacultad(facultad);
         TipoChequeraDto tipoChequera = tipoChequeraClient.findByTipoChequeraId(serie.getTipoChequeraId());
-        try {
-            log.debug("TipoChequera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(tipoChequera));
-        } catch (JsonProcessingException e) {
-            log.debug("TipoChequera -> {}", e.getMessage());
-        }
-        PersonaDto persona = null;
+        logTipoChequera(tipoChequera);
+        PersonaDto persona;
         try {
             persona = personaClient.findByUnique(serie.getPersonaId(), serie.getDocumentoId());
         } catch (Exception e) {
             persona = new PersonaDto();
         }
-        try {
-            log.debug("Persona -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(persona));
-        } catch (JsonProcessingException e) {
-            log.debug("Persona -> {}", e.getMessage());
-        }
-        LectivoDto lectivo = null;
+        logPersona(persona);
+        LectivoDto lectivo;
         try {
             lectivo = lectivoClient.findByLectivoId(serie.getLectivoId());
         } catch (Exception e) {
             lectivo = new LectivoDto();
         }
-        try {
-            log.debug("Lectivo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(lectivo));
-        } catch (JsonProcessingException e) {
-            log.debug("Lectivo -> {}", e.getMessage());
-        }
+        logLectivo(lectivo);
 
-        LegajoDto legajo = null;
+        LegajoDto legajo;
         try {
             legajo = legajoClient.findByFacultadIdAndPersonaIdAndDocumentoId(serie.getFacultadId(),
                     serie.getPersonaId(), serie.getDocumentoId());
         } catch (Exception e) {
             legajo = new LegajoDto();
         }
-        try {
-            log.debug("Legajo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(legajo));
-        } catch (JsonProcessingException e) {
-            log.debug("Legajo -> {}", e.getMessage());
-        }
-        CarreraDto carrera = null;
+        logLegajo(legajo);
+        CarreraDto carrera;
         try {
             carrera = carreraClient.findByFacultadIdAndPlanIdAndCarreraId(legajo.getFacultadId(), legajo.getPlanId(),
                     legajo.getCarreraId());
         } catch (Exception e) {
             carrera = new CarreraDto();
         }
-        try {
-            log.debug("Carrera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(carrera));
-        } catch (JsonProcessingException e) {
-            log.debug("Carrera -> {}", e.getMessage());
-        }
+        logCarrera(carrera);
 
         String path = environment.getProperty("path.reports");
 
@@ -525,7 +477,7 @@ public class FormulariosToPdfService {
                 paragraph.add(new Phrase(" - (" + carrera.getNombre() + ")", new Font(Font.HELVETICA, 11)));
             document.add(paragraph);
             paragraph = new Paragraph(new Phrase("Chequera Reemplazo: ", new Font(Font.HELVETICA, 11)));
-            paragraph.add(new Phrase(serie.getChequeraSerieId().toString(),
+            paragraph.add(new Phrase(Objects.requireNonNull(serie.getChequeraSerieId()).toString(),
                     new Font(Font.HELVETICA, 11, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_RIGHT);
             document.add(paragraph);
@@ -544,7 +496,7 @@ public class FormulariosToPdfService {
             for (ChequeraCuotaReemplazoDto cuota : chequeraCuotaReemplazoClient
                     .findAllByFacultadIdAndTipoChequeraIdAndChequeraSerieIdAndAlternativaId(serie.getFacultadId(),
                             serie.getTipoChequeraId(), serie.getChequeraSerieId(), serie.getAlternativaId())) {
-                Boolean printCuota = false;
+                boolean printCuota = false;
                 if (completa) {
                     if (cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
                         printCuota = true;
@@ -555,11 +507,7 @@ public class FormulariosToPdfService {
                         printCuota = true;
                     }
                 }
-                try {
-                    log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuota));
-                } catch (JsonProcessingException e) {
-                    log.debug("print -> {} - cuota -> {}", printCuota, e.getMessage());
-                }
+                logPrintCuotaReemplazo(printCuota, cuota);
                 if (printCuota) {
                     LectivoAlternativaDto lectivoAlternativa = lectivoAlternativaClient
                             .findByFacultadIdAndLectivoIdAndTipochequeraIdAndProductoIdAndAlternativaId(
@@ -587,21 +535,21 @@ public class FormulariosToPdfService {
                     paragraph = new Paragraph(new Phrase("Primer Vencimiento: ", new Font(Font.HELVETICA, 8)));
                     paragraph.add(new Phrase(
                             DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                    .format(cuota.getVencimiento1().withOffsetSameInstant(ZoneOffset.UTC)),
+                                    .format(Objects.requireNonNull(cuota.getVencimiento1()).withOffsetSameInstant(ZoneOffset.UTC)),
                             new Font(Font.HELVETICA, 8, Font.BOLD)));
                     paragraph.setAlignment(Element.ALIGN_RIGHT);
                     cell.addElement(paragraph);
                     paragraph = new Paragraph(new Phrase("Segundo Vencimiento: ", new Font(Font.HELVETICA, 8)));
                     paragraph.add(new Phrase(
                             DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                    .format(cuota.getVencimiento2().withOffsetSameInstant(ZoneOffset.UTC)),
+                                    .format(Objects.requireNonNull(cuota.getVencimiento2()).withOffsetSameInstant(ZoneOffset.UTC)),
                             new Font(Font.HELVETICA, 8, Font.BOLD)));
                     paragraph.setAlignment(Element.ALIGN_RIGHT);
                     cell.addElement(paragraph);
                     paragraph = new Paragraph(new Phrase("Tercer Vencimiento: ", new Font(Font.HELVETICA, 8)));
                     paragraph.add(new Phrase(
                             DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                    .format(cuota.getVencimiento3().withOffsetSameInstant(ZoneOffset.UTC)),
+                                    .format(Objects.requireNonNull(cuota.getVencimiento3()).withOffsetSameInstant(ZoneOffset.UTC)),
                             new Font(Font.HELVETICA, 8, Font.BOLD)));
                     paragraph.setAlignment(Element.ALIGN_RIGHT);
                     cell.addElement(paragraph);
@@ -667,13 +615,13 @@ public class FormulariosToPdfService {
 
         FacultadDto facultad = facultadClient.findByFacultadId(serie.getFacultadId());
         TipoChequeraDto tipoChequera = tipoChequeraClient.findByTipoChequeraId(serie.getTipoChequeraId());
-        PersonaDto persona = null;
+        PersonaDto persona;
         try {
             persona = personaClient.findByUnique(serie.getPersonaId(), serie.getDocumentoId());
         } catch (Exception e) {
             persona = new PersonaDto();
         }
-        LectivoDto lectivo = null;
+        LectivoDto lectivo;
         try {
             lectivo = lectivoClient.findByLectivoId(serie.getLectivoId());
         } catch (Exception e) {
@@ -755,7 +703,7 @@ public class FormulariosToPdfService {
                 paragraph.add(new Phrase(" - (" + carrera.getNombre() + ")", new Font(Font.HELVETICA, 11)));
             document.add(paragraph);
             paragraph = new Paragraph(new Phrase("Chequera: ", new Font(Font.HELVETICA, 11)));
-            paragraph.add(new Phrase(serie.getChequeraSerieId().toString(),
+            paragraph.add(new Phrase(Objects.requireNonNull(serie.getChequeraSerieId()).toString(),
                     new Font(Font.HELVETICA, 11, Font.BOLD)));
             paragraph.setAlignment(Element.ALIGN_RIGHT);
             document.add(paragraph);
@@ -799,21 +747,21 @@ public class FormulariosToPdfService {
                 paragraph = new Paragraph(new Phrase("Primer Vencimiento: ", new Font(Font.HELVETICA, 8)));
                 paragraph.add(new Phrase(
                         DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                .format(cuota.getVencimiento1().withOffsetSameInstant(ZoneOffset.UTC)),
+                                .format(Objects.requireNonNull(cuota.getVencimiento1()).withOffsetSameInstant(ZoneOffset.UTC)),
                         new Font(Font.HELVETICA, 8, Font.BOLD)));
                 paragraph.setAlignment(Element.ALIGN_RIGHT);
                 cell.addElement(paragraph);
                 paragraph = new Paragraph(new Phrase("Segundo Vencimiento: ", new Font(Font.HELVETICA, 8)));
                 paragraph.add(new Phrase(
                         DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                .format(cuota.getVencimiento2().withOffsetSameInstant(ZoneOffset.UTC)),
+                                .format(Objects.requireNonNull(cuota.getVencimiento2()).withOffsetSameInstant(ZoneOffset.UTC)),
                         new Font(Font.HELVETICA, 8, Font.BOLD)));
                 paragraph.setAlignment(Element.ALIGN_RIGHT);
                 cell.addElement(paragraph);
                 paragraph = new Paragraph(new Phrase("Tercer Vencimiento: ", new Font(Font.HELVETICA, 8)));
                 paragraph.add(new Phrase(
                         DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                .format(cuota.getVencimiento3().withOffsetSameInstant(ZoneOffset.UTC)),
+                                .format(Objects.requireNonNull(cuota.getVencimiento3()).withOffsetSameInstant(ZoneOffset.UTC)),
                         new Font(Font.HELVETICA, 8, Font.BOLD)));
                 paragraph.setAlignment(Element.ALIGN_RIGHT);
                 cell.addElement(paragraph);
@@ -889,15 +837,108 @@ public class FormulariosToPdfService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
             ResponseEntity<byte[]> response = restTemplateBuilder.build().exchange(url, HttpMethod.GET, entity,
                     byte[].class);
-            Files.write(response.getBody(), new File(filename));
-        } catch (HttpServerErrorException e) {
-            log.debug("No se pudo generar {}", filename);
-            filename = null;
-        } catch (IOException e) {
+            Files.write(Objects.requireNonNull(response.getBody()), new File(filename));
+        } catch (HttpServerErrorException | IOException e) {
             log.debug("No se pudo generar {}", filename);
             filename = null;
         }
         return filename;
+    }
+
+    private void logChequeraSerie(ChequeraSerieDto serie) {
+        try {
+            log.debug("ChequeraSerie -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraSerie -> {}", e.getMessage());
+        }
+    }
+
+    private void logChequeraCuotas(List<ChequeraCuotaDto> cuotas) {
+        try {
+            log.debug("Cuotas -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
+        } catch (JsonProcessingException e) {
+            log.debug("Cuotas -> {}", e.getMessage());
+        }
+    }
+
+    private void logFacultad(FacultadDto facultad) {
+        try {
+            log.debug("Facultad -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facultad));
+        } catch (JsonProcessingException e) {
+            log.debug("Facultad -> {}", e.getMessage());
+        }
+    }
+
+    private void logTipoChequera(TipoChequeraDto tipoChequera) {
+        try {
+            log.debug("TipoChequera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(tipoChequera));
+        } catch (JsonProcessingException e) {
+            log.debug("TipoChequera -> {}", e.getMessage());
+        }
+    }
+
+    private void logPersona(PersonaDto persona) {
+        try {
+            log.debug("Persona -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(persona));
+        } catch (JsonProcessingException e) {
+            log.debug("Persona -> {}", e.getMessage());
+        }
+    }
+
+    private void logLectivo(LectivoDto lectivo) {
+        try {
+            log.debug("Lectivo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(lectivo));
+        } catch (JsonProcessingException e) {
+            log.debug("Lectivo -> {}", e.getMessage());
+        }
+    }
+
+    private void logLegajo(LegajoDto legajo) {
+        try {
+            log.debug("Legajo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(legajo));
+        } catch (JsonProcessingException e) {
+            log.debug("Legajo -> {}", e.getMessage());
+        }
+    }
+
+    private void logCarrera(CarreraDto carrera) {
+        try {
+            log.debug("Carrera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(carrera));
+        } catch (JsonProcessingException e) {
+            log.debug("Carrera -> {}", e.getMessage());
+        }
+    }
+
+    private void logPrintCuota(boolean printCuota, ChequeraCuotaDto cuota) {
+        try {
+            log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuota));
+        } catch (JsonProcessingException e) {
+            log.debug("print -> {} - cuota -> {}", printCuota, e.getMessage());
+        }
+    }
+
+    private void logChequeraSerieReemplazo(ChequeraSerieReemplazoDto serie) {
+        try {
+            log.debug("ChequeraSerieReemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraSerieReemplazo -> {}", e.getMessage());
+        }
+    }
+
+    private void logChequeraCuotasReemplazo(List<ChequeraCuotaReemplazoDto> cuotas) {
+        try {
+            log.debug("Cuotas Reemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
+        } catch (JsonProcessingException e) {
+            log.debug("Cuotas Reemplazo -> {}", e.getMessage());
+        }
+    }
+
+    private void logPrintCuotaReemplazo(boolean printCuota, ChequeraCuotaReemplazoDto cuota) {
+        try {
+            log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuota));
+        } catch (JsonProcessingException e) {
+            log.debug("print -> {} - cuota -> {}", printCuota, e.getMessage());
+        }
     }
 
 }
