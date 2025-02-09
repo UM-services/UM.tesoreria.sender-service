@@ -1,6 +1,7 @@
 package um.tesoreria.sender.controller;
 
 import jakarta.mail.MessagingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +22,7 @@ import java.io.FileNotFoundException;
 
 @RestController
 @RequestMapping("/api/tesoreria/sender/chequera")
+@Slf4j
 public class ChequeraController {
 
     private final ChequeraService service;
@@ -37,8 +39,10 @@ public class ChequeraController {
     public ResponseEntity<Resource> generatePdf(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
                                                 @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
                                                 @PathVariable Boolean codigoBarras) throws FileNotFoundException {
+        log.debug("Processing ChequeraController.generatePdf");
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, codigoBarras, false, null);
+        log.debug("Generando archivo {}", filename);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
