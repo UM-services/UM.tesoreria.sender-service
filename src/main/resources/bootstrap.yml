@@ -40,7 +40,19 @@ spring:
     port: 5672
     username: admin
     password: admin
-
+    listener:
+      simple:
+        prefetch: 5
+        concurrency: 1
+        max-concurrency: 2
+        batch-size: 5
+        missing-queues-fatal: false
+        default-requeue-rejected: false
+    cache:
+      channel:
+        size: 10
+      connection:
+        mode: channel
 
 logging:
   um.tesoreria.report: ${app.logging}

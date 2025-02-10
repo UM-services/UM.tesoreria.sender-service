@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 
 @Configuration
 @EnableTransactionManagement
@@ -20,12 +21,12 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue reciboQueue() {
-        return new Queue(QUEUE_INVOICE, true); // Cola persistente
+        return new Queue(QUEUE_INVOICE, true);
     }
 
     @Bean
     public Queue testerQueue() {
-        return new Queue(QUEUE_TESTER, true); // Cola persistente
+        return new Queue(QUEUE_TESTER, true);
     }
 
     @Bean
@@ -38,6 +39,7 @@ public class RabbitMQConfig {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(jsonMessageConverter());
         template.setChannelTransacted(true);
+        template.setUsePublisherConnection(true);
         return template;
     }
 
@@ -46,4 +48,18 @@ public class RabbitMQConfig {
         return new RabbitTransactionManager(connectionFactory);
     }
 
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(jsonMessageConverter());
+        
+        // Valores reducidos para optimizar recursos
+        factory.setPrefetchCount(5);
+        factory.setBatchSize(5);
+        factory.setConcurrentConsumers(1);
+        factory.setMaxConcurrentConsumers(2);
+        
+        return factory;
+    }
 }
