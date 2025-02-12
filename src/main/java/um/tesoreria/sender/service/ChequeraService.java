@@ -6,14 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import um.tesoreria.sender.client.tesoreria.core.ChequeraCuotaClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
-import um.tesoreria.sender.client.tesoreria.core.MercadoPagoContextClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
-import um.tesoreria.sender.client.tesoreria.mercadopago.PreferenceClient;
-import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraCuotaDto;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
@@ -51,7 +46,7 @@ public class ChequeraService {
 
         // Crear tabla con los detalles
         // Código HTML para el cuerpo del correo electrónico
-        String data = "<html>" +
+        StringBuilder data = new StringBuilder("<html>" +
                 "<head>" +
                 "<style>" +
                 "body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; }" +
@@ -91,7 +86,7 @@ public class ChequeraService {
                 "<th>Fecha de Vencimiento</th>" +
                 "<th>Importe</th>" +
                 "<th>Enlace</th>" +
-                "</tr>";
+                "</tr>");
         for (var umPreferenceMPDto : preferences) {
             var chequeraCuota = umPreferenceMPDto.getChequeraCuota();
             if (chequeraCuota.getPagado() == 0 && chequeraCuota.getBaja() == 0
@@ -101,52 +96,11 @@ public class ChequeraService {
                     String fechaVencimientoFormatted = umPreferenceMPDto.getMercadoPagoContext().getFechaVencimiento()
                             .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-                    data = data + "<tr>" +
-                            "<td>" + Objects.requireNonNull(chequeraCuota.getProducto()).getNombre() + "</td>" +
-                            "<td>" + chequeraCuota.getMes() + "/" + chequeraCuota.getAnho() + "</td>" +
-                            "<td>" + fechaVencimientoFormatted + "</td>" +
-                            "<td>$" + String.format("%.2f", umPreferenceMPDto.getMercadoPagoContext().getImporte()) + "</td>" +
-                            "<td><a href='" + umPreferenceMPDto.getMercadoPagoContext().getInitPoint() + "' style='color: #007BFF; font-weight: bold;'>Click aquí para realizar el pago</a></td>" +
-                            "</tr>";
+                    data.append("<tr>").append("<td>").append(Objects.requireNonNull(chequeraCuota.getProducto()).getNombre()).append("</td>").append("<td>").append(chequeraCuota.getMes()).append("/").append(chequeraCuota.getAnho()).append("</td>").append("<td>").append(fechaVencimientoFormatted).append("</td>").append("<td>$").append(String.format("%.2f", umPreferenceMPDto.getMercadoPagoContext().getImporte())).append("</td>").append("<td><a href='").append(umPreferenceMPDto.getMercadoPagoContext().getInitPoint()).append("' style='color: #007BFF; font-weight: bold;'>Click aquí para realizar el pago</a></td>").append("</tr>");
                 }
             }
         }
-        data = data + "</table>" +
-                "<div class='info-section'>" +
-                    "<div class='info-details'>" +
-                        "<p>Unidad Académica: <strong>" + Objects.requireNonNull(chequeraSerie.getFacultad()).getNombre() + "</strong></p>" +
-                        "<br/>" +
-                        "<p>Tipo de Chequera: <strong>" + Objects.requireNonNull(chequeraSerie.getTipoChequera()).getNombre() + "</strong></p>" +
-                        "<br/>" +
-                        "<p>Sede: <strong>" + Objects.requireNonNull(chequeraSerie.getGeografica()).getNombre() + "</strong></p>" +
-                        "<br/>" +
-                        "<p>Ciclo Lectivo: <strong>" + Objects.requireNonNull(chequeraSerie.getLectivo()).getNombre() + "</strong></p>" +
-                        "<br/>" +
-                        "<p>Tipo de Arancel: <strong>" + Objects.requireNonNull(chequeraSerie.getArancelTipo()).getDescripcion() + "</strong></p>" +
-                        "<br/>" +
-                        "<p>Alternativa: <strong>" + chequeraSerie.getAlternativaId() + "</strong></p>" +
-                    "</div>" +
-                    "<div class='info-logo'>" +
-                        "<img src='cid:logoImage' alt='Logo'/>" +
-                    "</div>" +
-                "</div>" +
-                "</div>" +
-                "<div class='footer'>" +
-                "<p>Hasta pronto, seguimos en contacto</p>" +
-                "<p>Si ya has cancelado tu cuota desestima este recordatorio. </p>" +
-                "<br/>" +
-                "<p>Universidad de Mendoza</p>" +
-                "<p><small>Por favor no responda este mail, fue generado automáticamente. Su respuesta no será leída.</small></p>" +
-                "</div>" +
-                "</div>" +
-                "<div class='container'>" +
-                "<div class='content'>" +
-                    "<img src='cid:medioPago1' alt='Medio de Pago 1' style='width: 100%; height: auto; margin-bottom: 20px;'/>" +
-                    "<img src='cid:medioPago2' alt='Medio de Pago 2' style='width: 100%; height: auto;'/>" +
-                "</div>" +
-                "</div>" +
-                "</body>" +
-                "</html>";
+        data.append("</table>").append("<div class='info-section'>").append("<div class='info-details'>").append("<p>Unidad Académica: <strong>").append(Objects.requireNonNull(chequeraSerie.getFacultad()).getNombre()).append("</strong></p>").append("<br/>").append("<p>Tipo de Chequera: <strong>").append(Objects.requireNonNull(chequeraSerie.getTipoChequera()).getNombre()).append("</strong></p>").append("<br/>").append("<p>Sede: <strong>").append(Objects.requireNonNull(chequeraSerie.getGeografica()).getNombre()).append("</strong></p>").append("<br/>").append("<p>Ciclo Lectivo: <strong>").append(Objects.requireNonNull(chequeraSerie.getLectivo()).getNombre()).append("</strong></p>").append("<br/>").append("<p>Tipo de Arancel: <strong>").append(Objects.requireNonNull(chequeraSerie.getArancelTipo()).getDescripcion()).append("</strong></p>").append("<br/>").append("<p>Alternativa: <strong>").append(chequeraSerie.getAlternativaId()).append("</strong></p>").append("</div>").append("<div class='info-logo'>").append("<img src='cid:logoImage' alt='Logo'/>").append("</div>").append("</div>").append("</div>").append("<div class='footer'>").append("<p>Hasta pronto, seguimos en contacto</p>").append("<p>Si ya has cancelado tu cuota desestima este recordatorio. </p>").append("<br/>").append("<p>Universidad de Mendoza</p>").append("<p><small>Por favor no responda este mail, fue generado automáticamente. Su respuesta no será leída.</small></p>").append("</div>").append("</div>").append("<div class='container'>").append("<div class='content'>").append("<img src='cid:medioPago1' alt='Medio de Pago 1' style='width: 100%; height: auto; margin-bottom: 20px;'/>").append("<img src='cid:medioPago2' alt='Medio de Pago 2' style='width: 100%; height: auto;'/>").append("</div>").append("</div>").append("</body>").append("</html>");
 
         // Crear el mensaje de correo
         MimeMessage message = javaMailSender.createMimeMessage();
@@ -172,7 +126,7 @@ public class ChequeraService {
         helper.setTo(addresses.toArray(new String[0]));
         helper.setSubject("Recordatorio - Pago cuota UM -> " + nombreAlumno);
         helper.setReplyTo("no-reply@um.edu.ar");
-        helper.setText(data, true); // Permitir el envío de contenido HTML
+        helper.setText(data.toString(), true); // Permitir el envío de contenido HTML
 
         // Adjuntar el archivo de chequera
         FileSystemResource fileChequera = new FileSystemResource(filenameChequera);
