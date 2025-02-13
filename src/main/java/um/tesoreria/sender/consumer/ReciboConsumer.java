@@ -30,7 +30,9 @@ public class ReciboConsumer {
     }
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_TESTER)
+    @Transactional
     public void handleTesterMessage(String message) {
+        log.debug("Processing ReciboConsumer.handleTesterMessage");
         log.debug("Tester Message -> {}", message);
         log.error("TEST - Mensaje recibido: {}", message);
         simular(message);

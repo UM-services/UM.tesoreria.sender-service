@@ -737,10 +737,13 @@ public class ReciboService {
     }
 
     public String send(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica) throws MessagingException {
+        log.debug("Processing ReciboService.send()");
 
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
         }
+        logFacturacionElectronica(facturacionElectronica);
+
         ChequeraSerieDto chequeraSerie = chequeraSerieClient.findByUnique(Objects.requireNonNull(facturacionElectronica.getChequeraPago()).getFacultadId(), facturacionElectronica.getChequeraPago().getTipoChequeraId(), facturacionElectronica.getChequeraPago().getChequeraSerieId());
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
         String chequeraString = MessageFormat.format("Chequera {0}/{1}/{2}/{3}/{4}/{5}", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
@@ -755,26 +758,31 @@ public class ReciboService {
         String filenameRecibo = this.generatePdf(facturacionElectronicaId, facturacionElectronica, chequeraSerie);
         log.info("Filename_recibo -> " + filenameRecibo);
         if (filenameRecibo.isEmpty()) {
+            log.debug("Sin Recibo para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            logFacturacionElectronica(facturacionElectronica);
+
             return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
         }
 
         DomicilioDto domicilio = chequeraSerie.getDomicilio();
         if (domicilio == null) {
+            log.debug("Sin Domicilio para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            logFacturacionElectronica(facturacionElectronica);
             return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
         }
         if (domicilio.getEmailPersonal().isEmpty() && domicilio.getEmailInstitucional().isEmpty()) {
+            log.debug("Sin e-mails para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            logFacturacionElectronica(facturacionElectronica);
             return MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", chequeraString);
         }
 
-        String data = "";
-
-        data = "Estimad@ Estudiante:" + (char) 10;
+        String data = "Estimad@ Estudiante:" + (char) 10;
         data = data + (char) 10;
         data = data + "Le enviamos como archivo adjunto su recibo." + (char) 10;
         data = data + (char) 10;
@@ -813,30 +821,38 @@ public class ReciboService {
             helper.addAttachment(filenameRecibo, fileRecibo);
 
         } catch (MessagingException e) {
+            log.debug("No pudo ENVIARSE");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            logFacturacionElectronica(facturacionElectronica);
             return MessageFormat.format("ERROR: {0} No pudo ENVIARSE", chequeraString);
         }
 
         javaMailSender.send(message);
+        log.debug("Mail enviado");
         facturacionElectronica.setEnviada((byte) 1);
         facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-        String json = "";
-        try {
-            json = JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facturacionElectronica);
-        } catch (JsonProcessingException e) {
-            json = "";
-        }
+        logFacturacionElectronica(facturacionElectronica);
         return MessageFormat.format("{0} Envío de Correo Ok!!!", chequeraString);
     }
 
-    public String sendNext() {
-        FacturacionElectronicaDto facturacionElectronica = facturacionElectronicaClient.findNextPendiente();
+    private void logFacturacionElectronica(FacturacionElectronicaDto facturacionElectronica) {
         try {
-            log.info("SendNext: {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facturacionElectronica));
+            log.debug("FacturacionElectronica: {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(facturacionElectronica));
         } catch (JsonProcessingException e) {
-            log.info("SendNext jsonify error: {}", e.getMessage());
+            log.debug("FacturacionElectronica jsonify error: {}", e.getMessage());
         }
+    }
+
+    public String sendNext() {
+        log.debug("Processing ReciboService.sendNext()");
+        FacturacionElectronicaDto facturacionElectronica = facturacionElectronicaClient.findNextPendiente();
+        logFacturacionElectronica(facturacionElectronica);
         try {
             return this.send(facturacionElectronica.getFacturacionElectronicaId(), facturacionElectronica);
         } catch (Exception e) {
