@@ -95,11 +95,7 @@ public class ReciboService {
         Image imageQr = null;
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
-            try {
-                log.debug("FacturacionElectronicaDto: {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facturacionElectronica));
-            } catch (JsonProcessingException e) {
-                log.debug("FacturacionElectronicaDto: {}", e.getMessage());
-            }
+            logFacturacionElectronica(facturacionElectronica);
         }
         ComprobanteDto comprobante = facturacionElectronica.getComprobante();
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
@@ -756,7 +752,7 @@ public class ReciboService {
 
         // Genera PDF
         String filenameRecibo = this.generatePdf(facturacionElectronicaId, facturacionElectronica, chequeraSerie);
-        log.info("Filename_recibo -> " + filenameRecibo);
+        log.info("Filename_recibo -> {}", filenameRecibo);
         if (filenameRecibo.isEmpty()) {
             log.debug("Sin Recibo para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
