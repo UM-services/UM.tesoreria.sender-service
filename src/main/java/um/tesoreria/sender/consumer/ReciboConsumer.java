@@ -26,7 +26,7 @@ public class ReciboConsumer {
     public void init() {
         log.info("Consumidor de RabbitMQ inicializado y escuchando en la cola: {}", RabbitMQConfig.QUEUE_TESTER);
         log.info("Consumidor de RabbitMQ inicializado y escuchando en la cola: {}", RabbitMQConfig.QUEUE_INVOICE);
-        log.error("TEST - PostConstruct ejecutado");
+        log.error("TEST - PostConstruct ReciboConsumer ejecutado");
     }
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_TESTER)

@@ -17,11 +17,17 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 public class RabbitMQConfig {
 
     public static final String QUEUE_INVOICE = "recibo_queue";
+    public static final String QUEUE_CHEQUERA = "chequera_queue";
     public static final String QUEUE_TESTER = "tester_queue";
 
     @Bean
     public Queue reciboQueue() {
         return new Queue(QUEUE_INVOICE, true);
+    }
+
+    @Bean
+    public Queue chequeraQueue() {
+        return new Queue(QUEUE_CHEQUERA, true);
     }
 
     @Bean
