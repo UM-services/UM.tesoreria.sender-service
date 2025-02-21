@@ -1,5 +1,9 @@
 # UM.tesoreria.sender-service
 
+## Autor ✒️
+
+* **Daniel Quinteros** - *Desarrollo y Documentación*
+
 ## Estado de Integración Continua
 
 [![UM.tesoreria.sender-service CI](https://github.com/UM-services/UM.tesoreria.sender-service/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/UM-services/UM.tesoreria.sender-service/actions/workflows/maven.yml)
@@ -14,14 +18,19 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 - Procesamiento asíncrono de mensajes mediante RabbitMQ
 - Gestión transaccional de mensajes
 - Manejo optimizado de recursos (CPU/RAM)
+- Soporte para múltiples colas (recibo_queue, chequera_queue, tester_queue)
+- Generación automática de documentación y wiki
 
 ## Tecnologías
 
 - Java 21
-- Spring Boot 3.4.2
+- Spring Boot 3.4.3
 - Spring Cloud
 - RabbitMQ
 - Spring Mail
+- Spring Cloud Netflix Eureka Client
+- OpenAPI (Springdoc)
+- Kotlin 2.1.10
 
 ## Configuración
 
@@ -40,6 +49,13 @@ spring:
         concurrency: 1
         max-concurrency: 2
         batch-size: 5
+        missing-queues-fatal: false
+        default-requeue-rejected: false
+    cache:
+      channel:
+        size: 10
+      connection:
+        mode: channel
 ```
 
 ### Mail
@@ -56,7 +72,17 @@ spring:
         starttls:
           enable: true
           required: true
+      auth: true
+      connection timeout: 15000
+      timeout: 15000
+      write timeout: 15000
 ```
+
+## Colas RabbitMQ
+
+- `recibo_queue`: Cola para procesamiento de recibos electrónicos
+- `chequera_queue`: Cola para procesamiento de chequeras
+- `tester_queue`: Cola para pruebas del sistema
 
 ## Documentación
 
@@ -64,6 +90,7 @@ spring:
 - [Wiki](https://github.com/UM-services/UM.tesoreria.sender-service/wiki)
 - [Spring Mail](https://docs.spring.io/spring-framework/reference/integration/email.html)
 - [RabbitMQ](https://www.rabbitmq.com/documentation.html)
+- [OpenAPI UI](http://localhost:8080/swagger-ui.html)
 
 ## Estado del Proyecto
 
