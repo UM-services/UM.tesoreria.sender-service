@@ -100,6 +100,7 @@ public class FormulariosToPdfService {
         if (preferences == null) {
             preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
         }
+        logPreferences(preferences);
         List<ChequeraCuotaDto> cuotas = preferences.stream().map(UMPreferenceMPDto::getChequeraCuota).collect(Collectors.toList());
         logChequeraCuotas(cuotas);
         boolean hayAlgoParaImprimir = false;
@@ -108,7 +109,7 @@ public class FormulariosToPdfService {
                 hayAlgoParaImprimir = true;
             }
         }
-
+        log.debug("hayAlgoParaImprimir -> {}", hayAlgoParaImprimir);
         if (!hayAlgoParaImprimir) {
             return "";
         }
@@ -360,11 +361,24 @@ public class FormulariosToPdfService {
         return filename;
     }
 
+    private void logPreferences(List<UMPreferenceMPDto> preferences) {
+        try {
+            log.debug("Preferences -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(preferences));
+        } catch (JsonProcessingException e) {
+            log.debug("Preferences jsonify error -> {}", e.getMessage());
+        }
+    }
+
     private void logLectivoAlternativa(LectivoAlternativaDto lectivoAlternativa) {
         try {
             log.debug("LectivoAlternativa -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(lectivoAlternativa));
         } catch (JsonProcessingException e) {
-            log.debug("LectivoAlternativa -> {}", e.getMessage());
+            log.debug("LectivoAlternativa jsonify error -> {}", e.getMessage());
         }
     }
 
@@ -633,7 +647,6 @@ public class FormulariosToPdfService {
         } catch (Exception e) {
             log.debug("Sin sincronizar");
         }
-        log.debug("Antes");
 
         LegajoDto legajo = null;
         try {
@@ -847,97 +860,157 @@ public class FormulariosToPdfService {
 
     private void logChequeraSerie(ChequeraSerieDto serie) {
         try {
-            log.debug("ChequeraSerie -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
+            log.debug("ChequeraSerie -> {}", JsonMapper.
+                    builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(serie));
         } catch (JsonProcessingException e) {
-            log.debug("ChequeraSerie -> {}", e.getMessage());
+            log.debug("ChequeraSerie jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logChequeraCuotas(List<ChequeraCuotaDto> cuotas) {
         try {
-            log.debug("Cuotas -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
+            log.debug("Cuotas -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(cuotas));
         } catch (JsonProcessingException e) {
-            log.debug("Cuotas -> {}", e.getMessage());
+            log.debug("Cuotas jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logFacultad(FacultadDto facultad) {
         try {
-            log.debug("Facultad -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(facultad));
+            log.debug("Facultad -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(facultad));
         } catch (JsonProcessingException e) {
-            log.debug("Facultad -> {}", e.getMessage());
+            log.debug("Facultad jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logTipoChequera(TipoChequeraDto tipoChequera) {
         try {
-            log.debug("TipoChequera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(tipoChequera));
+            log.debug("TipoChequera -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(tipoChequera));
         } catch (JsonProcessingException e) {
-            log.debug("TipoChequera -> {}", e.getMessage());
+            log.debug("TipoChequera jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logPersona(PersonaDto persona) {
         try {
-            log.debug("Persona -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(persona));
+            log.debug("Persona -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(persona));
         } catch (JsonProcessingException e) {
-            log.debug("Persona -> {}", e.getMessage());
+            log.debug("Persona jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logLectivo(LectivoDto lectivo) {
         try {
-            log.debug("Lectivo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(lectivo));
+            log.debug("Lectivo -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(lectivo));
         } catch (JsonProcessingException e) {
-            log.debug("Lectivo -> {}", e.getMessage());
+            log.debug("Lectivo jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logLegajo(LegajoDto legajo) {
         try {
-            log.debug("Legajo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(legajo));
+            log.debug("Legajo -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(legajo));
         } catch (JsonProcessingException e) {
-            log.debug("Legajo -> {}", e.getMessage());
+            log.debug("Legajo jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logCarrera(CarreraDto carrera) {
         try {
-            log.debug("Carrera -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(carrera));
+            log.debug("Carrera -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(carrera));
         } catch (JsonProcessingException e) {
-            log.debug("Carrera -> {}", e.getMessage());
+            log.debug("Carrera jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logPrintCuota(boolean printCuota, ChequeraCuotaDto cuota) {
         try {
-            log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuota));
+            log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(cuota));
         } catch (JsonProcessingException e) {
-            log.debug("print -> {} - cuota -> {}", printCuota, e.getMessage());
+            log.debug("print -> {} - cuota jsonify error -> {}", printCuota, e.getMessage());
         }
     }
 
     private void logChequeraSerieReemplazo(ChequeraSerieReemplazoDto serie) {
         try {
-            log.debug("ChequeraSerieReemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(serie));
+            log.debug("ChequeraSerieReemplazo -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(serie));
         } catch (JsonProcessingException e) {
-            log.debug("ChequeraSerieReemplazo -> {}", e.getMessage());
+            log.debug("ChequeraSerieReemplazo jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logChequeraCuotasReemplazo(List<ChequeraCuotaReemplazoDto> cuotas) {
         try {
-            log.debug("Cuotas Reemplazo -> {}", JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuotas));
+            log.debug("Cuotas Reemplazo -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(cuotas));
         } catch (JsonProcessingException e) {
-            log.debug("Cuotas Reemplazo -> {}", e.getMessage());
+            log.debug("Cuotas Reemplazo jsonify error -> {}", e.getMessage());
         }
     }
 
     private void logPrintCuotaReemplazo(boolean printCuota, ChequeraCuotaReemplazoDto cuota) {
         try {
-            log.debug("print -> {} - cuota -> {}", printCuota, JsonMapper.builder().findAndAddModules().build().writerWithDefaultPrettyPrinter().writeValueAsString(cuota));
+            log.debug("print -> {} - cuota reemplazo -> {}", printCuota, JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(cuota));
         } catch (JsonProcessingException e) {
-            log.debug("print -> {} - cuota -> {}", printCuota, e.getMessage());
+            log.debug("print -> {} - cuota reemplazo jsonify error -> {}", printCuota, e.getMessage());
         }
     }
 

@@ -1,6 +1,7 @@
 app:
   port: 0
   logging: debug
+  testing: false
   mail:
     username: uid
     password: pwd

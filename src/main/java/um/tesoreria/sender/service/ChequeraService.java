@@ -1,14 +1,20 @@
 package um.tesoreria.sender.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
+import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
+import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraSerieDto;
+import um.tesoreria.sender.kotlin.dto.tesoreria.core.DomicilioDto;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +25,9 @@ import java.util.Objects;
 @Service
 @Slf4j
 public class ChequeraService {
+
+    @Value("${app.testing}")
+    private Boolean testing;
 
     private final FormulariosToPdfService formulariosToPdfService;
     private final JavaMailSender javaMailSender;
@@ -34,13 +43,22 @@ public class ChequeraService {
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
                                Boolean copiaInformes, Boolean codigoBarras, Boolean incluyeMatricula) throws MessagingException {
+        log.debug("Sending chequera for facultadId: {}, tipoChequeraId: {}, chequeraSerieId: {}, alternativaId: {}, copiaInformes: {}, codigoBarras: {}, incluyeMatricula: {}", facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula);
 
         var chequeraSerie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
+        logChequeraSerie(chequeraSerie);
+
         var domicilio = chequeraSerie.getDomicilio();
+        logDomicilio(domicilio);
 
         var preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
+        logPreferences(preferences);
 
         String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
+        log.debug("ChequeraService.sendChequera - filenameChequera -> {}", filenameChequera);
+        if (filenameChequera.isEmpty()) {
+            return "ERROR: Sin CUOTAS para ENVIAR";
+        }
         // Obtener el nombre del alumno
         String nombreAlumno = Objects.requireNonNull(chequeraSerie.getPersona()).getApellidoNombre();
 
@@ -107,20 +125,28 @@ public class ChequeraService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         List<String> addresses = new ArrayList<>();
 
-        assert domicilio != null;
-        if (!domicilio.getEmailPersonal().isEmpty()) {
-            addresses.add(domicilio.getEmailPersonal());
-            log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+        if (!testing) {
+            assert domicilio != null;
+            if (!domicilio.getEmailPersonal().isEmpty()) {
+                addresses.add(domicilio.getEmailPersonal());
+                log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+            }
         }
 
-        if (copiaInformes) {
-            addresses.add("informes@etec.um.edu.ar");
-            log.debug("adding informes email -> {}", "informes@etec.um.edu.ar");
-        } else {
-            if (!domicilio.getEmailInstitucional().isEmpty()) {
-                addresses.add(domicilio.getEmailInstitucional());
-                log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
+        if (!testing) {
+            if (copiaInformes) {
+                addresses.add("informes@etec.um.edu.ar");
+                log.debug("adding informes email -> {}", "informes@etec.um.edu.ar");
+            } else {
+                if (!domicilio.getEmailInstitucional().isEmpty()) {
+                    addresses.add(domicilio.getEmailInstitucional());
+                    log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
+                }
             }
+        }
+
+        if (testing) {
+            addresses.add("daniel.quinterospinto@gmail.com");
         }
 
         helper.setTo(addresses.toArray(new String[0]));
@@ -155,6 +181,45 @@ public class ChequeraService {
         javaMailSender.send(message);
 
         return "Envío de Chequera Ok!!!";
+    }
+
+    private void logPreferences(List<UMPreferenceMPDto> preferences) {
+        try {
+            log.debug("Preferences -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(preferences));
+        } catch (JsonProcessingException e) {
+            log.debug("Preferences jsonify error -> {}", e.getMessage());
+        }
+    }
+
+    private void logDomicilio(DomicilioDto domicilio) {
+        try {
+            log.debug("Domicilio -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(domicilio));
+        } catch (JsonProcessingException e) {
+            log.debug("Domicilio jsonify error -> {}", e.getMessage());
+        }
+    }
+
+    private void logChequeraSerie(ChequeraSerieDto chequeraSerie) {
+        try {
+            log.debug("ChequeraSerie -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(chequeraSerie));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraSerie jsonify error -> {}", e.getMessage());
+        }
     }
 
 }
