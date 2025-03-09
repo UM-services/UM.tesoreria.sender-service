@@ -57,6 +57,7 @@ public class ChequeraService {
         String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
         log.debug("ChequeraService.sendChequera - filenameChequera -> {}", filenameChequera);
         if (filenameChequera.isEmpty()) {
+            log.debug("Sin CUOTAS para ENVIAR");
             return "ERROR: Sin CUOTAS para ENVIAR";
         }
         // Obtener el nombre del alumno
@@ -146,6 +147,7 @@ public class ChequeraService {
         }
 
         if (testing) {
+            log.debug("Testing -> daniel.quinterospinto@gmail.com");
             addresses.add("daniel.quinterospinto@gmail.com");
         }
 
@@ -178,8 +180,16 @@ public class ChequeraService {
         helper.addInline("medioPago2", fileMedios2);
 
         // Enviar el mensaje
+        log.debug("Enviando el mensaje");
         javaMailSender.send(message);
+        log.debug("Mensaje enviado");
 
+        // Marcar como enviado
+        log.debug("Marcando como enviado");
+        chequeraSerie = chequeraSerieClient.markSent(facultadId, tipoChequeraId, chequeraSerieId);
+        logChequeraSerie(chequeraSerie);
+
+        log.debug("Envío de Chequera Ok!!!");
         return "Envío de Chequera Ok!!!";
     }
 

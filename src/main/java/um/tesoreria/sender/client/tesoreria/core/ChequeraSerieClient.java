@@ -20,15 +20,18 @@ public interface ChequeraSerieClient {
 
     @GetMapping("/facultad/{personaId}/{documentoId}/{facultadId}")
     List<ChequeraSerieDto> findAllByFacultad(@PathVariable BigDecimal personaId,
-                                             @PathVariable Integer documentoId, @PathVariable Integer facultadId);
+                                             @PathVariable Integer documentoId,
+                                             @PathVariable Integer facultadId);
 
     @GetMapping("/facultadextended/{personaId}/{documentoId}/{facultadId}")
     List<ChequeraSerieDto> findAllByFacultadExtended(@PathVariable BigDecimal personaId,
-                                                     @PathVariable Integer documentoId, @PathVariable Integer facultadId);
+                                                     @PathVariable Integer documentoId,
+                                                     @PathVariable Integer facultadId);
 
     @GetMapping("/personaLectivo/{personaId}/{documentoId}/{lectivoId}")
     List<ChequeraSerieDto> findAllByPersonaLectivo(@PathVariable BigDecimal personaId,
-                                                   @PathVariable Integer documentoId, @PathVariable Integer lectivoId);
+                                                   @PathVariable Integer documentoId,
+                                                   @PathVariable Integer lectivoId);
 
     @GetMapping("/bynumber/{facultadId}/{chequeraserieId}")
     List<ChequeraSerieDto> findAllByNumber(@PathVariable Integer facultadId,
@@ -36,7 +39,8 @@ public interface ChequeraSerieClient {
 
     @PostMapping("/documentos/{facultadId}/{lectivoId}/{geograficaId}")
     List<ChequeraSerieDto> findAllByDocumentos(@PathVariable Integer facultadId,
-                                               @PathVariable Integer lectivoId, @PathVariable Integer geograficaId,
+                                               @PathVariable Integer lectivoId,
+                                               @PathVariable Integer geograficaId,
                                                @RequestBody List<BigDecimal> personaIds);
 
     @GetMapping("/{chequeraId}")
@@ -47,15 +51,24 @@ public interface ChequeraSerieClient {
 
     @GetMapping("/unique/{facultadId}/{tipochequeraId}/{chequeraserieId}")
     ChequeraSerieDto findByUnique(@PathVariable Integer facultadId,
-                                  @PathVariable Integer tipochequeraId, @PathVariable Long chequeraserieId);
+                                  @PathVariable Integer tipochequeraId,
+                                  @PathVariable Long chequeraserieId);
 
     @GetMapping("/uniqueextended/{facultadId}/{tipochequeraId}/{chequeraserieId}")
     ChequeraSerieDto findByUniqueExtended(@PathVariable Integer facultadId,
-                                          @PathVariable Integer tipochequeraId, @PathVariable Long chequeraserieId);
+                                          @PathVariable Integer tipochequeraId,
+                                          @PathVariable Long chequeraserieId);
 
     @GetMapping("/setpaypertic/{facultadId}/{tipochequeraId}/{chequeraserieId}/{flag}")
     ChequeraSerieDto setPayPerTic(@PathVariable Integer facultadId,
-                                  @PathVariable Integer tipochequeraId, @PathVariable Long chequeraserieId, @PathVariable Byte flag);
+                                  @PathVariable Integer tipochequeraId,
+                                  @PathVariable Long chequeraserieId,
+                                  @PathVariable Byte flag);
+
+    @PostMapping("/mark/sent/{facultadId}/{tipoChequeraId}/{chequeraSerieId}")
+    ChequeraSerieDto markSent(@PathVariable Integer facultadId,
+                              @PathVariable Integer tipoChequeraId,
+                              @PathVariable Long chequeraSerieId);
 
     @PutMapping("/{chequeraId}")
     ChequeraSerieDto update(@RequestBody ChequeraSerieDto chequeraserie,
