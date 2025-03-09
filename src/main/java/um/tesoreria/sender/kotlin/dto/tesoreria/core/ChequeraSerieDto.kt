@@ -31,6 +31,8 @@ data class ChequeraSerieDto(
     var version: Long? = null,
     var cuotasDeuda: Int = 0,
     var importeDeuda: BigDecimal = BigDecimal.ZERO,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "UTC")
+    var ultimoEnvio: OffsetDateTime? = null,
     var facultad: FacultadDto? = null,
     var tipoChequera: TipoChequeraDto? = null,
     var persona: PersonaDto? = null,
