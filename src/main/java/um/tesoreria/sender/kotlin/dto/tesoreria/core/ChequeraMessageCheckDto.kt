@@ -3,11 +3,13 @@ package um.tesoreria.sender.kotlin.dto.tesoreria.core
 import java.util.*
 
 data class ChequeraMessageCheckDto (
+
     var chequeraMessageCheckId: UUID? = null,
     var facultadId: Integer? = null,
     var tipoChequeraId: Integer? = null,
     var chequeraSerieId: Long? = null,
     var payload: String = ""
+
 ) {
     class Builder {
         private var chequeraMessageCheckId: UUID? = null
