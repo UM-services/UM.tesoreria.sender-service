@@ -17,6 +17,7 @@ import com.lowagie.text.pdf.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -42,6 +43,9 @@ import java.util.List;
 @Service
 @Slf4j
 public class ReciboService {
+
+    @Value("${app.testing}")
+    private Boolean testing;
 
     private final Environment environment;
     private final FacturacionElectronicaClient facturacionElectronicaClient;
@@ -795,17 +799,25 @@ public class ReciboService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         List<String> addresses = new ArrayList<String>();
 
-        if (!domicilio.getEmailPersonal().isEmpty()) {
-            addresses.add(domicilio.getEmailPersonal());
-        }
-        if (!domicilio.getEmailInstitucional().isEmpty()) {
-            addresses.add(domicilio.getEmailInstitucional());
-        }
-        if (!chequeraFacturacionElectronica.getEmail().isEmpty()) {
-            addresses.add(chequeraFacturacionElectronica.getEmail());
+        if (!testing) {
+            if (!domicilio.getEmailPersonal().isEmpty()) {
+                addresses.add(domicilio.getEmailPersonal());
+                log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+            }
+            if (!domicilio.getEmailInstitucional().isEmpty()) {
+                addresses.add(domicilio.getEmailInstitucional());
+                log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
+            }
+            if (!chequeraFacturacionElectronica.getEmail().isEmpty()) {
+                addresses.add(chequeraFacturacionElectronica.getEmail());
+                log.debug("adding chequera email -> {}", chequeraFacturacionElectronica.getEmail());
+            }
         }
 
-//		addresses.add("daniel.quinterospinto@gmail.com");
+        if (testing) {
+            log.debug("Testing -> daniel.quinterospinto@gmail.com");
+            addresses.add("daniel.quinterospinto@gmail.com");
+        }
 
         try {
             helper.setTo(addresses.toArray(new String[0]));

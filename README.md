@@ -18,19 +18,21 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 - Procesamiento asíncrono de mensajes mediante RabbitMQ
 - Gestión transaccional de mensajes
 - Manejo optimizado de recursos (CPU/RAM)
-- Soporte para múltiples colas (recibo_queue, chequera_queue, tester_queue)
+- Sistema de deduplicación de mensajes
+- Soporte para múltiples colas (recibo_queue, chequera_queue)
 - Generación automática de documentación y wiki
 
 ## Tecnologías
 
 - Java 21
-- Spring Boot 3.4.3
-- Spring Cloud
+- Spring Boot 3.4.4
+- Spring Cloud 2024.0.1
 - RabbitMQ
 - Spring Mail
 - Spring Cloud Netflix Eureka Client
-- OpenAPI (Springdoc)
-- Kotlin 2.1.10
+- OpenAPI (Springdoc) 2.8.6
+- Kotlin 2.1.20
+- Guava 33.4.6-jre
 
 ## Configuración
 
@@ -78,11 +80,17 @@ spring:
       write timeout: 15000
 ```
 
+### Testing Mode
+
+```yaml
+app:
+  testing: false  # Set to true for testing mode
+```
+
 ## Colas RabbitMQ
 
 - `recibo_queue`: Cola para procesamiento de recibos electrónicos
 - `chequera_queue`: Cola para procesamiento de chequeras
-- `tester_queue`: Cola para pruebas del sistema
 
 ## Documentación
 
@@ -95,3 +103,7 @@ spring:
 ## Estado del Proyecto
 
 Para ver el estado actual del proyecto, issues y milestones, visita la [página de documentación](https://um-services.github.io/UM.tesoreria.sender-service/project-documentation.html).
+
+## Changelog
+
+Para ver los cambios detallados en cada versión, consulta el [CHANGELOG.md](CHANGELOG.md).
