@@ -746,7 +746,7 @@ public class ReciboService {
 
         ChequeraSerieDto chequeraSerie = chequeraSerieClient.findByUnique(Objects.requireNonNull(facturacionElectronica.getChequeraPago()).getFacultadId(), facturacionElectronica.getChequeraPago().getTipoChequeraId(), facturacionElectronica.getChequeraPago().getChequeraSerieId());
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
-        String chequeraString = MessageFormat.format("Chequera {0}/{1}/{2}/{3}/{4}/{5}", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
+        String cuotaString = MessageFormat.format("Recibo de Cuota {0}/{1}/{2}/{3}/{4}/{5}", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
         ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica = null;
         try {
             chequeraFacturacionElectronica = chequeraFacturacionElectronicaClient.findByChequeraId(chequeraSerie.getChequeraId());
@@ -763,7 +763,7 @@ public class ReciboService {
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
             logFacturacionElectronica(facturacionElectronica);
 
-            return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
+            return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", cuotaString);
         }
 
         DomicilioDto domicilio = chequeraSerie.getDomicilio();
@@ -772,14 +772,14 @@ public class ReciboService {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
             logFacturacionElectronica(facturacionElectronica);
-            return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", chequeraString);
+            return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", cuotaString);
         }
         if (domicilio.getEmailPersonal().isEmpty() && domicilio.getEmailInstitucional().isEmpty()) {
             log.debug("Sin e-mails para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
             logFacturacionElectronica(facturacionElectronica);
-            return MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", chequeraString);
+            return MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", cuotaString);
         }
 
         String data = "Estimad@ Estudiante:" + (char) 10;
@@ -833,7 +833,7 @@ public class ReciboService {
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
             facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
             logFacturacionElectronica(facturacionElectronica);
-            return MessageFormat.format("ERROR: {0} No pudo ENVIARSE", chequeraString);
+            return MessageFormat.format("ERROR: {0} No pudo ENVIARSE", cuotaString);
         }
 
         javaMailSender.send(message);
@@ -841,7 +841,7 @@ public class ReciboService {
         facturacionElectronica.setEnviada((byte) 1);
         facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
         logFacturacionElectronica(facturacionElectronica);
-        return MessageFormat.format("{0} Envío de Correo Ok!!!", chequeraString);
+        return MessageFormat.format("{0} Envío de Correo Ok!!!", cuotaString);
     }
 
     private void logFacturacionElectronica(FacturacionElectronicaDto facturacionElectronica) {
