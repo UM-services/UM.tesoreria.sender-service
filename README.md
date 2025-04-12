@@ -1,5 +1,12 @@
 # UM.tesoreria.sender-service
 
+[![Java](https://img.shields.io/badge/Java-21-red.svg)](https://www.java.com/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2024.0.1-blue.svg)](https://spring.io/projects/spring-cloud)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.20-purple.svg)](https://kotlinlang.org/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.6-lightblue.svg)](https://www.openapis.org/)
+[![Guava](https://img.shields.io/badge/Guava-33.4.7-jre-orange.svg)](https://github.com/google/guava)
+
 ## Autor ✒️
 
 * **Daniel Quinteros** - *Desarrollo y Documentación*
@@ -32,7 +39,7 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 - Spring Cloud Netflix Eureka Client
 - OpenAPI (Springdoc) 2.8.6
 - Kotlin 2.1.20
-- Guava 33.4.6-jre
+- Guava 33.4.7-jre
 
 ## Configuración
 
