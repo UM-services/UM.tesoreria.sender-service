@@ -52,9 +52,4 @@ public class ReciboController {
         return new ResponseEntity<>(service.sendNext(), HttpStatus.OK);
     }
 
-    @Scheduled(cron = "0 0 * * * *")
-    public void sendPendientes() throws MessagingException {
-        service.sendPendientes();
-    }
-
 }
