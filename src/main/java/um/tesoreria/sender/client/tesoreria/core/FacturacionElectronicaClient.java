@@ -2,6 +2,7 @@ package um.tesoreria.sender.client.tesoreria.core;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.FacturacionElectronicaDto;
 
@@ -32,5 +33,8 @@ public interface FacturacionElectronicaClient {
     @PutMapping("/{facturacionElectronicaId}")
     FacturacionElectronicaDto update(@RequestBody FacturacionElectronicaDto facturacionElectronicaDto,
                                      @PathVariable Long facturacionElectronicaId);
+
+    @GetMapping("/pendientes")
+    List<FacturacionElectronicaDto> find100Pendientes();
 
 }

@@ -25,7 +25,7 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 - Procesamiento asíncrono de mensajes mediante RabbitMQ
 - Gestión transaccional de mensajes
 - Manejo optimizado de recursos (CPU/RAM)
-- Sistema de deduplicación de mensajes
+- Sistema de deduplicación de mensajes con UUID tracking
 - Soporte para múltiples colas (recibo_queue, chequera_queue)
 - Generación automática de documentación y wiki
 
