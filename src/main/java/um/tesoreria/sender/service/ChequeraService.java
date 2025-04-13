@@ -10,9 +10,11 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import um.tesoreria.sender.client.tesoreria.core.ChequeraMessageCheckClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
 import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
+import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraMessageCheckDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraSerieDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.DomicilioDto;
 
@@ -21,11 +23,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
 public class ChequeraService {
 
+    private final ChequeraMessageCheckClient chequeraMessageCheckClient;
     @Value("${app.testing}")
     private Boolean testing;
 
@@ -34,11 +38,12 @@ public class ChequeraService {
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraClient chequeraClient;
 
-    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraClient chequeraClient) {
+    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraClient chequeraClient, ChequeraMessageCheckClient chequeraMessageCheckClient) {
         this.formulariosToPdfService = formulariosToPdfService;
         this.javaMailSender = javaMailSender;
         this.chequeraSerieClient = chequeraSerieClient;
         this.chequeraClient = chequeraClient;
+        this.chequeraMessageCheckClient = chequeraMessageCheckClient;
     }
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
@@ -188,9 +193,29 @@ public class ChequeraService {
         log.debug("Marcando como enviado");
         chequeraSerie = chequeraSerieClient.markSent(facultadId, tipoChequeraId, chequeraSerieId);
         logChequeraSerie(chequeraSerie);
-
+        var chequeraMessageCheck = new ChequeraMessageCheckDto.Builder()
+                .chequeraMessageCheckId(UUID.randomUUID())
+                .facultadId(chequeraSerie.getFacultadId())
+                .tipoChequeraId(chequeraSerie.getTipoChequeraId())
+                .chequeraSerieId(chequeraSerie.getChequeraSerieId())
+                .build();
+        chequeraMessageCheck = chequeraMessageCheckClient.add(chequeraMessageCheck);
+        logChequeraMessageCheck(chequeraMessageCheck);
         log.debug("Envío de Chequera Ok!!!");
         return "Envío de Chequera Ok!!!";
+    }
+
+    private void logChequeraMessageCheck(ChequeraMessageCheckDto chequeraMessageCheck) {
+        try {
+            log.debug("ChequeraMessageCheck -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(chequeraMessageCheck));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraMessageCheck jsonify error -> {}", e.getMessage());
+        }
     }
 
     private void logPreferences(List<UMPreferenceMPDto> preferences) {

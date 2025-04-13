@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Implementación de sistema de deduplicación de mensajes
+- Implementación de sistema de deduplicación de mensajes con UUID tracking
 - Optimización de consumo de recursos (CPU/RAM)
 - Configuración de prefetch count y concurrencia para RabbitMQ
 - Manejo transaccional de mensajes
@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Eliminado RabbitMQConfig.java
 - Eliminado ChequeraConsumer.java
 - Eliminado ReciboConsumer.java
+- Eliminado ChequeraMessageDto.kt
+- Eliminado ReciboMessageDto.kt
 - Eliminada configuración redundante de RabbitMQ
 - Removed tester queue and related functionality
 - Removed redundant logging statements
