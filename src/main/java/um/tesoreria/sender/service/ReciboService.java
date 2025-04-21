@@ -42,6 +42,8 @@ import java.util.List;
 public class ReciboService {
 
     private final ReciboMessageCheckClient reciboMessageCheckClient;
+    private final ChequeraPagoClient chequeraPagoClient;
+    private final ComprobanteClient comprobanteClient;
     @Value("${app.testing}")
     private Boolean testing;
 
@@ -54,7 +56,7 @@ public class ReciboService {
 
     public ReciboService(Environment environment, FacturacionElectronicaClient facturacionElectronicaClient, JavaMailSender javaMailSender,
                          ChequeraCuotaClient chequeraCuotaClient, ChequeraSerieClient chequeraSerieClient,
-                         ChequeraFacturacionElectronicaClient chequeraFacturacionElectronicaClient, ReciboMessageCheckClient reciboMessageCheckClient) {
+                         ChequeraFacturacionElectronicaClient chequeraFacturacionElectronicaClient, ReciboMessageCheckClient reciboMessageCheckClient, ChequeraPagoClient chequeraPagoClient, ComprobanteClient comprobanteClient) {
         this.environment = environment;
         this.facturacionElectronicaClient = facturacionElectronicaClient;
         this.javaMailSender = javaMailSender;
@@ -62,6 +64,8 @@ public class ReciboService {
         this.chequeraSerieClient = chequeraSerieClient;
         this.chequeraFacturacionElectronicaClient = chequeraFacturacionElectronicaClient;
         this.reciboMessageCheckClient = reciboMessageCheckClient;
+        this.chequeraPagoClient = chequeraPagoClient;
+        this.comprobanteClient = comprobanteClient;
     }
 
     private void createQRImage(File qrFile, String qrCodeText, int size, String fileType)
@@ -94,20 +98,26 @@ public class ReciboService {
     }
 
     public String generatePdf(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica, ChequeraSerieDto chequeraSerie) {
-
+        log.debug("Processing ReciboService.generatePdf");
         Image imageQr = null;
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
             logFacturacionElectronica(facturacionElectronica);
         }
         ComprobanteDto comprobante = facturacionElectronica.getComprobante();
+        if (comprobante == null) {
+            comprobante = comprobanteClient.findByComprobanteId(facturacionElectronica.getComprobanteId());
+        }
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
+        if (chequeraPago == null) {
+            chequeraPago = chequeraPagoClient.findByChequeraPagoId(facturacionElectronica.getChequeraPagoId());
+        }
         assert chequeraPago != null;
         ChequeraCuotaDto chequeraCuota = chequeraCuotaClient.findByUnique(chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getProductoId(), chequeraPago.getAlternativaId(), chequeraPago.getCuotaId());
         if (chequeraSerie == null) {
             chequeraSerie = chequeraSerieClient.findByUnique(chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId());
         }
-        ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica = null;
+        ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica;
         try {
             chequeraFacturacionElectronica = chequeraFacturacionElectronicaClient.findByChequeraId(chequeraSerie.getChequeraId());
         } catch (Exception e) {
@@ -742,13 +752,19 @@ public class ReciboService {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
         }
         logFacturacionElectronica(facturacionElectronica);
+        ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
+        if (chequeraPago == null) {
+            chequeraPago = chequeraPagoClient.findByChequeraPagoId(facturacionElectronica.getChequeraPagoId());
+        }
+        logChequeraPago(chequeraPago);
 
         ChequeraSerieDto chequeraSerie = chequeraSerieClient.findByUnique(Objects.requireNonNull(facturacionElectronica.getChequeraPago()).getFacultadId(), facturacionElectronica.getChequeraPago().getTipoChequeraId(), facturacionElectronica.getChequeraPago().getChequeraSerieId());
-        ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
+        logChequeraSerie(chequeraSerie);
         String cuotaString = MessageFormat.format("Recibo de Cuota {0}/{1}/{2}/{3}/{4}/{5}", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
-        ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica = null;
+        ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica;
         try {
             chequeraFacturacionElectronica = chequeraFacturacionElectronicaClient.findByChequeraId(chequeraSerie.getChequeraId());
+            logChequeraFacturacionElectronica(chequeraFacturacionElectronica);
         } catch (Exception e) {
             chequeraFacturacionElectronica = new ChequeraFacturacionElectronicaDto();
         }
@@ -839,6 +855,8 @@ public class ReciboService {
         log.debug("Mail enviado");
         facturacionElectronica.setEnviada((byte) 1);
         facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+        // Agregado por perder la referencia a chequeraPago en el update
+        facturacionElectronica.setChequeraPago(chequeraPago);
         logFacturacionElectronica(facturacionElectronica);
         var reciboMessageCheck = new ReciboMessageCheckDto.Builder()
                 .reciboMessageCheckId(UUID.randomUUID())
@@ -854,6 +872,48 @@ public class ReciboService {
         reciboMessageCheck = reciboMessageCheckClient.add(reciboMessageCheck);
         logReciboMessageCheck(reciboMessageCheck);
         return MessageFormat.format("{0} Envío de Correo Ok!!!", cuotaString);
+    }
+
+    private void logChequeraFacturacionElectronica(ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica) {
+        log.debug("Processing ReciboService.logChequeraFacturacionElectronica()");
+        try {
+            log.debug("ChequeraFacturacionElectronica -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(chequeraFacturacionElectronica));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraFacturacionElectronica jsonify error -> {}", e.getMessage());
+        }
+    }
+
+    private void logChequeraPago(ChequeraPagoDto chequeraPago) {
+        log.debug("Processing ReciboService.logChequeraPago()");
+        try {
+            log.debug("ChequeraPago -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(chequeraPago));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraPago jsonify error -> {}", e.getMessage());
+        }
+    }
+
+    private void logChequeraSerie(ChequeraSerieDto chequeraSerie) {
+        log.debug("Processing ReciboService.logChequeraSerie()");
+        try {
+            log.debug("ChequeraSerie -> {}", JsonMapper
+                    .builder()
+                    .findAndAddModules()
+                    .build()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(chequeraSerie));
+        } catch (JsonProcessingException e) {
+            log.debug("ChequeraSerie jsonify error -> {}", e.getMessage());
+        }
     }
 
     private void logReciboMessageCheck(ReciboMessageCheckDto reciboMessageCheck) {
