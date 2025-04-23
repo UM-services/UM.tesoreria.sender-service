@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UUID-based message tracking in DTOs
 - Manual acknowledgment mode for RabbitMQ consumers
 - Enhanced logging for message processing
+- New `ToolClient` for email validation
+- New `Tool` utility class for string to list conversion
+- Email validation before sending receipts
 
 ### Changed
 - Actualizado Spring Boot a versión 3.4.4
@@ -28,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimizado el consumo de memoria en el procesamiento de mensajes
 - Improved error handling in message consumers
 - Enhanced email address handling with testing mode
+- Modified email sending logic to validate addresses before sending
+- Added validation for personal, institutional and chequera emails
 
 ### Removed
 - Eliminado RabbitMQConfig.java
