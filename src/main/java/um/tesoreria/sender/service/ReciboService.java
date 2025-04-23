@@ -24,7 +24,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import um.tesoreria.sender.client.tesoreria.core.*;
+import um.tesoreria.sender.client.tesoreria.core.facade.ToolClient;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
+import um.tesoreria.sender.service.util.Tool;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -44,6 +46,7 @@ public class ReciboService {
     private final ReciboMessageCheckClient reciboMessageCheckClient;
     private final ChequeraPagoClient chequeraPagoClient;
     private final ComprobanteClient comprobanteClient;
+    private final ToolClient toolClient;
     @Value("${app.testing}")
     private Boolean testing;
 
@@ -56,7 +59,7 @@ public class ReciboService {
 
     public ReciboService(Environment environment, FacturacionElectronicaClient facturacionElectronicaClient, JavaMailSender javaMailSender,
                          ChequeraCuotaClient chequeraCuotaClient, ChequeraSerieClient chequeraSerieClient,
-                         ChequeraFacturacionElectronicaClient chequeraFacturacionElectronicaClient, ReciboMessageCheckClient reciboMessageCheckClient, ChequeraPagoClient chequeraPagoClient, ComprobanteClient comprobanteClient) {
+                         ChequeraFacturacionElectronicaClient chequeraFacturacionElectronicaClient, ReciboMessageCheckClient reciboMessageCheckClient, ChequeraPagoClient chequeraPagoClient, ComprobanteClient comprobanteClient, ToolClient toolClient) {
         this.environment = environment;
         this.facturacionElectronicaClient = facturacionElectronicaClient;
         this.javaMailSender = javaMailSender;
@@ -66,6 +69,7 @@ public class ReciboService {
         this.reciboMessageCheckClient = reciboMessageCheckClient;
         this.chequeraPagoClient = chequeraPagoClient;
         this.comprobanteClient = comprobanteClient;
+        this.toolClient = toolClient;
     }
 
     private void createQRImage(File qrFile, String qrCodeText, int size, String fileType)
@@ -816,22 +820,33 @@ public class ReciboService {
 
         if (!testing) {
             if (!domicilio.getEmailPersonal().isEmpty()) {
-                addresses.add(domicilio.getEmailPersonal());
-                log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+                if (toolClient.mailValidate(Tool.convertStringToList(domicilio.getEmailPersonal()))) {
+                    addresses.add(domicilio.getEmailPersonal());
+                    log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+                }
             }
             if (!domicilio.getEmailInstitucional().isEmpty()) {
-                addresses.add(domicilio.getEmailInstitucional());
-                log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
+                if (toolClient.mailValidate(Tool.convertStringToList(domicilio.getEmailInstitucional()))) {
+                    addresses.add(domicilio.getEmailInstitucional());
+                    log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
+                }
             }
             if (!chequeraFacturacionElectronica.getEmail().isEmpty()) {
-                addresses.add(chequeraFacturacionElectronica.getEmail());
-                log.debug("adding chequera email -> {}", chequeraFacturacionElectronica.getEmail());
+                if (toolClient.mailValidate(Tool.convertStringToList(chequeraFacturacionElectronica.getEmail()))) {
+                    addresses.add(chequeraFacturacionElectronica.getEmail());
+                    log.debug("adding chequera email -> {}", chequeraFacturacionElectronica.getEmail());
+                }
             }
         }
 
         if (testing) {
             log.debug("Testing -> daniel.quinterospinto@gmail.com");
             addresses.add("daniel.quinterospinto@gmail.com");
+        }
+
+        if (addresses.isEmpty()) {
+            log.debug("Sin e-mails para ENVIAR");
+            return "ERROR: Sin e-mails para ENVIAR";
         }
 
         try {

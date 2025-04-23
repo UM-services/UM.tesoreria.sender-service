@@ -28,6 +28,8 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 - Sistema de deduplicación de mensajes con UUID tracking
 - Soporte para múltiples colas (recibo_queue, chequera_queue)
 - Generación automática de documentación y wiki
+- Validación de direcciones de email antes del envío
+- Manejo de casos donde no hay emails válidos para enviar
 
 ## Tecnologías
 
