@@ -15,6 +15,7 @@ import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
 import jakarta.mail.MessagingException;
+import jakarta.mail.SendFailedException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -858,6 +859,8 @@ public class ReciboService {
             FileSystemResource fileRecibo = new FileSystemResource(filenameRecibo);
             helper.addAttachment(filenameRecibo, fileRecibo);
 
+            javaMailSender.send(message);
+
         } catch (MessagingException e) {
             log.debug("No pudo ENVIARSE");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
@@ -866,7 +869,6 @@ public class ReciboService {
             return MessageFormat.format("ERROR: {0} No pudo ENVIARSE", cuotaString);
         }
 
-        javaMailSender.send(message);
         log.debug("Mail enviado");
         facturacionElectronica.setEnviada((byte) 1);
         facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
