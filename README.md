@@ -1,11 +1,12 @@
 # UM.tesoreria.sender-service
 
 [![Java](https://img.shields.io/badge/Java-21-red.svg)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2024.0.1-blue.svg)](https://spring.io/projects/spring-cloud)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.20-purple.svg)](https://kotlinlang.org/)
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.6-lightblue.svg)](https://www.openapis.org/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.8-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.4.7-jre-orange.svg)](https://github.com/google/guava)
+[![OpenPDF](https://img.shields.io/badge/OpenPDF-2.0.4-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
 
 ## Autor ✒️
 
@@ -34,85 +35,18 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 ## Tecnologías
 
 - Java 21
-- Spring Boot 3.4.4
+- Spring Boot 3.4.5
 - Spring Cloud 2024.0.1
 - RabbitMQ
 - Spring Mail
 - Spring Cloud Netflix Eureka Client
-- OpenAPI (Springdoc) 2.8.6
+- OpenAPI (Springdoc) 2.8.8
 - Kotlin 2.1.20
 - Guava 33.4.7-jre
+- OpenPDF 2.0.4
 
 ## Configuración
 
 ### RabbitMQ
 
-```yaml
-spring:
-  rabbitmq:
-    host: rabbitmq
-    port: 5672
-    username: admin
-    password: admin
-    listener:
-      simple:
-        prefetch: 5
-        concurrency: 1
-        max-concurrency: 2
-        batch-size: 5
-        missing-queues-fatal: false
-        default-requeue-rejected: false
-    cache:
-      channel:
-        size: 10
-      connection:
-        mode: channel
 ```
-
-### Mail
-
-```yaml
-spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${app.mail.username}
-    password: ${app.mail.password}
-    properties:
-      mail.smtp:
-        starttls:
-          enable: true
-          required: true
-      auth: true
-      connection timeout: 15000
-      timeout: 15000
-      write timeout: 15000
-```
-
-### Testing Mode
-
-```yaml
-app:
-  testing: false  # Set to true for testing mode
-```
-
-## Colas RabbitMQ
-
-- `recibo_queue`: Cola para procesamiento de recibos electrónicos
-- `chequera_queue`: Cola para procesamiento de chequeras
-
-## Documentación
-
-- [Documentación del Proyecto](https://um-services.github.io/UM.tesoreria.sender-service)
-- [Wiki](https://github.com/UM-services/UM.tesoreria.sender-service/wiki)
-- [Spring Mail](https://docs.spring.io/spring-framework/reference/integration/email.html)
-- [RabbitMQ](https://www.rabbitmq.com/documentation.html)
-- [OpenAPI UI](http://localhost:8080/swagger-ui.html)
-
-## Estado del Proyecto
-
-Para ver el estado actual del proyecto, issues y milestones, visita la [página de documentación](https://um-services.github.io/UM.tesoreria.sender-service/project-documentation.html).
-
-## Changelog
-
-Para ver los cambios detallados en cada versión, consulta el [CHANGELOG.md](CHANGELOG.md).
