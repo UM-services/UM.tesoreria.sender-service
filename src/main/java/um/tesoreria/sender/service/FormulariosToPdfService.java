@@ -177,7 +177,7 @@ public class FormulariosToPdfService {
             if (facultadId == 15)
                 image = Image.getInstance("marca_etec.png");
             else
-                image = Image.getInstance("marca_um.png");
+                image = Image.getInstance("marca_um_65.png");
             image.scalePercent(80);
             PdfPCell cell = new PdfPCell(image);
             cell.setBorder(Rectangle.NO_BORDER);
@@ -200,7 +200,11 @@ public class FormulariosToPdfService {
             paragraph = new Paragraph(lectivo.getNombre(), new Font(Font.HELVETICA, 12));
             paragraph.setAlignment(Element.ALIGN_CENTER);
             document.add(paragraph);
-            paragraph = new Paragraph("RapiPago", new Font(Font.HELVETICA, 12, Font.BOLD));
+            var tipoImpresion = "MercadoPago";
+            if (codigoBarras) {
+                tipoImpresion = "RapiPago";
+            }
+            paragraph = new Paragraph(tipoImpresion, new Font(Font.HELVETICA, 12, Font.BOLD));
             paragraph.setAlignment(Element.ALIGN_RIGHT);
             document.add(paragraph);
             paragraph = new Paragraph(
@@ -457,7 +461,7 @@ public class FormulariosToPdfService {
             if (facultadId == 15)
                 image = Image.getInstance("marca_etec.png");
             else
-                image = Image.getInstance("marca_um.png");
+                image = Image.getInstance("marca_um_65.png");
             image.scalePercent(80);
             PdfPCell cell = new PdfPCell(image);
             cell.setBorder(Rectangle.NO_BORDER);
@@ -682,7 +686,7 @@ public class FormulariosToPdfService {
             if (facultadId == 15)
                 image = Image.getInstance("marca_etec.png");
             else
-                image = Image.getInstance("marca_um.png");
+                image = Image.getInstance("marca_um_65.png");
             image.scalePercent(80);
             PdfPCell cell = new PdfPCell(image);
             cell.setBorder(Rectangle.NO_BORDER);

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `ToolClient` for email validation
 - New `Tool` utility class for string to list conversion
 - Email validation before sending receipts
+- Nuevo logo marca_um_65.png para formularios
+- Campo emailCopia en TipoChequeraDto para manejo de copias de email
 
 ### Changed
 - Actualizado Spring Boot a versión 3.4.5
@@ -35,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modified email sending logic to validate addresses before sending
 - Added validation for personal, institutional and chequera emails
 - Optimizado el orden de envío de emails en ReciboService para mejor manejo de errores
+- Modificado FormulariosToPdfService para usar nuevo logo marca_um_65.png
+- Actualizada lógica de tipo de impresión en formularios (RapiPago/MercadoPago)
 
 ### Removed
 - Eliminado RabbitMQConfig.java
@@ -45,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Eliminada configuración redundante de RabbitMQ
 - Removed tester queue and related functionality
 - Removed redundant logging statements
+- Eliminados archivos no utilizados:
+  - ReciboConsumer.java
+  - RabbitMQConfig.java
+  - TestController.java
+  - DeadLetterQueueConsumer.java
+  - ChequeraConsumer.java
 
 ### Fixed
 - Corregido problema de alta utilización de CPU
