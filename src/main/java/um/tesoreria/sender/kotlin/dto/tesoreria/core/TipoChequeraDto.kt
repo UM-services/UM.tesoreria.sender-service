@@ -13,6 +13,7 @@ data class TipoChequeraDto(
     var imprimir: Byte = 0,
     var contado: Byte = 0,
     var multiple: Byte = 0,
+    var emailCopia: String? = null,
     var geografica: GeograficaDto? = null,
     var claseChequera: ClaseChequeraDto? = null
 
