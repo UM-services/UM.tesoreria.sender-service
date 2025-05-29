@@ -12,6 +12,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraMessageCheckClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
+import um.tesoreria.sender.client.tesoreria.core.PersonaClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
 import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraMessageCheckDto;
@@ -30,6 +31,7 @@ import java.util.UUID;
 public class ChequeraService {
 
     private final ChequeraMessageCheckClient chequeraMessageCheckClient;
+    private final PersonaClient personaClient;
     @Value("${app.testing}")
     private Boolean testing;
 
@@ -38,12 +40,13 @@ public class ChequeraService {
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraClient chequeraClient;
 
-    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraClient chequeraClient, ChequeraMessageCheckClient chequeraMessageCheckClient) {
+    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraClient chequeraClient, ChequeraMessageCheckClient chequeraMessageCheckClient, PersonaClient personaClient) {
         this.formulariosToPdfService = formulariosToPdfService;
         this.javaMailSender = javaMailSender;
         this.chequeraSerieClient = chequeraSerieClient;
         this.chequeraClient = chequeraClient;
         this.chequeraMessageCheckClient = chequeraMessageCheckClient;
+        this.personaClient = personaClient;
     }
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
@@ -51,10 +54,13 @@ public class ChequeraService {
         log.debug("Sending chequera for facultadId: {}, tipoChequeraId: {}, chequeraSerieId: {}, alternativaId: {}, copiaInformes: {}, codigoBarras: {}, incluyeMatricula: {}", facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula);
 
         var chequeraSerie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
+        var tipoChequera = chequeraSerie.getTipoChequera();
         logChequeraSerie(chequeraSerie);
 
         var domicilio = chequeraSerie.getDomicilio();
         logDomicilio(domicilio);
+
+        var inscripcionFull = personaClient.findInscripcionFull(facultadId, chequeraSerie.getPersonaId(), chequeraSerie.getDocumentoId(), chequeraSerie.getLectivoId());
 
         var preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
         logPreferences(preferences);
@@ -141,12 +147,28 @@ public class ChequeraService {
 
         if (!testing) {
             if (copiaInformes) {
-                addresses.add("informes@etec.um.edu.ar");
-                log.debug("adding informes email -> {}", "informes@etec.um.edu.ar");
-            } else {
-                if (!domicilio.getEmailInstitucional().isEmpty()) {
-                    addresses.add(domicilio.getEmailInstitucional());
-                    log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
+                assert tipoChequera != null;
+                String emailCopia = tipoChequera.getEmailCopia();
+                if (emailCopia != null && !emailCopia.isEmpty()) {
+                    addresses.add(emailCopia);
+                    log.debug("adding informes email -> {}", emailCopia);
+                }
+            }
+            if (!domicilio.getEmailInstitucional().isEmpty()) {
+                addresses.add(domicilio.getEmailInstitucional());
+                log.debug("adding institucional email -> {}", domicilio.getEmailInstitucional());
+            }
+            var domicilioPago = inscripcionFull.getDomicilioPago();
+            if (domicilioPago != null) {
+                domicilioPago.getEmailPersonal();
+                if (!domicilioPago.getEmailPersonal().isEmpty()) {
+                    addresses.add(domicilioPago.getEmailPersonal());
+                    log.debug("adding pago personal email -> {}", domicilioPago.getEmailPersonal());
+                }
+                domicilioPago.getEmailInstitucional();
+                if (!domicilioPago.getEmailInstitucional().isEmpty()) {
+                    addresses.add(domicilioPago.getEmailInstitucional());
+                    log.debug("adding pago institucional email -> {}", domicilioPago.getEmailInstitucional());
                 }
             }
         }
@@ -166,7 +188,7 @@ public class ChequeraService {
         helper.addAttachment(filenameChequera, fileChequera);
 
         // Adjuntar el logo en línea
-        var filenameLogo = "marca_um.png"; // Ruta al logo de la UM
+        var filenameLogo = "marca_um_65.png"; // Ruta al logo de la UM
         if (facultadId == 15) {
             filenameLogo = "marca_etec.png"; // Ruta al logo de ETEC si aplica
         }

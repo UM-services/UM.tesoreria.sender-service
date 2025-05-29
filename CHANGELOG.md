@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email validation before sending receipts
 - Nuevo logo marca_um_65.png para formularios
 - Campo emailCopia en TipoChequeraDto para manejo de copias de email
+- Nuevo endpoint en PersonaClient para obtener información completa de inscripción
+- Nuevos DTOs para manejo de inscripciones:
+  - InscripcionFullDto
+  - InscripcionDto
+  - InscripcionPagoDto
 
 ### Changed
 - Actualizado Spring Boot a versión 3.4.5
@@ -39,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimizado el orden de envío de emails en ReciboService para mejor manejo de errores
 - Modificado FormulariosToPdfService para usar nuevo logo marca_um_65.png
 - Actualizada lógica de tipo de impresión en formularios (RapiPago/MercadoPago)
+- Mejorada la lógica de envío de emails en ChequeraService para incluir emails de pago
+- Actualizado el manejo de logos institucionales en formularios
 
 ### Removed
 - Eliminado RabbitMQConfig.java

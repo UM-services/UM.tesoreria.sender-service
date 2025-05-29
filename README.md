@@ -18,6 +18,10 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Soporte para múltiples tipos de chequeras
 - Integración con servicios de email
 - Generación de PDFs con logos institucionales
+- Sistema de deduplicación de mensajes con UUID tracking
+- Manejo de inscripciones y pagos
+- Soporte para múltiples destinatarios de email (personal, institucional, copias)
+- Validación y procesamiento de emails de pago
 
 ## Requisitos
 
@@ -82,9 +86,13 @@ src/
 │   │   └── um/
 │   │       └── tesoreria/
 │   │           └── sender/
+│   │               ├── client/           # Clientes de servicios externos
+│   │               │   ├── tesoreria/    # Clientes de servicios de tesorería
+│   │               │   └── mercadopago/  # Clientes de MercadoPago
 │   │               ├── configuration/    # Configuraciones
 │   │               ├── controller/       # Controladores REST
-│   │               ├── dto/             # Objetos de transferencia
+│   │               ├── domain/           # Modelos de dominio y DTOs
+│   │               │   └── dto/         # Objetos de transferencia
 │   │               ├── exception/        # Manejo de excepciones
 │   │               ├── kotlin/          # Código Kotlin
 │   │               ├── service/          # Lógica de negocio
