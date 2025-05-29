@@ -2,6 +2,7 @@ package um.tesoreria.sender.client.tesoreria.core;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+import um.tesoreria.sender.domain.dto.InscripcionFullDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.PersonaDto;
 
 import java.math.BigDecimal;
@@ -57,5 +58,8 @@ public interface PersonaClient {
 
     @PutMapping("/{uniqueId}")
     PersonaDto update(@RequestBody PersonaDto persona, @PathVariable Long uniqueId);
+
+    @GetMapping("/inscripcion/full/{facultadId}/{personaId}/{documentoId}/{lectivoId}")
+    InscripcionFullDto findInscripcionFull(@PathVariable Integer facultadId, @PathVariable BigDecimal personaId, @PathVariable Integer documentoId, @PathVariable Integer lectivoId);
 
 }
