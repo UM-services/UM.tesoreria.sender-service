@@ -14,7 +14,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 
 - Generación y envío de recibos de pago
 - Generación de formularios de pago (RapiPago/MercadoPago)
-- Validación de emails antes del envío
+- Validación de emails antes del envío usando ToolClient
 - Soporte para múltiples tipos de chequeras
 - Integración con servicios de email
 - Generación de PDFs con logos institucionales
@@ -22,6 +22,8 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Manejo de inscripciones y pagos
 - Soporte para múltiples destinatarios de email (personal, institucional, copias)
 - Validación y procesamiento de emails de pago
+- Validación en tiempo real de direcciones de email
+- Integración con servicio de herramientas (ToolClient) para validación de emails
 
 ## Requisitos
 
@@ -88,6 +90,8 @@ src/
 │   │           └── sender/
 │   │               ├── client/           # Clientes de servicios externos
 │   │               │   ├── tesoreria/    # Clientes de servicios de tesorería
+│   │               │   │   └── core/     # Clientes core de tesorería
+│   │               │   │   └── facade/   # Clientes facade de tesorería
 │   │               │   └── mercadopago/  # Clientes de MercadoPago
 │   │               ├── configuration/    # Configuraciones
 │   │               ├── controller/       # Controladores REST

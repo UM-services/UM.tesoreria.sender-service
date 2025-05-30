@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - InscripcionFullDto
   - InscripcionDto
   - InscripcionPagoDto
+- Validación de emails usando ToolClient para todos los tipos de correos (personal, institucional, copias)
 
 ### Changed
 - Actualizado Spring Boot a versión 3.4.5
@@ -46,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Actualizada lógica de tipo de impresión en formularios (RapiPago/MercadoPago)
 - Mejorada la lógica de envío de emails en ChequeraService para incluir emails de pago
 - Actualizado el manejo de logos institucionales en formularios
+- Integrado ToolClient para validación de emails en ChequeraService
+- Mejorado el proceso de validación de emails con validación previa al envío
 
 ### Removed
 - Eliminado RabbitMQConfig.java
