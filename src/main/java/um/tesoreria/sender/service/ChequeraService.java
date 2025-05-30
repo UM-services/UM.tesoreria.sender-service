@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraMessageCheckClient;
 import um.tesoreria.sender.client.tesoreria.core.ChequeraSerieClient;
 import um.tesoreria.sender.client.tesoreria.core.PersonaClient;
+import um.tesoreria.sender.client.tesoreria.core.facade.ToolClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
 import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraMessageCheckDto;
@@ -32,6 +33,7 @@ public class ChequeraService {
 
     private final ChequeraMessageCheckClient chequeraMessageCheckClient;
     private final PersonaClient personaClient;
+    private final ToolClient toolClient;
     @Value("${app.testing}")
     private Boolean testing;
 
@@ -40,13 +42,14 @@ public class ChequeraService {
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraClient chequeraClient;
 
-    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraClient chequeraClient, ChequeraMessageCheckClient chequeraMessageCheckClient, PersonaClient personaClient) {
+    public ChequeraService(FormulariosToPdfService formulariosToPdfService, JavaMailSender javaMailSender, ChequeraSerieClient chequeraSerieClient, ChequeraClient chequeraClient, ChequeraMessageCheckClient chequeraMessageCheckClient, PersonaClient personaClient, ToolClient toolClient) {
         this.formulariosToPdfService = formulariosToPdfService;
         this.javaMailSender = javaMailSender;
         this.chequeraSerieClient = chequeraSerieClient;
         this.chequeraClient = chequeraClient;
         this.chequeraMessageCheckClient = chequeraMessageCheckClient;
         this.personaClient = personaClient;
+        this.toolClient = toolClient;
     }
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
@@ -140,8 +143,10 @@ public class ChequeraService {
         if (!testing) {
             assert domicilio != null;
             if (!domicilio.getEmailPersonal().isEmpty()) {
-                addresses.add(domicilio.getEmailPersonal());
-                log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+                if (toolClient.mailValidate(List.of(domicilio.getEmailPersonal()))) {
+                    addresses.add(domicilio.getEmailPersonal());
+                    log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
+                }
             }
         }
 
@@ -150,25 +155,33 @@ public class ChequeraService {
                 assert tipoChequera != null;
                 String emailCopia = tipoChequera.getEmailCopia();
                 if (emailCopia != null && !emailCopia.isEmpty()) {
-                    addresses.add(emailCopia);
-                    log.debug("adding informes email -> {}", emailCopia);
+                    if (toolClient.mailValidate(List.of(emailCopia))) {
+                        addresses.add(emailCopia);
+                        log.debug("adding informes email -> {}", emailCopia);
+                    }
                 }
             }
             if (!domicilio.getEmailInstitucional().isEmpty()) {
-                addresses.add(domicilio.getEmailInstitucional());
-                log.debug("adding institucional email -> {}", domicilio.getEmailInstitucional());
+                if (toolClient.mailValidate(List.of(domicilio.getEmailInstitucional()))) {
+                    addresses.add(domicilio.getEmailInstitucional());
+                    log.debug("adding institucional email -> {}", domicilio.getEmailInstitucional());
+                }
             }
             var domicilioPago = inscripcionFull.getDomicilioPago();
             if (domicilioPago != null) {
                 domicilioPago.getEmailPersonal();
                 if (!domicilioPago.getEmailPersonal().isEmpty()) {
-                    addresses.add(domicilioPago.getEmailPersonal());
-                    log.debug("adding pago personal email -> {}", domicilioPago.getEmailPersonal());
+                    if (toolClient.mailValidate(List.of(domicilioPago.getEmailPersonal()))) {
+                        addresses.add(domicilioPago.getEmailPersonal());
+                        log.debug("adding pago personal email -> {}", domicilioPago.getEmailPersonal());
+                    }
                 }
                 domicilioPago.getEmailInstitucional();
                 if (!domicilioPago.getEmailInstitucional().isEmpty()) {
-                    addresses.add(domicilioPago.getEmailInstitucional());
-                    log.debug("adding pago institucional email -> {}", domicilioPago.getEmailInstitucional());
+                    if (toolClient.mailValidate(List.of(domicilioPago.getEmailInstitucional()))) {
+                        addresses.add(domicilioPago.getEmailInstitucional());
+                        log.debug("adding pago institucional email -> {}", domicilioPago.getEmailInstitucional());
+                    }
                 }
             }
         }
