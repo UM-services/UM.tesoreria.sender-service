@@ -15,7 +15,6 @@ import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
 import jakarta.mail.MessagingException;
-import jakarta.mail.SendFailedException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -750,7 +749,7 @@ public class ReciboService {
 
     }
 
-    public String send(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica) throws MessagingException {
+    public String send(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica) {
         log.debug("Processing ReciboService.send()");
 
         if (facturacionElectronica == null) {
@@ -816,8 +815,7 @@ public class ReciboService {
 
         // Envia correo
         MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        List<String> addresses = new ArrayList<String>();
+        List<String> addresses = new ArrayList<>();
 
         if (!testing) {
             if (!domicilio.getEmailPersonal().isEmpty()) {
@@ -851,6 +849,7 @@ public class ReciboService {
         }
 
         try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(addresses.toArray(new String[0]));
             helper.setText(data);
             helper.setReplyTo("no-reply@um.edu.ar");
@@ -861,6 +860,12 @@ public class ReciboService {
 
             javaMailSender.send(message);
 
+        } catch (org.springframework.mail.MailSendException e) {
+            log.error("Error al enviar el correo por dirección inválida: {}", e.getMessage());
+            facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
+            facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            logFacturacionElectronica(facturacionElectronica);
+            return MessageFormat.format("ERROR: {0} No pudo ENVIARSE. Dirección de correo inválida.", cuotaString);
         } catch (MessagingException e) {
             log.debug("No pudo ENVIARSE");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
@@ -979,7 +984,7 @@ public class ReciboService {
         }
     }
 
-    public void sendPendientes() throws MessagingException {
+    public void sendPendientes() {
         log.debug("Processing ReciboService.sendPendientes()");
         for (FacturacionElectronicaDto facturacionElectronica : facturacionElectronicaClient.find100Pendientes()) {
             send(facturacionElectronica.getFacturacionElectronicaId(), facturacionElectronica);
