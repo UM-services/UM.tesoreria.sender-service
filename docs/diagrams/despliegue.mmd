@@ -1,0 +1,18 @@
+graph TD
+    subgraph "Servidor Institucional"
+        subgraph "Docker"
+            A["UM Tesoreria Sender Service (Container)"];
+        end
+    end
+
+    subgraph "Sistemas Externos"
+        B["Tesoreria Core API"];
+        C["Servidor SMTP"];
+    end
+
+    A --> B;
+    A --> C;
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px

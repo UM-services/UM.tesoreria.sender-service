@@ -1,0 +1,20 @@
+sequenceDiagram
+    actor User
+    User->>ReciboController: GET /api/tesoreria/sender/recibo/send/{id}
+    ReciboController->>ReciboService: send(id, null)
+    ReciboService->>FacturacionElectronicaClient: findByFacturacionElectronicaId(id)
+    FacturacionElectronicaClient-->>ReciboService: facturacionElectronica
+    ReciboService->>ReciboService: generatePdf(...)
+    ReciboService-->>ReciboService: filenameRecibo
+    ReciboService->>JavaMailSender: createMimeMessage()
+    JavaMailSender-->>ReciboService: message
+    ReciboService->>MimeMessageHelper: setTo(), setText(), setSubject(), addAttachment()
+    MimeMessageHelper-->>ReciboService:
+    ReciboService->>JavaMailSender: send(message)
+    JavaMailSender-->>ReciboService:
+    ReciboService->>FacturacionElectronicaClient: update(facturacionElectronica)
+    FacturacionElectronicaClient-->>ReciboService: facturacionElectronica
+    ReciboService->>ReciboMessageCheckClient: add(reciboMessageCheck)
+    ReciboMessageCheckClient-->>ReciboService: reciboMessageCheck
+    ReciboService-->>ReciboController: "Envío de Correo Ok!!!"
+    ReciboController-->>User: HTTP 200 OK

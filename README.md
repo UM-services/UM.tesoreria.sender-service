@@ -1,12 +1,13 @@
 # UM.tesoreria.sender-service
 
-[![Java](https://img.shields.io/badge/Java-21-red.svg)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2024.0.1-blue.svg)](https://spring.io/projects/spring-cloud)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.20-purple.svg)](https://kotlinlang.org/)
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.8-lightblue.svg)](https://www.openapis.org/)
-[![Guava](https://img.shields.io/badge/Guava-33.4.7-jre-orange.svg)](https://github.com/google/guava)
-[![OpenPDF](https://img.shields.io/badge/OpenPDF-2.0.4-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
+[![Java](https://img.shields.io/badge/Java-24-red.svg)](https://www.java.com/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-purple.svg)](https://kotlinlang.org/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.9-lightblue.svg)](https://www.openapis.org/)
+[![Guava](https://img.shields.io/badge/Guava-33.4.7--jre-orange.svg)](https://github.com/google/guava)
+[![OpenPDF](https://img.shields.io/badge/OpenPDF-2.2.4-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
+[![Version](https://img.shields.io/badge/Version-1.0.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -27,7 +28,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 
 ## Requisitos
 
-- Java 21
+- Java 24
 - Maven 3.9+
 - Docker (opcional)
 

@@ -7,47 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-07-20
+
 ### Added
 - Implementación de sistema de deduplicación de mensajes con UUID tracking
-- Optimización de consumo de recursos (CPU/RAM)
-- Configuración de prefetch count y concurrencia para RabbitMQ
-- Manejo transaccional de mensajes
-- Message deduplication system for chequera and recibo processing
-- New `ChequeraMessageCheckClient` and `ReciboMessageCheckClient` for message tracking
-- UUID-based message tracking in DTOs
-- Manual acknowledgment mode for RabbitMQ consumers
-- Enhanced logging for message processing
-- New `ToolClient` for email validation
-- New `Tool` utility class for string to list conversion
-- Email validation before sending receipts
+- Sistema completo de validación de emails usando ToolClient
+- Nuevo `Tool` utility class para conversión de strings a listas
+- Nuevo manejo robusto de errores en envío de emails
 - Nuevo logo marca_um_65.png para formularios
-- Campo emailCopia en TipoChequeraDto para manejo de copias de email
-- Nuevo endpoint en PersonaClient para obtener información completa de inscripción
+- Campo emailCopia en TipoChequeraDto
+- Endpoint mejorado en PersonaClient para información completa de inscripción
 - Nuevos DTOs para manejo de inscripciones:
   - InscripcionFullDto
   - InscripcionDto
   - InscripcionPagoDto
-- Validación de emails usando ToolClient para todos los tipos de correos (personal, institucional, copias)
+- Sistema de tracking de mensajes con UUID para chequeras y recibos
+- Nuevos clientes para seguimiento de mensajes:
+  - ChequeraMessageCheckClient
+  - ReciboMessageCheckClient
+- Modo de reconocimiento manual para consumidores RabbitMQ
+- Logging mejorado para procesamiento de mensajes
+- Integración completa con ToolClient para validación de emails
 
 ### Changed
-- Actualizado Spring Boot a versión 3.4.5
-- Actualizado Kotlin a versión 2.1.20
-- Actualizado Spring Cloud a versión 2024.0.1
-- Actualizado Guava a versión 33.4.7-jre
-- Actualizado Springdoc OpenAPI a versión 2.8.8
-- Actualizado OpenPDF a versión 2.0.4
-- Mejorado el manejo de errores en el procesamiento de mensajes
-- Optimizado el consumo de memoria en el procesamiento de mensajes
-- Improved error handling in message consumers
-- Enhanced email address handling with testing mode
-- Modified email sending logic to validate addresses before sending
-- Added validation for personal, institutional and chequera emails
-- Optimizado el orden de envío de emails en ReciboService para mejor manejo de errores
-- Modificado FormulariosToPdfService para usar nuevo logo marca_um_65.png
-- Actualizada lógica de tipo de impresión en formularios (RapiPago/MercadoPago)
-- Mejorada la lógica de envío de emails en ChequeraService para incluir emails de pago
-- Actualizado el manejo de logos institucionales en formularios
-- Integrado ToolClient para validación de emails en ChequeraService
+- Actualizado Spring Boot a versión 3.5.3 (desde 3.4.5)
+- Actualizado Java a versión 24 (desde 21)
+- Actualizado Kotlin a versión 2.2.0 (desde 2.1.20)
+- Actualizado Spring Cloud a versión 2025.0.0 (desde 2024.0.1)
+- Actualizado OpenPDF a versión 2.2.4 (desde 2.0.4)
+- Actualizado Springdoc OpenAPI a versión 2.8.9 (desde 2.8.8)
+- Mejorado el manejo de errores en procesamiento de mensajes
+- Optimizado el consumo de memoria y CPU
+- Mejorada la lógica de envío de emails para validación previa
+- Optimizado el orden de envío de emails en ReciboService
+- Actualizada la lógica de impresión en formularios
+- Actualizado el manejo de logos institucionales
+- Integrada validación completa de emails en ChequeraService
+
+### Fixed
+- Error handling en envío de emails con direcciones inválidas
+- Manejo de memoria en procesamiento de mensajes
+- Validación de emails antes del envío
+- Orden de procesamiento de mensajes en RabbitMQ
 - Mejorado el proceso de validación de emails con validación previa al envío
 
 ### Removed

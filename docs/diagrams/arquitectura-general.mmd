@@ -1,0 +1,33 @@
+graph TD
+    subgraph "UM Tesoreria Sender Service"
+        A[ReciboController] --> B{ReciboService};
+        B --> C[JavaMailSender];
+        B --> D[FacturacionElectronicaClient];
+        B --> E[ChequeraPagoClient];
+        B --> F[ComprobanteClient];
+        B --> G[ToolClient];
+        B --> H[ChequeraCuotaClient];
+        B --> I[ChequeraSerieClient];
+        B --> J[ChequeraFacturacionElectronicaClient];
+        B --> K[ReciboMessageCheckClient];
+    end
+
+    subgraph "External Systems"
+        C --> L((SMTP Server));
+        D --> M[Tesoreria Core API];
+        E --> M;
+        F --> M;
+        G --> M;
+        H --> M;
+        I --> M;
+        J --> M;
+        K --> M;
+    end
+
+    U[Usuario] --> A;
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px;
+    style B fill:#ccf,stroke:#333,stroke-width:2px;
+    style L fill:#bbf,stroke:#333,stroke-width:2px;
+    style M fill:#bbf,stroke:#333,stroke-width:2px;
+    style U fill:#9cf,stroke:#333,stroke-width:2px;

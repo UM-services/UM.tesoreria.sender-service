@@ -34,6 +34,7 @@ public class ChequeraService {
     private final ChequeraMessageCheckClient chequeraMessageCheckClient;
     private final PersonaClient personaClient;
     private final ToolClient toolClient;
+
     @Value("${app.testing}")
     private Boolean testing;
 
