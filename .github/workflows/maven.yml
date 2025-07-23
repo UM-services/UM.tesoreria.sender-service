@@ -1,5 +1,5 @@
 
-name: UM.haberes.core-service Build JVM Image
+name: UM.tesoreria.sender-service Build JVM Image
 
 on:
   push:
