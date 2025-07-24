@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    consul:
+      discovery:
+        enabled: false
+  mail:
+    host: smtp.gmail.com
+app:
+  mail:
+    username: test
+    password: test
+  testing: true
