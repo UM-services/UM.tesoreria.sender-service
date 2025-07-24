@@ -20,7 +20,7 @@ spring:
       host: ${app.consul.host}
       port: ${app.consul.port}
       discovery:
-        instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${local.server.port}
+        instance-id: ${spring.application.name}-${spring.cloud.client.ip-address}-${server.port}
         prefer-ip-address: true
         tags: tesoreria,sender
   mail:
