@@ -38,6 +38,9 @@ COPY marca_um_65.png marca_um_65.png
 COPY medio_pago_1.png medio_pago_1.png
 COPY medio_pago_2.png medio_pago_2.png
 
+# Damos permisos al usuario sobre el directorio de la aplicación
+RUN chown -R appuser:appgroup /app
+
 # Cambiamos al usuario no privilegiado
 USER appuser
 

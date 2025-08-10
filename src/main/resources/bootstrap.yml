@@ -50,3 +50,7 @@ logging:
       springframework:
         amqp: ${app.logging}
 
+management:
+  health:
+    mail:
+      enabled: false
