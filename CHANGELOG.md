@@ -18,7 +18,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.2.0] - 2025-11-15
+
+### Added
+- Nuevo Jsonifier utility class para serialización JSON simplificada ([src/main/java/um/tesoreria/sender/util/Jsonifier.java])
+
+### Changed
+- Actualizado Spring Boot a versión 3.5.6 (desde 3.5.4) ([pom.xml])
+- Actualizado Kotlin a versión 2.2.21 (desde 2.2.0) ([pom.xml])
+- Actualizado Springdoc OpenAPI a versión 2.8.10 (desde 2.8.9) ([pom.xml])
+- Migrado de iText a OpenPDF versión 3.0.0 para mejor compatibilidad y rendimiento ([pom.xml])
+- Refactorizados Feign clients con contextId para mejor configuración ([src/main/java/um/tesoreria/sender/client/tesoreria/core/])
+- Refactorizados servicios con @RequiredArgsConstructor para inyección de dependencias ([src/main/java/um/tesoreria/sender/service/])
+- Mejorada lógica de envío de emails en ChequeraService con métodos separados y validación mejorada ([src/main/java/um/tesoreria/sender/service/ChequeraService.java])
+- Actualizado diagrama de flujo de envío de recibos ([docs/diagrams/flujo-envio-recibo.mmd])
+
+### Fixed
+- Corregida serialización JSON en logging de servicios ([src/main/java/um/tesoreria/sender/service/])
 
 ## [1.0.0] - 2025-07-20
 

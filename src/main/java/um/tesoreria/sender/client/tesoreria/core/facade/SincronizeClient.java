@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/sincronize")
+@FeignClient(name = "tesoreria-core-service", contextId = "sincronizeClient", path = "/api/tesoreria/core/sincronize")
 public interface SincronizeClient {
 
     @GetMapping("/matricula/{lectivoId}/{facultadId}")

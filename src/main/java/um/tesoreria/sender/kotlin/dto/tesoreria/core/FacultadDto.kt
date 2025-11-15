@@ -1,5 +1,6 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
+import um.tesoreria.sender.util.Jsonifier
 import java.math.BigDecimal
 
 data class FacultadDto(
@@ -14,4 +15,10 @@ data class FacultadDto(
     var apiserver: String = "",
     var apiport: Long = 0L
 
-)
+) {
+
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
+}

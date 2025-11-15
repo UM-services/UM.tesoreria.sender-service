@@ -2,6 +2,7 @@ package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ClaseChequeraDto
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.GeograficaDto
+import um.tesoreria.sender.util.Jsonifier
 
 data class TipoChequeraDto(
 
@@ -17,4 +18,10 @@ data class TipoChequeraDto(
     var geografica: GeograficaDto? = null,
     var claseChequera: ClaseChequeraDto? = null
 
-)
+) {
+
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
+}

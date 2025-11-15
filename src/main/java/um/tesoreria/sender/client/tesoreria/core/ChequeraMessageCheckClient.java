@@ -9,7 +9,7 @@ import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraMessageCheckDto;
 
 import java.util.UUID;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/chequeraMessageCheck")
+@FeignClient(name = "tesoreria-core-service", contextId = "chequeraMessageCheckClient", path = "/api/tesoreria/core/chequeraMessageCheck")
 public interface ChequeraMessageCheckClient {
 
     @GetMapping("/{chequeraMessageCheckId}")

@@ -9,7 +9,7 @@ import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraCuotaDto;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/chequeraCuota")
+@FeignClient(name = "tesoreria-core-service", contextId = "chequeraCuotaClient", path = "/api/tesoreria/core/chequeraCuota")
 public interface ChequeraCuotaClient {
 
     @GetMapping("/chequera/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")

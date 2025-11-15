@@ -9,14 +9,15 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.lowagie.text.*;
-import com.lowagie.text.Font;
-import com.lowagie.text.Image;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openpdf.text.*;
+import org.openpdf.text.Font;
+import org.openpdf.text.Image;
+import org.openpdf.text.Rectangle;
+import org.openpdf.text.pdf.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
@@ -41,12 +42,14 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ReciboService {
 
     private final ReciboMessageCheckClient reciboMessageCheckClient;
     private final ChequeraPagoClient chequeraPagoClient;
     private final ComprobanteClient comprobanteClient;
     private final ToolClient toolClient;
+
     @Value("${app.testing}")
     private Boolean testing;
 
@@ -56,21 +59,6 @@ public class ReciboService {
     private final ChequeraCuotaClient chequeraCuotaClient;
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraFacturacionElectronicaClient chequeraFacturacionElectronicaClient;
-
-    public ReciboService(Environment environment, FacturacionElectronicaClient facturacionElectronicaClient, JavaMailSender javaMailSender,
-                         ChequeraCuotaClient chequeraCuotaClient, ChequeraSerieClient chequeraSerieClient,
-                         ChequeraFacturacionElectronicaClient chequeraFacturacionElectronicaClient, ReciboMessageCheckClient reciboMessageCheckClient, ChequeraPagoClient chequeraPagoClient, ComprobanteClient comprobanteClient, ToolClient toolClient) {
-        this.environment = environment;
-        this.facturacionElectronicaClient = facturacionElectronicaClient;
-        this.javaMailSender = javaMailSender;
-        this.chequeraCuotaClient = chequeraCuotaClient;
-        this.chequeraSerieClient = chequeraSerieClient;
-        this.chequeraFacturacionElectronicaClient = chequeraFacturacionElectronicaClient;
-        this.reciboMessageCheckClient = reciboMessageCheckClient;
-        this.chequeraPagoClient = chequeraPagoClient;
-        this.comprobanteClient = comprobanteClient;
-        this.toolClient = toolClient;
-    }
 
     private void createQRImage(File qrFile, String qrCodeText, int size, String fileType)
             throws WriterException, IOException {

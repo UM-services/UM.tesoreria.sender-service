@@ -7,7 +7,7 @@ import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
 
 import java.util.List;
 
-@FeignClient(name = "tesoreria-mercadopago-service/api/tesoreria/mercadopago/chequera")
+@FeignClient(name = "tesoreria-mercadopago-service", contextId = "chequeraClient", path = "/api/tesoreria/mercadopago/chequera")
 public interface ChequeraClient {
 
     @GetMapping("/create/context/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")

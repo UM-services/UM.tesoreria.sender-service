@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraSerieReemplazoDto;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/chequeraSerieReemplazo")
+@FeignClient(name = "tesoreria-core-service", contextId = "chequeraSerieReemplazoClient", path = "/api/tesoreria/core/chequeraSerieReemplazo")
 public interface ChequeraSerieReemplazoClient {
 
     @GetMapping("/unique/{facultadId}/{tipoChequeraId}/{chequeraSerieId}")

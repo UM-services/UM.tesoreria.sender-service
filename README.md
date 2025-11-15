@@ -1,13 +1,13 @@
 # UM.tesoreria.sender-service
 
 [![Java](https://img.shields.io/badge/Java-24-red.svg)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-purple.svg)](https://kotlinlang.org/)
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.9-lightblue.svg)](https://www.openapis.org/)
-[![Guava](https://img.shields.io/badge/Guava-33.4.7--jre-orange.svg)](https://github.com/google/guava)
-[![OpenPDF](https://img.shields.io/badge/OpenPDF-2.2.4-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-1.1.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21-purple.svg)](https://kotlinlang.org/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.10-lightblue.svg)](https://www.openapis.org/)
+[![Guava](https://img.shields.io/badge/Guava-33.4.8--jre-orange.svg)](https://github.com/google/guava)
+[![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.0-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
+[![Version](https://img.shields.io/badge/Version-1.2.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -133,16 +133,16 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 
 ## Tecnologías
 
-- Java 21
-- Spring Boot 3.4.5
-- Spring Cloud 2024.0.1
+- Java 24
+- Spring Boot 3.5.6
+- Spring Cloud 2025.0.0
 - RabbitMQ
 - Spring Mail
 - Spring Cloud Netflix Eureka Client
-- OpenAPI (Springdoc) 2.8.8
-- Kotlin 2.1.20
-- Guava 33.4.7-jre
-- OpenPDF 2.0.4
+- OpenAPI (Springdoc) 2.8.10
+- Kotlin 2.2.21
+- Guava 33.4.8-jre
+- OpenPDF 3.0.0
 
 ## Configuración
 

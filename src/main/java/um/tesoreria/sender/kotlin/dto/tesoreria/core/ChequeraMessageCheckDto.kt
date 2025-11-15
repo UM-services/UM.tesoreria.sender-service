@@ -1,5 +1,6 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
+import um.tesoreria.sender.util.Jsonifier
 import java.util.*
 
 data class ChequeraMessageCheckDto (
@@ -11,6 +12,10 @@ data class ChequeraMessageCheckDto (
     var payload: String = ""
 
 ) {
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
     class Builder {
         private var chequeraMessageCheckId: UUID? = null
         private var facultadId: Integer? = null

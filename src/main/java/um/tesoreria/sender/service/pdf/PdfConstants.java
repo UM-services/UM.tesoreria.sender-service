@@ -2,7 +2,7 @@ package um.tesoreria.sender.service.pdf;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import com.lowagie.text.Font;
+import org.openpdf.text.Font;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PdfConstants {

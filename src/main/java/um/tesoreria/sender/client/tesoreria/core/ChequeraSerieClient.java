@@ -7,7 +7,7 @@ import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraSerieDto;
 import java.math.BigDecimal;
 import java.util.List;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/chequeraSerie")
+@FeignClient(name = "tesoreria-core-service", contextId = "chequeraSerieClient", path = "/api/tesoreria/core/chequeraSerie")
 public interface ChequeraSerieClient {
 
     @GetMapping("/persona/{personaId}/{documentoId}")

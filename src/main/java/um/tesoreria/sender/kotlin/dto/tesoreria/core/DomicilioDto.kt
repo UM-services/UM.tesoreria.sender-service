@@ -1,6 +1,7 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import um.tesoreria.sender.util.Jsonifier
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
@@ -26,4 +27,8 @@ data class DomicilioDto(
     var emailInstitucional: String = "",
     var laboral: String = ""
 
-)
+) {
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+}

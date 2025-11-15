@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraFacturacionElectronicaDto;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/chequeraFacturacionElectronica")
+@FeignClient(name = "tesoreria-core-service", contextId = "chequeraFacturaElectronicaClient", path = "/api/tesoreria/core/chequeraFacturacionElectronica")
 public interface ChequeraFacturacionElectronicaClient {
 
     @GetMapping("/chequera/{chequeraId}")

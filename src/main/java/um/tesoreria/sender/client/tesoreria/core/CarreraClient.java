@@ -7,7 +7,7 @@ import um.tesoreria.sender.kotlin.dto.tesoreria.core.CarreraDto;
 
 import java.util.List;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/carrera")
+@FeignClient(name = "tesoreria-core-service", contextId = "carreraClient", path = "/api/tesoreria/core/carrera")
 public interface CarreraClient {
 
     @GetMapping("/")

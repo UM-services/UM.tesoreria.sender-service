@@ -1,5 +1,7 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
+import um.tesoreria.sender.util.Jsonifier
+
 data class CarreraDto(
 
     var uniqueId: Long? = null,
@@ -17,4 +19,10 @@ data class CarreraDto(
     var optativas: Int = 0,
     var vigente: Byte = 0,
 
-    )
+    ) {
+
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
+}
