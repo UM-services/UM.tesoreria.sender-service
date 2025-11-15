@@ -1,5 +1,6 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
+import um.tesoreria.sender.util.Jsonifier
 import java.math.BigDecimal
 
 data class PersonaDto(
@@ -16,6 +17,10 @@ data class PersonaDto(
     var password: String? = null
 
 ) {
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
     val apellidoNombre: String
         get() = "$apellido, $nombre"
 }

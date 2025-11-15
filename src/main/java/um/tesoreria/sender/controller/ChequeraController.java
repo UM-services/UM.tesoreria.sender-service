@@ -1,6 +1,7 @@
 package um.tesoreria.sender.controller;
 
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -23,17 +24,12 @@ import java.io.FileNotFoundException;
 @RestController
 @RequestMapping("/api/tesoreria/sender/chequera")
 @Slf4j
+@RequiredArgsConstructor
 public class ChequeraController {
 
     private final ChequeraService service;
     private final FormulariosToPdfService formularioToPdfService;
     private final ChequeraCuotaClient chequeraCuotaClient;
-
-    public ChequeraController(ChequeraService service, FormulariosToPdfService formularioToPdfService, ChequeraCuotaClient chequeraCuotaClient) {
-        this.service = service;
-        this.formularioToPdfService = formularioToPdfService;
-        this.chequeraCuotaClient = chequeraCuotaClient;
-    }
 
     @GetMapping("/generatePdf/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{codigoBarras}")
     public ResponseEntity<Resource> generatePdf(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
@@ -112,8 +108,13 @@ public class ChequeraController {
                                                @PathVariable Boolean copiaInformes,
                                                @PathVariable Boolean codigoBarras) throws MessagingException {
         chequeraCuotaClient.updateBarras(facultadId, tipoChequeraId, chequeraSerieId);
-        return new ResponseEntity<>(service.sendChequera(facultadId, tipoChequeraId, chequeraSerieId,
-                alternativaId, copiaInformes, codigoBarras, true), HttpStatus.OK);
+        return ResponseEntity.ok(service.sendChequera(facultadId, tipoChequeraId, chequeraSerieId,
+                alternativaId, copiaInformes, codigoBarras, true));
+    }
+
+    @GetMapping("/sendCuota/{chequeraCuotaId}")
+    public ResponseEntity<String>  sendCuota(@PathVariable Long chequeraCuotaId) throws MessagingException {
+        return ResponseEntity.ok(service.sendCuota(chequeraCuotaId));
     }
 
 }

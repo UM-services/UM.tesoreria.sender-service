@@ -9,7 +9,7 @@ sequenceDiagram
     ReciboService->>JavaMailSender: createMimeMessage()
     JavaMailSender-->>ReciboService: message
     ReciboService->>MimeMessageHelper: setTo(), setText(), setSubject(), addAttachment()
-    MimeMessageHelper-->>ReciboService:
+    MimeMessageHelper-->>ReciboService: _
     ReciboService->>JavaMailSender: send(message)
     JavaMailSender-->>ReciboService:
     ReciboService->>FacturacionElectronicaClient: update(facturacionElectronica)

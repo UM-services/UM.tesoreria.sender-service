@@ -8,7 +8,7 @@ import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraCuotaReemplazoDto;
 
 import java.util.List;
 
-@FeignClient(name = "tesoreria-core-service/api/tesoreria/core/chequeraCuotaReemplazo")
+@FeignClient(name = "tesoreria-core-service", contextId = "chequeraCuotaReemplazoClient", path = "/api/tesoreria/core/chequeraCuotaReemplazo")
 public interface ChequeraCuotaReemplazoClient {
 
     @GetMapping("/chequera/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")

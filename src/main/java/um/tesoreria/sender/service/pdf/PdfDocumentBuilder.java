@@ -1,16 +1,17 @@
 package um.tesoreria.sender.service.pdf;
 
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
 import lombok.extern.slf4j.Slf4j;
+import org.openpdf.text.*;
+import org.openpdf.text.pdf.PdfPCell;
+import org.openpdf.text.pdf.PdfPTable;
+import org.openpdf.text.pdf.PdfWriter;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 @Slf4j
 public class PdfDocumentBuilder {
+
     private final Document document;
     private final PdfWriter writer;
 
@@ -32,7 +33,7 @@ public class PdfDocumentBuilder {
         table.setWidthPercentage(PdfConstants.TABLE_WIDTH_PERCENT);
 
         // Logo
-        Image image = Image.getInstance(Integer.parseInt(facultadId) == PdfConstants.ETEC_FACULTY_ID 
+        Image image = Image.getInstance(Integer.parseInt(facultadId) == PdfConstants.ETEC_FACULTY_ID
             ? PdfConstants.ETEC_LOGO 
             : PdfConstants.UM_LOGO);
         image.scalePercent(PdfConstants.IMAGE_SCALE_PERCENT);

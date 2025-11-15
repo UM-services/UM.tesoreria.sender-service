@@ -1,5 +1,7 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
+import um.tesoreria.sender.util.Jsonifier
+
 data class LectivoAlternativaDto(
 
     var lectivoAlternativaId: Long? = null,
@@ -12,4 +14,10 @@ data class LectivoAlternativaDto(
     var cuotas: Int? = 0,
     var descuentoPagoTermino: Int? = 0
 
-)
+) {
+
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
+}
