@@ -229,12 +229,14 @@ public class ChequeraService {
             addValidEmail(addresses, tipoChequera.getEmailCopia(), "informes");
         }
 
-        DomicilioDto domicilioPago = inscripcionFull.getDomicilioPago();
-        if (domicilioPago != null && Objects.requireNonNull(domicilioPago.getPersonaId()).compareTo(BigDecimal.ZERO) > 0) {
-            addValidEmail(addresses, domicilioPago.getEmailPersonal(), "pago personal");
-            addValidEmail(addresses, domicilioPago.getEmailInstitucional(), "pago institucional");
+        if (inscripcionFull != null) {
+            DomicilioDto domicilioPago = inscripcionFull.getDomicilioPago();
+            if (domicilioPago != null && Objects.requireNonNull(domicilioPago.getPersonaId()).compareTo(BigDecimal.ZERO) > 0) {
+                addValidEmail(addresses, domicilioPago.getEmailPersonal(), "pago personal");
+                addValidEmail(addresses, domicilioPago.getEmailInstitucional(), "pago institucional");
+            }
         }
-
+        log.info("Addresses: {}", Jsonifier.builder(addresses).build());
         return addresses;
     }
 
