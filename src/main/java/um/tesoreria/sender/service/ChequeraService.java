@@ -50,19 +50,13 @@ public class ChequeraService {
         log.debug("Sending chequera for facultadId: {}, tipoChequeraId: {}, chequeraSerieId: {}, alternativaId: {}, copiaInformes: {}, codigoBarras: {}, incluyeMatricula: {}", facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula);
 
         var chequeraSerie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
-        log.debug("Chequera serie found: {}", chequeraSerie.jsonify());
-
         var inscripcionFull = personaClient.findInscripcionFull(facultadId, chequeraSerie.getPersonaId(), chequeraSerie.getDocumentoId(), chequeraSerie.getLectivoId());
-        log.debug("InscripcionFull -> {}", inscripcionFull.jsonify());
-
         var preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
-        log.debug("ChequeraContext -> {}", Jsonifier.builder(preferences).build());
 
         String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
         log.debug("ChequeraService.sendChequera - filenameChequera -> {}", filenameChequera);
         if (filenameChequera.isEmpty()) {
-            log.debug("Sin CUOTAS para ENVIAR");
-            return "ERROR: Sin CUOTAS para ENVIAR";
+            return "\n\nERROR: Sin CUOTAS para ENVIAR\n\n";
         }
 
         String nombreAlumno = Objects.requireNonNull(chequeraSerie.getPersona()).getApellidoNombre();
@@ -75,24 +69,17 @@ public class ChequeraService {
 
         markAsSent(facultadId, tipoChequeraId, chequeraSerieId);
 
-        log.debug("Envío de Chequera Ok!!!");
-        return "Envío de Chequera Ok!!!";
+        return "\n\nEnvío de Chequera Ok!!!\n\n";
     }
 
     public String sendCuota(Long chequeraCuotaId) throws MessagingException {
         log.debug("Sending cuota {}", chequeraCuotaId);
 
         var chequeraCuota = chequeraCuotaClient.findByChequeraCuotaId(chequeraCuotaId);
-        log.debug("Chequera cuota found: {}", chequeraCuota.jsonify());
-
         var chequeraSerie = chequeraCuota.getChequeraSerie();
         assert chequeraSerie != null;
-
         var inscripcionFull = personaClient.findInscripcionFull(chequeraSerie.getFacultadId(), chequeraSerie.getPersonaId(), chequeraSerie.getDocumentoId(), chequeraSerie.getLectivoId());
-        log.debug("InscripcionFull -> {}", inscripcionFull.jsonify());
-
         var preferences = chequeraClient.createChequeraContext(chequeraSerie.getFacultadId(), chequeraSerie.getTipoChequeraId(), chequeraSerie.getChequeraSerieId(), chequeraSerie.getAlternativaId());
-        log.debug("ChequeraContext -> {}", Jsonifier.builder(preferences).build());
 
         String nombreAlumno = Objects.requireNonNull(chequeraSerie.getPersona()).getApellidoNombre();
 
@@ -102,8 +89,7 @@ public class ChequeraService {
 
         sendMessage(recipients, nombreAlumno, emailBodyCuota, null, chequeraCuota.getFacultadId());
 
-        log.debug("Envío de Cuota Ok!!!");
-        return "Envío de Cuota Ok!!!";
+        return "\n\nEnvío de Cuota Ok!!!\n\n";
     }
 
     private String buildEmailBodyChequera(String nombreAlumno, List<UMPreferenceMPDto> preferences, ChequeraSerieDto chequeraSerie) {
@@ -150,7 +136,7 @@ public class ChequeraService {
                 "</tr>");
         for (var umPreferenceMPDto : preferences) {
             var chequeraCuota = umPreferenceMPDto.getChequeraCuota();
-            if (chequeraCuota.getPagado() == 0 && chequeraCuota.getBaja() == 0
+            if (chequeraCuota.getPagado() == 0 && chequeraCuota.getBaja() == 0 && chequeraCuota.getCompensada() == 0
                     && chequeraCuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
                 if (umPreferenceMPDto.getMercadoPagoContext() != null) {
                     String fechaVencimientoFormatted = umPreferenceMPDto.getMercadoPagoContext().getFechaVencimiento()
@@ -208,7 +194,7 @@ public class ChequeraService {
                 "</tr>");
         for (var umPreferenceMPDto : preferences) {
             if (Objects.equals(chequeraCuota.getChequeraCuotaId(), umPreferenceMPDto.getChequeraCuota().getChequeraCuotaId())) {
-                if (chequeraCuota.getPagado() == 0 && chequeraCuota.getBaja() == 0
+                if (chequeraCuota.getPagado() == 0 && chequeraCuota.getBaja() == 0 && chequeraCuota.getCompensada() == 0
                         && chequeraCuota.getImporte1().compareTo(BigDecimal.ZERO) != 0) {
                     if (umPreferenceMPDto.getMercadoPagoContext() != null) {
                         String fechaVencimientoFormatted = umPreferenceMPDto.getMercadoPagoContext().getFechaVencimiento()
@@ -291,7 +277,6 @@ public class ChequeraService {
     private void markAsSent(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId) {
         log.debug("Marcando como enviado");
         var chequeraSerie = chequeraSerieClient.markSent(facultadId, tipoChequeraId, chequeraSerieId);
-        log.debug("Chequera serie enviado -> {}", chequeraSerie.jsonify());
         var chequeraMessageCheck = new ChequeraMessageCheckDto.Builder()
                 .chequeraMessageCheckId(UUID.randomUUID())
                 .facultadId(chequeraSerie.getFacultadId())
@@ -299,7 +284,6 @@ public class ChequeraService {
                 .chequeraSerieId(chequeraSerie.getChequeraSerieId())
                 .build();
         chequeraMessageCheck = chequeraMessageCheckClient.add(chequeraMessageCheck);
-        log.debug("ChequeraMessageCheck -> {}", chequeraMessageCheck.jsonify());
     }
 
 }

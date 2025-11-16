@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2025-11-16
+
+### Changed
+- Refactorizado el servicio de generación de PDFs (FormulariosToPdfService) para mejorar la modularidad y mantenibilidad.
+- Extraída lógica común de generación de PDFs en métodos privados (`createDocument`, `addHeader`, `addCommonHeaderInfo`, `addCuotaTable`, `addCuotaTableReemplazo`, `createCuotaTableStructure`, `createVencimientoParagraph`, `createImporteParagraph`, `addMercadoPagoLink`, `addBarcode`, `fetchData`).
+- Mejorado el manejo de errores en la generación de PDFs.
+- Añadida verificación de `cuota.getCompensada() == 0` en la lógica de impresión de cuotas.
+
 ## [1.2.0] - 2025-11-15
 
 ### Added
