@@ -225,16 +225,18 @@ public class ChequeraService {
         addValidEmail(addresses, domicilio.getEmailInstitucional(), "institucional");
 
         if (copiaInformes) {
-            TipoChequeraDto tipoChequera = chequeraSerie.getTipoChequera();
+            var tipoChequera = chequeraSerie.getTipoChequera();
             assert tipoChequera != null;
             addValidEmail(addresses, tipoChequera.getEmailCopia(), "informes");
         }
 
         if (inscripcionFull != null) {
-            DomicilioDto domicilioPago = inscripcionFull.getDomicilioPago();
-            if (domicilioPago != null && Objects.requireNonNull(domicilioPago.getPersonaId()).compareTo(BigDecimal.ZERO) > 0) {
-                addValidEmail(addresses, domicilioPago.getEmailPersonal(), "pago personal");
-                addValidEmail(addresses, domicilioPago.getEmailInstitucional(), "pago institucional");
+            var domicilioPago = inscripcionFull.getDomicilioPago();
+            if (domicilioPago != null) {
+                if (domicilioPago.getPersonaId() != null) {
+                    addValidEmail(addresses, domicilioPago.getEmailPersonal(), "pago personal");
+                    addValidEmail(addresses, domicilioPago.getEmailInstitucional(), "pago institucional");
+                }
             }
         }
         log.info("Addresses: {}", Jsonifier.builder(addresses).build());
