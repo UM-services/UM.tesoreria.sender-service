@@ -210,6 +210,7 @@ public class ChequeraService {
     }
 
     private List<String> collectRecipients(ChequeraSerieDto chequeraSerie, InscripcionFullDto inscripcionFull, Boolean copiaInformes) {
+        log.debug("Processing ChequeraService.collectRecipients");
         List<String> addresses = new ArrayList<>();
         if (testing) {
             log.debug("Testing -> daniel.quinterospinto@gmail.com");
@@ -218,8 +219,8 @@ public class ChequeraService {
         }
 
         DomicilioDto domicilio = chequeraSerie.getDomicilio();
-        assert domicilio != null;
 
+        assert domicilio != null;
         addValidEmail(addresses, domicilio.getEmailPersonal(), "personal");
         addValidEmail(addresses, domicilio.getEmailInstitucional(), "institucional");
 
