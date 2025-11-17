@@ -234,8 +234,10 @@ public class ChequeraService {
             var domicilioPago = inscripcionFull.getDomicilioPago();
             if (domicilioPago != null) {
                 if (domicilioPago.getPersonaId() != null) {
-                    addValidEmail(addresses, domicilioPago.getEmailPersonal(), "pago personal");
-                    addValidEmail(addresses, domicilioPago.getEmailInstitucional(), "pago institucional");
+                    if (domicilioPago.getPersonaId().compareTo(BigDecimal.ZERO) > 0) {
+                        addValidEmail(addresses, domicilioPago.getEmailPersonal(), "pago personal");
+                        addValidEmail(addresses, domicilioPago.getEmailInstitucional(), "pago institucional");
+                    }
                 }
             }
         }
