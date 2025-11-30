@@ -35,7 +35,7 @@ public class ChequeraController {
     public ResponseEntity<Resource> generatePdf(@PathVariable Integer facultadId, @PathVariable Integer tipoChequeraId,
                                                 @PathVariable Long chequeraSerieId, @PathVariable Integer alternativaId,
                                                 @PathVariable Boolean codigoBarras) throws FileNotFoundException {
-        log.debug("Processing ChequeraController.generatePdf");
+        log.debug("\n\nProcessing ChequeraController.generatePdf\n\n");
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, codigoBarras, false, null);
         log.debug("Generando archivo {}", filename);
