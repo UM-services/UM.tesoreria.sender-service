@@ -11,9 +11,9 @@ data class PersonaDto(
     var apellido: String? = null,
     var nombre: String? = null,
     var sexo: String? = null,
-    var primero: Byte = 0,
-    var cuit: String = "",
-    var cbu: String = "",
+    var primero: Byte? = 0,
+    var cuit: String? = "",
+    var cbu: String? = "",
     var password: String? = null
 
 ) {
