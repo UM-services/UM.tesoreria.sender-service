@@ -11,7 +11,7 @@ import org.openpdf.text.pdf.BarcodeInter25;
 import org.openpdf.text.pdf.PdfPCell;
 import org.openpdf.text.pdf.PdfPTable;
 import org.openpdf.text.pdf.PdfWriter;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestClient;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ import java.util.Objects;
 public class FormulariosToPdfService {
 
     private final Environment environment;
-    private final RestTemplateBuilder restTemplateBuilder;
+    private final RestClient.Builder restClientBuilder;
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraCuotaClient chequeraCuotaClient;
     private final FacultadClient facultadClient;
@@ -61,7 +61,7 @@ public class FormulariosToPdfService {
                                       Boolean codigoBarras,
                                       Boolean completa,
                                       List<UMPreferenceMPDto> preferences) {
-        log.debug("Processing FormulariosToPdfService.generateChequeraPdf");
+        log.debug("\n\nProcessing FormulariosToPdfService.generateChequeraPdf\n\n");
         var serie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
         if (preferences == null) {
             preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
@@ -418,12 +418,12 @@ public class FormulariosToPdfService {
                 + ".pdf";
 
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setAccept(List.of(MediaType.APPLICATION_OCTET_STREAM));
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<byte[]> response = restTemplateBuilder.build().exchange(url, HttpMethod.GET, entity,
-                    byte[].class);
-            Files.write(Objects.requireNonNull(response.getBody()), new File(filename));
+            byte[] response = restClientBuilder.build().get()
+                    .uri(url)
+                    .accept(MediaType.APPLICATION_OCTET_STREAM)
+                    .retrieve()
+                    .body(byte[].class);
+            Files.write(Objects.requireNonNull(response), new File(filename));
         } catch (HttpServerErrorException | IOException e) {
             log.debug("No se pudo generar {}", filename);
             filename = null;
