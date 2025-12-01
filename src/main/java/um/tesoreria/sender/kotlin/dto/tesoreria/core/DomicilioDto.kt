@@ -12,20 +12,20 @@ data class DomicilioDto(
     var documentoId: Int? = null,
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "UTC")
     var fecha: OffsetDateTime? = OffsetDateTime.now(),
-    var calle: String = "",
-    var puerta: String = "",
-    var piso: String = "",
-    var dpto: String = "",
-    var telefono: String = "",
-    var movil: String = "",
-    var observaciones: String = "",
-    var codigoPostal: String = "",
+    var calle: String? = "",
+    var puerta: String? = "",
+    var piso: String? = "",
+    var dpto: String? = "",
+    var telefono: String? = "",
+    var movil: String? = "",
+    var observaciones: String? = "",
+    var codigoPostal: String? = "",
     var facultadId: Int? = null,
     var provinciaId: Int? = null,
     var localidadId: Int? = null,
-    var emailPersonal: String = "",
-    var emailInstitucional: String = "",
-    var laboral: String = ""
+    var emailPersonal: String? = "",
+    var emailInstitucional: String? = "",
+    var laboral: String? = ""
 
 ) {
     fun jsonify(): String {
