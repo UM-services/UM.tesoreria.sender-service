@@ -10,6 +10,7 @@ graph TD
         B --> I[ChequeraSerieClient];
         B --> J[ChequeraFacturacionElectronicaClient];
         B --> K[ReciboMessageCheckClient];
+        N[ChequeraEventListener] --> O{FormulariosToPdfService};
     end
 
     subgraph "External Systems"
@@ -22,6 +23,7 @@ graph TD
         I --> M;
         J --> M;
         K --> M;
+        P((Kafka Broker)) --> N;
     end
 
     U[Usuario] --> A;

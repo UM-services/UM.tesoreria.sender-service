@@ -5,6 +5,10 @@ spring:
         enabled: false
   mail:
     host: smtp.gmail.com
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: test-group
 app:
   mail:
     username: test
