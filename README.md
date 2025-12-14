@@ -7,7 +7,7 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.10-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.4.8--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.0-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-1.3.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -96,6 +96,8 @@ src/
 │   │               │   └── mercadopago/  # Clientes de MercadoPago
 │   │               ├── configuration/    # Configuraciones
 │   │               ├── controller/       # Controladores REST
+│   │               ├── consumer/         # Consumidores Kafka
+│   │               ├── event/            # Eventos
 │   │               ├── domain/           # Modelos de dominio y DTOs
 │   │               │   └── dto/         # Objetos de transferencia
 │   │               ├── exception/        # Manejo de excepciones
@@ -129,14 +131,14 @@ Este proyecto es privado y confidencial. Todos los derechos reservados.
 
 ## Descripción
 
-Servicio de envío de correos electrónicos y notificaciones para UM Tesorería. Maneja el envío de chequeras, comprobantes y notificaciones transaccionales mediante RabbitMQ.
+Servicio de envío de correos electrónicos y notificaciones para UM Tesorería. Maneja el envío de chequeras, comprobantes y notificaciones transaccionales mediante Kafka.
 
 ## Tecnologías
 
 - Java 24
 - Spring Boot 3.5.6
 - Spring Cloud 2025.0.0
-- RabbitMQ
+- Kafka
 - Spring Mail
 - Spring Cloud Netflix Eureka Client
 - OpenAPI (Springdoc) 2.8.10
@@ -146,6 +148,6 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 
 ## Configuración
 
-### RabbitMQ
+### Kafka
 
 ```

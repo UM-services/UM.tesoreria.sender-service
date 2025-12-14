@@ -23,6 +23,15 @@ spring:
         instance-id: ${spring.application.name}-${spring.cloud.client.ip-address}-${server.port}
         prefer-ip-address: true
         tags: tesoreria,sender
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: tesoreria-sender-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
   mail:
     host: smtp.gmail.com
     port: 587
