@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.5.0] - 2026-02-04
+
+### Changed
+- Actualizado Spring Boot a versión 4.0.2 (desde 3.5.8) ([pom.xml])
+- Actualizado Java a versión 25 (desde 24) ([pom.xml], [.github/workflows/maven.yml], [Dockerfile])
+- Actualizado Kotlin a versión 2.3.0 (desde 2.2.21) ([pom.xml])
+- Actualizado Spring Cloud a versión 2025.1.0 (desde 2025.0.0) ([pom.xml])
+- Actualizado Springdoc OpenAPI a versión 3.0.1 (desde 2.8.10) ([pom.xml])
+- Actualizado Guava a versión 33.5.0-jre (desde 33.4.8-jre) ([pom.xml])
+- Actualizado ZXing Core a versión 3.5.4 (desde 3.5.3) ([pom.xml])
+- Actualizado Commons Lang3 a versión 3.20.0 (desde 3.18.0) ([pom.xml])
+- Mejorada configuración de Jackson ObjectMapper en SenderConfiguration para registar módulos automáticamente ([src/main/java/um/tesoreria/sender/configuration/SenderConfiguration.java])
+- Corregido tipo de datos en ChequeraMessageCheckDto: cambiado de Integer a Int para mejor compatibilidad Kotlin ([src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraMessageCheckDto.kt])
+
 ## [1.4.0] - 2025-12-14
 
 ### Added

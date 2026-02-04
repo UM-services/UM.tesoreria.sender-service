@@ -6,8 +6,8 @@ import java.util.*
 data class ChequeraMessageCheckDto (
 
     var chequeraMessageCheckId: UUID? = null,
-    var facultadId: Integer? = null,
-    var tipoChequeraId: Integer? = null,
+    var facultadId: Int? = null,
+    var tipoChequeraId: Int? = null,
     var chequeraSerieId: Long? = null,
     var payload: String = ""
 
@@ -18,8 +18,8 @@ data class ChequeraMessageCheckDto (
 
     class Builder {
         private var chequeraMessageCheckId: UUID? = null
-        private var facultadId: Integer? = null
-        private var tipoChequeraId: Integer? = null
+        private var facultadId: Int? = null
+        private var tipoChequeraId: Int? = null
         private var chequeraSerieId: Long? = null
         private var payload: String = ""
 
@@ -27,11 +27,11 @@ data class ChequeraMessageCheckDto (
             this.chequeraMessageCheckId = chequeraMessageCheckId 
         }
 
-        fun facultadId(facultadId: Integer?) = apply {
+        fun facultadId(facultadId: Int?) = apply {
             this.facultadId = facultadId
         }
 
-        fun tipoChequeraId(tipoChequeraId: Integer?) = apply {
+        fun tipoChequeraId(tipoChequeraId: Int?) = apply {
             this.tipoChequeraId = tipoChequeraId
         }
 
