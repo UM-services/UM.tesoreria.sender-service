@@ -1,13 +1,13 @@
 # UM.tesoreria.sender-service
 
-[![Java](https://img.shields.io/badge/Java-24-red.svg)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21-purple.svg)](https://kotlinlang.org/)
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.8.10-lightblue.svg)](https://www.openapis.org/)
-[![Guava](https://img.shields.io/badge/Guava-33.4.8--jre-orange.svg)](https://github.com/google/guava)
+[![Java](https://img.shields.io/badge/Java-25-red.svg)](https://www.java.com/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.0-blue.svg)](https://spring.io/projects/spring-cloud)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.0-purple.svg)](https://kotlinlang.org/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.1-lightblue.svg)](https://www.openapis.org/)
+[![Guava](https://img.shields.io/badge/Guava-33.5.0--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.0-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-1.4.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -28,7 +28,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 
 ## Requisitos
 
-- Java 24
+- Java 25
 - Maven 3.9+
 - Docker (opcional)
 
@@ -135,15 +135,15 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 
 ## Tecnologías
 
-- Java 24
-- Spring Boot 3.5.6
-- Spring Cloud 2025.0.0
+- Java 25
+- Spring Boot 4.0.2
+- Spring Cloud 2025.1.0
 - Kafka
 - Spring Mail
 - Spring Cloud Netflix Eureka Client
-- OpenAPI (Springdoc) 2.8.10
-- Kotlin 2.2.21
-- Guava 33.4.8-jre
+- OpenAPI (Springdoc) 3.0.1
+- Kotlin 2.3.0
+- Guava 33.5.0-jre
 - OpenPDF 3.0.0
 
 ## Configuración
