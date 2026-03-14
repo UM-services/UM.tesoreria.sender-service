@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.6.0] - 2026-03-13
+
+### Added
+- Nuevo DTO GoogleMailTestRequest para testing de emails ([src/main/java/um/tesoreria/sender/domain/dto/GoogleMailTestRequest.java])
+
+### Changed
+- Actualizado OpenPDF a versión 3.0.1 (desde 3.0.0) ([pom.xml])
+- Simplificado import de Spring Web en ChequeraController usando wildcard ([src/main/java/um/tesoreria/sender/controller/ChequeraController.java])
+- Mejorado logging debug en FormulariosToPdfService para depuración de preferences ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+
 ## [1.5.0] - 2026-02-04
 
 ### Changed

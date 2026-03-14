@@ -21,6 +21,7 @@ import um.tesoreria.sender.client.tesoreria.core.facade.SincronizeClient;
 import um.tesoreria.sender.client.tesoreria.mercadopago.ChequeraClient;
 import um.tesoreria.sender.domain.dto.UMPreferenceMPDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
+import um.tesoreria.sender.util.Jsonifier;
 
 import java.awt.*;
 import java.io.File;
@@ -66,6 +67,7 @@ public class FormulariosToPdfService {
         if (preferences == null) {
             preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
         }
+        log.debug("Preferences -> {}", Jsonifier.builder(preferences).build());
         List<ChequeraCuotaDto> cuotas = preferences.stream().map(UMPreferenceMPDto::getChequeraCuota).toList();
         if (cuotas.stream().noneMatch(c -> c.getPagado() == 0 && c.getBaja() == 0 && c.getCompensada() == 0 && c.getImporte1().compareTo(BigDecimal.ZERO) != 0)) {
             log.debug("No hay nada para imprimir.");

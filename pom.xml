@@ -10,7 +10,7 @@
     </parent>
     <groupId>um.tesoreria</groupId>
     <artifactId>sender-service</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <name>UM.tesoreria.sender-service</name>
     <description>um.tesoreria.sender-service</description>
     <url/>
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.openjson</groupId>
