@@ -1,6 +1,7 @@
 package um.tesoreria.sender.controller;
 
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -20,13 +21,10 @@ import java.io.FileNotFoundException;
 
 @RestController
 @RequestMapping("/api/tesoreria/sender/recibo")
+@RequiredArgsConstructor
 public class ReciboController {
 
     private final ReciboService service;
-
-    public ReciboController(ReciboService service) {
-        this.service = service;
-    }
 
     @GetMapping("/pdf/{facturacionElectronicaId}")
     public ResponseEntity<Resource> makePdf(@PathVariable Long facturacionElectronicaId) throws FileNotFoundException {
@@ -46,14 +44,14 @@ public class ReciboController {
     public ResponseEntity<String> send(@PathVariable Long facturacionElectronicaId) {
         String result = service.send(facturacionElectronicaId, null);
         if (result.startsWith("ERROR:")) {
-            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(result);
         }
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/sendNext")
     public ResponseEntity<String> sendNext() {
-        return new ResponseEntity<>(service.sendNext(), HttpStatus.OK);
+        return ResponseEntity.ok(service.sendNext());
     }
 
 }

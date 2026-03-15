@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.7.0] - 2026-03-14
+
+### Added
+- feat: Nuevos campos de beca en ChequeraSerieDto (hpum, becaPorcentaje, becaResolucion, becaFecha, becaUserId) ([src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraSerieDto.kt])
+
+### Changed
+- Actualizado Kafka consumer:迁移 de JsonDeserializer a JacksonJsonDeserializer para mejor rendimiento ([src/main/java/um/tesoreria/sender/configuration/KafkaConsumerConfig.java])
+- Migración de FacturacionElectronicaDto de Kotlin a Java para mejor interoperabilidad ([src/main/java/um/tesoreria/sender/domain/dto/tesoreria/core/FacturacionElectronicaDto.java])
+- Refactorizado ReciboController usando @RequiredArgsConstructor y ResponseEntityBuilder ([src/main/java/um/tesoreria/sender/controller/ReciboController.java])
+- Refactorizado logging en ReciboService usando Jsonifier para mejor legibilidad y rendimiento ([src/main/java/um/tesoreria/sender/service/ReciboService.java])
+- Mejorado null safety en ReciboService con Objects.requireNonNull ([src/main/java/um/tesoreria/sender/service/ReciboService.java])
+- Añadido método jsonify() a DTOs (ChequeraFacturacionElectronicaDto, ChequeraPagoDto, ReciboMessageCheckDto) para serialización JSON uniforme
+
 ## [1.6.0] - 2026-03-13
 
 ### Added

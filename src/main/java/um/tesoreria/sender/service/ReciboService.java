@@ -26,6 +26,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import um.tesoreria.sender.client.tesoreria.core.*;
 import um.tesoreria.sender.client.tesoreria.core.facade.ToolClient;
+import um.tesoreria.sender.domain.dto.tesoreria.core.FacturacionElectronicaDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.*;
 import um.tesoreria.sender.service.util.Tool;
 
@@ -94,7 +95,7 @@ public class ReciboService {
         Image imageQr = null;
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
-            logFacturacionElectronica(facturacionElectronica);
+            log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
         }
         ComprobanteDto comprobante = facturacionElectronica.getComprobante();
         if (comprobante == null) {
@@ -743,20 +744,21 @@ public class ReciboService {
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
         }
-        logFacturacionElectronica(facturacionElectronica);
+
+        log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
         ChequeraPagoDto chequeraPago = facturacionElectronica.getChequeraPago();
         if (chequeraPago == null) {
             chequeraPago = chequeraPagoClient.findByChequeraPagoId(facturacionElectronica.getChequeraPagoId());
         }
-        logChequeraPago(chequeraPago);
+        log.debug("ChequeraPago -> {}", chequeraPago.jsonify());
 
         ChequeraSerieDto chequeraSerie = chequeraSerieClient.findByUnique(Objects.requireNonNull(facturacionElectronica.getChequeraPago()).getFacultadId(), facturacionElectronica.getChequeraPago().getTipoChequeraId(), facturacionElectronica.getChequeraPago().getChequeraSerieId());
-        logChequeraSerie(chequeraSerie);
+        log.debug("ChequeraSerie -> {}", chequeraSerie.jsonify());
         String cuotaString = MessageFormat.format("Recibo de Cuota {0}/{1}/{2}/{3}/{4}/{5}", chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getAlternativaId(), chequeraPago.getProductoId(), chequeraPago.getCuotaId());
         ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica;
         try {
             chequeraFacturacionElectronica = chequeraFacturacionElectronicaClient.findByChequeraId(chequeraSerie.getChequeraId());
-            logChequeraFacturacionElectronica(chequeraFacturacionElectronica);
+            log.debug("ChequeraFacturacionElectronica -> {}", chequeraFacturacionElectronica.jsonify());
         } catch (Exception e) {
             chequeraFacturacionElectronica = new ChequeraFacturacionElectronicaDto();
         }
@@ -767,8 +769,8 @@ public class ReciboService {
         if (filenameRecibo.isEmpty()) {
             log.debug("Sin Recibo para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
-            facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            logFacturacionElectronica(facturacionElectronica);
+            facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
 
             return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", cuotaString);
         }
@@ -777,15 +779,17 @@ public class ReciboService {
         if (domicilio == null) {
             log.debug("Sin Domicilio para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
-            facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            logFacturacionElectronica(facturacionElectronica);
+            facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
             return MessageFormat.format("ERROR: {0} Sin Recibo para ENVIAR", cuotaString);
         }
-        if (domicilio.getEmailPersonal().isEmpty() && domicilio.getEmailInstitucional().isEmpty()) {
+        if (Objects.requireNonNull(domicilio.getEmailPersonal()).isEmpty() && Objects.requireNonNull(domicilio.getEmailInstitucional()).isEmpty()) {
             log.debug("Sin e-mails para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
-            facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            logFacturacionElectronica(facturacionElectronica);
+            facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
             return MessageFormat.format("ERROR: {0} Sin e-mails para ENVIAR", cuotaString);
         }
 
@@ -812,7 +816,7 @@ public class ReciboService {
                     log.debug("adding personal email -> {}", domicilio.getEmailPersonal());
                 }
             }
-            if (!domicilio.getEmailInstitucional().isEmpty()) {
+            if (!Objects.requireNonNull(domicilio.getEmailInstitucional()).isEmpty()) {
                 if (toolClient.mailValidate(Tool.convertStringToList(domicilio.getEmailInstitucional()))) {
                     addresses.add(domicilio.getEmailInstitucional());
                     log.debug("adding institutional email -> {}", domicilio.getEmailInstitucional());
@@ -851,23 +855,30 @@ public class ReciboService {
         } catch (org.springframework.mail.MailSendException e) {
             log.error("Error al enviar el correo por dirección inválida: {}", e.getMessage());
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
-            facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            logFacturacionElectronica(facturacionElectronica);
+            facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
             return MessageFormat.format("ERROR: {0} No pudo ENVIARSE. Dirección de correo inválida.", cuotaString);
         } catch (MessagingException e) {
             log.debug("No pudo ENVIARSE");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);
-            facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
-            logFacturacionElectronica(facturacionElectronica);
+            facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+            log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
             return MessageFormat.format("ERROR: {0} No pudo ENVIARSE", cuotaString);
         }
 
         log.debug("Mail enviado");
         facturacionElectronica.setEnviada((byte) 1);
+        log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+        log.debug("Updating ...");
         facturacionElectronica = facturacionElectronicaClient.update(facturacionElectronica, facturacionElectronicaId);
+        log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
         // Agregado por perder la referencia a chequeraPago en el update
         facturacionElectronica.setChequeraPago(chequeraPago);
-        logFacturacionElectronica(facturacionElectronica);
+        log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
         var reciboMessageCheck = new ReciboMessageCheckDto.Builder()
                 .reciboMessageCheckId(UUID.randomUUID())
                 .facturacionElectronicaId(facturacionElectronica.getFacturacionElectronicaId())
@@ -880,82 +891,16 @@ public class ReciboService {
                 .cuotaId(facturacionElectronica.getChequeraPago().getCuotaId())
                 .build();
         reciboMessageCheck = reciboMessageCheckClient.add(reciboMessageCheck);
-        logReciboMessageCheck(reciboMessageCheck);
+        log.debug("ReciboMessageCheck -> {}", reciboMessageCheck.jsonify());
+
         return MessageFormat.format("{0} Envío de Correo Ok!!!", cuotaString);
-    }
-
-    private void logChequeraFacturacionElectronica(ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica) {
-        log.debug("Processing ReciboService.logChequeraFacturacionElectronica()");
-        try {
-            log.debug("ChequeraFacturacionElectronica -> {}", JsonMapper
-                    .builder()
-                    .findAndAddModules()
-                    .build()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(chequeraFacturacionElectronica));
-        } catch (JsonProcessingException e) {
-            log.debug("ChequeraFacturacionElectronica jsonify error -> {}", e.getMessage());
-        }
-    }
-
-    private void logChequeraPago(ChequeraPagoDto chequeraPago) {
-        log.debug("Processing ReciboService.logChequeraPago()");
-        try {
-            log.debug("ChequeraPago -> {}", JsonMapper
-                    .builder()
-                    .findAndAddModules()
-                    .build()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(chequeraPago));
-        } catch (JsonProcessingException e) {
-            log.debug("ChequeraPago jsonify error -> {}", e.getMessage());
-        }
-    }
-
-    private void logChequeraSerie(ChequeraSerieDto chequeraSerie) {
-        log.debug("Processing ReciboService.logChequeraSerie()");
-        try {
-            log.debug("ChequeraSerie -> {}", JsonMapper
-                    .builder()
-                    .findAndAddModules()
-                    .build()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(chequeraSerie));
-        } catch (JsonProcessingException e) {
-            log.debug("ChequeraSerie jsonify error -> {}", e.getMessage());
-        }
-    }
-
-    private void logReciboMessageCheck(ReciboMessageCheckDto reciboMessageCheck) {
-        try {
-            log.debug("ReciboMessageCheck: {}", JsonMapper
-                    .builder()
-                    .findAndAddModules()
-                    .build()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(reciboMessageCheck));
-        } catch (JsonProcessingException e) {
-            log.debug("ReciboMessageCheck jsonify error: {}", e.getMessage());
-        }
-    }
-
-    private void logFacturacionElectronica(FacturacionElectronicaDto facturacionElectronica) {
-        try {
-            log.debug("FacturacionElectronica: {}", JsonMapper
-                    .builder()
-                    .findAndAddModules()
-                    .build()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(facturacionElectronica));
-        } catch (JsonProcessingException e) {
-            log.debug("FacturacionElectronica jsonify error: {}", e.getMessage());
-        }
     }
 
     public String sendNext() {
         log.debug("Processing ReciboService.sendNext()");
         FacturacionElectronicaDto facturacionElectronica = facturacionElectronicaClient.findNextPendiente();
-        logFacturacionElectronica(facturacionElectronica);
+        log.debug("FacturacionElectronica -> {}", facturacionElectronica.jsonify());
+
         try {
             return this.send(facturacionElectronica.getFacturacionElectronicaId(), facturacionElectronica);
         } catch (Exception e) {

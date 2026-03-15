@@ -8,11 +8,14 @@ graph TD
     subgraph "Sistemas Externos"
         B["Tesoreria Core API"];
         C["Servidor SMTP"];
+        D["Kafka Broker"];
     end
 
     A --> B;
     A --> C;
+    A --> D;
 
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#bbf,stroke:#333,stroke-width:2px
     style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px

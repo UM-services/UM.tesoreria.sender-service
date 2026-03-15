@@ -1,5 +1,6 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
+import um.tesoreria.sender.util.Jsonifier
 import java.util.UUID
 
 data class ReciboMessageCheckDto(
@@ -16,6 +17,10 @@ data class ReciboMessageCheckDto(
     var payload: String = ""
 
 ) {
+    fun jsonify(): String {
+        return Jsonifier.builder(this).build()
+    }
+
     class Builder {
         private var reciboMessageCheckId: UUID? = null
         private var facturacionElectronicaId: Long? = null
