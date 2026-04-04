@@ -1,13 +1,13 @@
 # UM.tesoreria.sender-service
 
 [![Java](https://img.shields.io/badge/Java-25-red.svg)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.0-blue.svg)](https://spring.io/projects/spring-cloud)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.0-purple.svg)](https://kotlinlang.org/)
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.1-lightblue.svg)](https://www.openapis.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.2-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.5.0--jre-orange.svg)](https://github.com/google/guava)
-[![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.1-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-1.7.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.3-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
+[![Version](https://img.shields.io/badge/Version-1.8.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -136,15 +136,15 @@ Servicio de envío de correos electrónicos y notificaciones para UM Tesorería.
 ## Tecnologías
 
 - Java 25
-- Spring Boot 4.0.2
+- Spring Boot 4.0.5
 - Spring Cloud 2025.1.0
 - Kafka
 - Spring Mail
 - Spring Cloud Netflix Eureka Client
-- OpenAPI (Springdoc) 3.0.1
-- Kotlin 2.3.0
+- OpenAPI (Springdoc) 3.0.2
+- Kotlin 2.3.20
 - Guava 33.5.0-jre
-- OpenPDF 3.0.1
+- OpenPDF 3.0.3
 
 ## Configuración
 
