@@ -11,6 +11,7 @@ spring:
       group-id: test-group
 app:
   mail:
+    from: envios.chequeras@um.edu.ar
     username: test
     password: test
   testing: true

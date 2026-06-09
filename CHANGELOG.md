@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.9.0] - 2026-06-09
+
+### Added
+- Nueva propiedad configurable `app.mail.from` para definir el remitente en envíos de chequeras ([src/main/java/um/tesoreria/sender/service/ChequeraService.java], [src/main/resources/bootstrap.yml])
+- Configuración externalizada para `spring.mail.host` mediante `${app.mail.host}` ([src/main/resources/bootstrap.yml])
+
+### Changed
+- Actualizado Spring Boot a versión 4.0.6 (desde 4.0.5) ([pom.xml])
+
 ## [1.8.0] - 2026-04-04
 
 ### Changed
