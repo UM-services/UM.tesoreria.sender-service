@@ -1,20 +1,52 @@
 sequenceDiagram
     actor User
+    participant ReciboController
+    participant ReciboService
+    participant FacturacionElectronicaClient
+    participant JavaMailSender
+    participant MimeMessageHelper
+    participant ReciboMessageCheckClient
+
     User->>ReciboController: GET /api/tesoreria/sender/recibo/send/{id}
+    activate ReciboController
     ReciboController->>ReciboService: send(id, null)
+    activate ReciboService
+    
     ReciboService->>FacturacionElectronicaClient: findByFacturacionElectronicaId(id)
+    activate FacturacionElectronicaClient
     FacturacionElectronicaClient-->>ReciboService: facturacionElectronica
-    ReciboService->>ReciboService: generatePdf(...)
-    ReciboService-->>ReciboService: filenameRecibo
+    deactivate FacturacionElectronicaClient
+    
+    ReciboService->>ReciboService: generatePdf(id, facturacionElectronica, chequeraSerie)
+    Note over ReciboService: Genera archivo PDF del recibo
+    
     ReciboService->>JavaMailSender: createMimeMessage()
+    activate JavaMailSender
     JavaMailSender-->>ReciboService: message
+    deactivate JavaMailSender
+    
+    ReciboService->>MimeMessageHelper: MimeMessageHelper(message, true)
+    activate MimeMessageHelper
     ReciboService->>MimeMessageHelper: setTo(), setText(), setSubject(), addAttachment()
-    MimeMessageHelper-->>ReciboService: _
+    MimeMessageHelper-->>ReciboService: helper
+    deactivate MimeMessageHelper
+    
     ReciboService->>JavaMailSender: send(message)
-    JavaMailSender-->>ReciboService:
+    activate JavaMailSender
+    JavaMailSender-->>ReciboService: (void)
+    deactivate JavaMailSender
+    
     ReciboService->>FacturacionElectronicaClient: update(facturacionElectronica)
+    activate FacturacionElectronicaClient
     FacturacionElectronicaClient-->>ReciboService: facturacionElectronica
+    deactivate FacturacionElectronicaClient
+    
     ReciboService->>ReciboMessageCheckClient: add(reciboMessageCheck)
+    activate ReciboMessageCheckClient
     ReciboMessageCheckClient-->>ReciboService: reciboMessageCheck
+    deactivate ReciboMessageCheckClient
+    
     ReciboService-->>ReciboController: "Envío de Correo Ok!!!"
+    deactivate ReciboService
     ReciboController-->>User: HTTP 200 OK
+    deactivate ReciboController

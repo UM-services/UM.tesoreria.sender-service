@@ -7,7 +7,7 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.2-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.5.0--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.3-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-1.9.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.0.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -42,7 +42,8 @@ spring.application.name=um.tesoreria.sender-service
 server.port=8080
 
 # Configuración de email
-app.mail.from=${MAIL_FROM}
+app.mail.fromchequera=${MAIL_FROM_CHEQUERA}
+app.mail.fromrecibo=${MAIL_FROM_RECIBO}
 spring.mail.host=${MAIL_HOST}
 spring.mail.port=587
 spring.mail.username=${MAIL_USERNAME}
@@ -147,7 +148,7 @@ Este proyecto es privado y confidencial. Todos los derechos reservados.
 - Spring Cloud 2025.1.0
 - Kafka
 - Spring Mail
-- Spring Cloud Netflix Eureka Client
+- Spring Cloud Consul Discovery
 - OpenAPI (Springdoc) 3.0.2
 - Kotlin 2.3.20
 - Guava 33.5.0-jre

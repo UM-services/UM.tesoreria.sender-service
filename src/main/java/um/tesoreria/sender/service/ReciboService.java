@@ -54,6 +54,9 @@ public class ReciboService {
     @Value("${app.testing}")
     private Boolean testing;
 
+    @Value("${app.mail.fromrecibo}")
+    private String mailFromRecibo;
+
     private final Environment environment;
     private final FacturacionElectronicaClient facturacionElectronicaClient;
     private final JavaMailSender javaMailSender;
@@ -842,6 +845,7 @@ public class ReciboService {
 
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(mailFromRecibo);
             helper.setTo(addresses.toArray(new String[0]));
             helper.setText(data);
             helper.setReplyTo("no-reply@um.edu.ar");

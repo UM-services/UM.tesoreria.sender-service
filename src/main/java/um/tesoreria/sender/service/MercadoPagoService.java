@@ -2,6 +2,7 @@ package um.tesoreria.sender.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -12,36 +13,30 @@ import um.tesoreria.sender.kotlin.dto.tesoreria.core.DomicilioDto;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class MercadoPagoService {
 
     private final ChequeraCuotaClient chequeraCuotaClient;
     private final MercadoPagoContextClient mercadoPagoContextClient;
     private final JavaMailSender javaMailSender;
 
-    public MercadoPagoService(ChequeraCuotaClient chequeraCuotaClient,
-                              MercadoPagoContextClient mercadoPagoContextClient,
-                              JavaMailSender javaMailSender) {
-        this.chequeraCuotaClient = chequeraCuotaClient;
-        this.mercadoPagoContextClient = mercadoPagoContextClient;
-        this.javaMailSender = javaMailSender;
-    }
-
     public String sendCuota(Long chequeraCuotaId) throws MessagingException {
         var chequeraCuota = chequeraCuotaClient.findByChequeraCuotaId(chequeraCuotaId);
         var mercadoPagoContext = mercadoPagoContextClient.findActivoByChequeraCuotaId(chequeraCuotaId);
 
-        DomicilioDto domicilio = chequeraCuota.getChequeraSerie().getDomicilio();
+        DomicilioDto domicilio = Objects.requireNonNull(chequeraCuota.getChequeraSerie()).getDomicilio();
         if (domicilio == null) {
             return "ERROR: Sin datos de e-mail para ENVIAR";
         }
-        if (domicilio.getEmailPersonal().isEmpty() && domicilio.getEmailInstitucional().isEmpty()) {
+        if (Objects.requireNonNull(domicilio.getEmailPersonal()).isEmpty() && Objects.requireNonNull(domicilio.getEmailInstitucional()).isEmpty()) {
             return "ERROR: Sin datos de e-mail para ENVIAR";
         }
 
         // Obtener el nombre del alumno
-        String nombreAlumno = chequeraCuota.getChequeraSerie().getPersona().getApellidoNombre();
+        String nombreAlumno = Objects.requireNonNull(chequeraCuota.getChequeraSerie().getPersona()).getApellidoNombre();
 
         // Formatear la fecha de vencimiento
         String fechaVencimientoFormatted = mercadoPagoContext.getFechaVencimiento()
@@ -81,15 +76,15 @@ public class MercadoPagoService {
                 "<p><strong>Estimad@ " + nombreAlumno + ",</strong></p>" +
                 "<p>Le compartimos los detalles:</p>" +
                 "<div class='info-section'>" +
-                "<p>Unidad Académica: <strong>" + chequeraCuota.getFacultad().getNombre() + "</strong></p>" +
+                "<p>Unidad Académica: <strong>" + Objects.requireNonNull(chequeraCuota.getFacultad()).getNombre() + "</strong></p>" +
                 "<br/>" +
-                "<p>Tipo de Chequera: <strong>" + chequeraCuota.getTipoChequera().getNombre() + "</strong></p>" +
+                "<p>Tipo de Chequera: <strong>" + Objects.requireNonNull(chequeraCuota.getTipoChequera()).getNombre() + "</strong></p>" +
                 "<br/>" +
-                "<p>Sede: <strong>" + chequeraCuota.getChequeraSerie().getGeografica().getNombre() + "</strong></p>" +
+                "<p>Sede: <strong>" + Objects.requireNonNull(chequeraCuota.getChequeraSerie().getGeografica()).getNombre() + "</strong></p>" +
                 "<br/>" +
-                "<p>Ciclo Lectivo: <strong>" + chequeraCuota.getChequeraSerie().getLectivo().getNombre() + "</strong></p>" +
+                "<p>Ciclo Lectivo: <strong>" + Objects.requireNonNull(chequeraCuota.getChequeraSerie().getLectivo()).getNombre() + "</strong></p>" +
                 "<br/>" +
-                "<p>Tipo de Arancel: <strong>" + chequeraCuota.getChequeraSerie().getArancelTipo().getDescripcion() + "</strong></p>" +
+                "<p>Tipo de Arancel: <strong>" + Objects.requireNonNull(chequeraCuota.getChequeraSerie().getArancelTipo()).getDescripcion() + "</strong></p>" +
                 "<br/>" +
                 "<p>Alternativa: <strong>" + chequeraCuota.getChequeraSerie().getAlternativaId() + "</strong></p>" +
                 "</div>" +
@@ -102,7 +97,7 @@ public class MercadoPagoService {
                 "<th>Enlace</th>" +
                 "</tr>" +
                 "<tr>" +
-                "<td>" + chequeraCuota.getProducto().getNombre() + "</td>" +
+                "<td>" + Objects.requireNonNull(chequeraCuota.getProducto()).getNombre() + "</td>" +
                 "<td>" + chequeraCuota.getMes() + "/" + chequeraCuota.getAnho() + "</td>" +
                 "<td>" + fechaVencimientoFormatted + "</td>" +
                 "<td>$" + String.format("%.2f", mercadoPagoContext.getImporte()) + "</td>" +
@@ -128,12 +123,12 @@ public class MercadoPagoService {
         if (!domicilio.getEmailPersonal().isEmpty()) {
             addresses.add(domicilio.getEmailPersonal());
         }
-        if (!domicilio.getEmailInstitucional().isEmpty()) {
+        if (!Objects.requireNonNull(domicilio.getEmailInstitucional()).isEmpty()) {
             addresses.add(domicilio.getEmailInstitucional());
         }
 
         try {
-            helper.setTo(addresses.toArray(new String[addresses.size()]));
+            helper.setTo(addresses.toArray(new String[0]));
             helper.setText(data, true);
             helper.setReplyTo("no-reply@um.edu.ar");
             helper.setSubject("Envío de Enlace de MercadoPago: " + nombreAlumno);

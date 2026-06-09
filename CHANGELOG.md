@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.0] - 2026-06-09
+
+### Added
+- Nueva propiedad configurable `app.mail.fromrecibo` para definir el remitente en envíos de recibos ([src/main/java/um/tesoreria/sender/service/ReciboService.java], [src/main/resources/bootstrap.yml])
+- Validación null-safety con `Objects.requireNonNull()` en MercadoPagoService para evitar NullPointerException ([src/main/java/um/tesoreria/sender/service/MercadoPagoService.java])
+
+### Changed
+- Refactorizado MercadoPagoService usando `@RequiredArgsConstructor`, eliminando el constructor explícito ([src/main/java/um/tesoreria/sender/service/MercadoPagoService.java])
+- Reemplazado `addresses.toArray(new String[addresses.size()])` por `addresses.toArray(new String[0])` en MercadoPagoService ([src/main/java/um/tesoreria/sender/service/MercadoPagoService.java])
+- Actualizado diagrama de secuencia de envío de recibos con participantes detallados (ReciboController, FacturacionElectronicaClient, JavaMailSender, MimeMessageHelper, ReciboMessageCheckClient) y bloques activate/deactivate ([docs/diagrams/flujo-envio-recibo.mmd])
+
+### Removed
+- Eliminada propiedad `app.mail.from` — reemplazada por `app.mail.fromchequera` y `app.mail.fromrecibo` ([src/main/java/um/tesoreria/sender/service/ChequeraService.java], [src/main/resources/bootstrap.yml])
+
 ## [1.9.0] - 2026-06-09
 
 ### Added

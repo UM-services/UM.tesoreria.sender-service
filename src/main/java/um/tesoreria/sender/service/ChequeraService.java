@@ -40,8 +40,8 @@ public class ChequeraService {
     @Value("${app.testing}")
     private Boolean testing;
 
-    @Value("${app.mail.from}")
-    private String mailFrom;
+    @Value("${app.mail.fromchequera}")
+    private String mailFromChequera;
 
     private final FormulariosToPdfService formulariosToPdfService;
     private final JavaMailSender javaMailSender;
@@ -259,7 +259,7 @@ public class ChequeraService {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        helper.setFrom(mailFrom);
+        helper.setFrom(mailFromChequera);
         helper.setTo(recipients.toArray(new String[0]));
         helper.setSubject("Recordatorio - Pago cuota UM -> " + nombreAlumno);
         helper.setReplyTo("no-reply@um.edu.ar");
