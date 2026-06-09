@@ -6,7 +6,8 @@ app:
     host: consul-service
     port: 8500
   mail:
-    from: from
+    fromchequera: fromchequera
+    fromrecibo: fromrecibo
     host: host
     username: uid
     password: pwd
