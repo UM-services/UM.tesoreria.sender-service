@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reemplazado `addresses.toArray(new String[addresses.size()])` por `addresses.toArray(new String[0])` en MercadoPagoService ([src/main/java/um/tesoreria/sender/service/MercadoPagoService.java])
 - Actualizado diagrama de secuencia de envío de recibos con participantes detallados (ReciboController, FacturacionElectronicaClient, JavaMailSender, MimeMessageHelper, ReciboMessageCheckClient) y bloques activate/deactivate ([docs/diagrams/flujo-envio-recibo.mmd])
 
+### Fixed
+- Alineada configuración de test `src/test/resources/bootstrap.yml` con el nuevo esquema `app.mail.fromchequera` / `app.mail.fromrecibo`, reemplazando la propiedad antigua `app.mail.from` ([src/test/resources/bootstrap.yml])
+
 ### Removed
 - Eliminada propiedad `app.mail.from` — reemplazada por `app.mail.fromchequera` y `app.mail.fromrecibo` ([src/main/java/um/tesoreria/sender/service/ChequeraService.java], [src/main/resources/bootstrap.yml])
 
