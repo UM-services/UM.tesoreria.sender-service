@@ -76,6 +76,7 @@ jobs:
               <div id="stats" class="stats"></div>
               <div id="architecture" class="section"></div>
               <div id="sequence-diagram" class="section"></div>
+              <div id="erd-diagram" class="section"></div>
               <div id="deployment-diagram" class="section"></div>
               <div id="dependencies" class="section">
                   <h2>🌳 Grafo de Dependencias</h2>

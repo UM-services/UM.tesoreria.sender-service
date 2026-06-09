@@ -6,6 +6,8 @@ app:
     host: consul-service
     port: 8500
   mail:
+    from: from
+    host: host
     username: uid
     password: pwd
 
@@ -33,7 +35,7 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
   mail:
-    host: smtp.gmail.com
+    host: ${app.mail.host}
     port: 587
     username: ${app.mail.username}
     password: ${app.mail.password}

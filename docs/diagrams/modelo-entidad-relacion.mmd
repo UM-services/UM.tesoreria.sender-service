@@ -1,0 +1,81 @@
+erDiagram
+    ChequeraSerie ||--o{ ChequeraCuota : tiene
+    ChequeraSerie ||--o{ ChequeraPago : genera
+    ChequeraSerie ||--o{ ChequeraFacturacionElectronica : factura
+    ChequeraSerie }o--|| TipoChequera : clasifica
+    ChequeraSerie }o--|| Persona : pertenece
+
+    ChequeraFacturacionElectronica ||--|| FacturacionElectronica : genera
+    FacturacionElectronica ||--o{ ReciboMessageCheck : rastrea
+
+    ChequeraPago ||--o{ ChequeraMessageCheck : rastrea
+
+    ChequeraSerie {
+        Long chequeraSerieId PK
+        Integer facultadId
+        Integer tipoChequeraId
+        Long personaId
+        String hpum
+        BigDecimal becaPorcentaje
+        String becaResolucion
+        Date becaFecha
+        String becaUserId
+    }
+
+    ChequeraCuota {
+        Long chequeraCuotaId PK
+        Long chequeraSerieId FK
+        Integer cuotaNro
+        BigDecimal importe
+        Date vencimiento
+        Integer compensada
+    }
+
+    ChequeraPago {
+        Long chequeraPagoId PK
+        Long chequeraSerieId FK
+        BigDecimal importe
+        Date fechaPago
+    }
+
+    TipoChequera {
+        Integer tipoChequeraId PK
+        String nombre
+        String emailCopia
+    }
+
+    Persona {
+        Long personaId PK
+        String apellido
+        String nombre
+        String emailPersonal
+        String emailInstitucional
+        String documento
+    }
+
+    ChequeraFacturacionElectronica {
+        Long chequeraFacturacionElectronicaId PK
+        Long chequeraSerieId FK
+        Long facturacionElectronicaId FK
+    }
+
+    FacturacionElectronica {
+        Long facturacionElectronicaId PK
+        Long chequeraSerieId
+        BigDecimal importe
+        Date fechaEmision
+    }
+
+    ReciboMessageCheck {
+        Long reciboMessageCheckId PK
+        Long facturacionElectronicaId FK
+        String uuid
+        Date fechaEnvio
+    }
+
+    ChequeraMessageCheck {
+        Long chequeraMessageCheckId PK
+        Long chequeraPagoId FK
+        String uuid
+        Date fechaEnvio
+    }
