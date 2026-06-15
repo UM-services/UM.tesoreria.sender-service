@@ -18,7 +18,7 @@ data class ChequeraSerieReemplazoDto(
     var cursoId: Int? = null,
     var asentado: Int = 0,
     var geograficaId: Int? = 1,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "UTC")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXX", timezone = "UTC")
     var fecha: OffsetDateTime,
     var cuotasPagadas: Int = 0,
     var observaciones: String = "",

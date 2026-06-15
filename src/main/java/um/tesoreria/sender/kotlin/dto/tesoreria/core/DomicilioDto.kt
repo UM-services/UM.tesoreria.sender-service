@@ -10,7 +10,7 @@ data class DomicilioDto(
     var domicilioId: Long? = null,
     var personaId: BigDecimal? = null,
     var documentoId: Int? = null,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "UTC")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXX", timezone = "UTC")
     var fecha: OffsetDateTime? = OffsetDateTime.now(),
     var calle: String? = "",
     var puerta: String? = "",
