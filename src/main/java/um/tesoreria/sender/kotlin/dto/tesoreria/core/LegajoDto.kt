@@ -12,7 +12,7 @@ data class LegajoDto(
     var documentoId: Int? = null,
     var facultadId: Int? = null,
     var numeroLegajo: Long = 0L,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "UTC")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXX", timezone = "UTC")
     var fecha: OffsetDateTime? = null,
     var lectivoId: Int? = null,
     var planId: Int? = null,

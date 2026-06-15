@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.1] - 2026-06-15
+
+### Changed
+- Actualizado Spring Boot a versión 4.1.0 (desde 4.0.6) ([pom.xml])
+- Actualizado Spring Cloud a versión 2025.1.2 (desde 2025.1.0) ([pom.xml])
+
+### Fixed
+- Corregido patrón de serialización `@JsonFormat` de `Z` a `XX` en todos los DTOs para conformidad con ISO 8601 en `OffsetDateTime` ([src/main/java/um/tesoreria/sender/domain/dto/MercadoPagoContextDto.java], [src/main/java/um/tesoreria/sender/domain/dto/tesoreria/core/FacturacionElectronicaDto.java], [src/main/java/um/tesoreria/sender/domain/dto/tesoreria/core/InscripcionDto.java], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraCuotaDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraCuotaReemplazoDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraPagoDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraSerieDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/ChequeraSerieReemplazoDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/DomicilioDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/LectivoDto.kt], [src/main/java/um/tesoreria/sender/kotlin/dto/tesoreria/core/LegajoDto.kt])
+- Alineada configuración de test `bootstrap.yml` con nuevo esquema de propiedades mail from ([src/test/resources/bootstrap.yml])
+
 ## [2.0.0] - 2026-06-09
 
 ### Added
