@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.0] - 2026-06-17
+
+### Added
+- Mostrado del tipo de arancel (`arancelTipo`) y porcentaje de beca (`becaPorcentaje`) en los encabezados de los PDFs generados ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+
+### Changed
+- Refactorizado `FormulariosToPdfService.fetchData()` para recibir objetos de dominio completos (`FacultadDto`, `TipoChequeraDto`, `LectivoDto`, `ArancelTipoDto`) en lugar de IDs primitivos, eliminando llamadas redundantes a clientes de facultad, tipo chequera y lectivo ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+- Refactorizado `addCommonHeaderInfo()` para incluir el nombre del arancel y el porcentaje de beca como parámetros de visualización ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+- Simplificado el banner ASCII de la aplicación ([src/main/resources/banner.txt])
+
+### Removed
+- Eliminadas dependencias `tipoChequeraClient` y `lectivoClient` de `FormulariosToPdfService` (los datos ahora se obtienen desde `ChequeraSerieDto`) ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+
 ## [2.0.1] - 2026-06-15
 
 ### Changed

@@ -4,6 +4,7 @@ erDiagram
     ChequeraSerie ||--o{ ChequeraFacturacionElectronica : factura
     ChequeraSerie }o--|| TipoChequera : clasifica
     ChequeraSerie }o--|| Persona : pertenece
+    ChequeraSerie }o--|| ArancelTipo : categoriza
 
     ChequeraFacturacionElectronica ||--|| FacturacionElectronica : genera
     FacturacionElectronica ||--o{ ReciboMessageCheck : rastrea
@@ -51,6 +52,13 @@ erDiagram
         String emailPersonal
         String emailInstitucional
         String documento
+    }
+
+    ArancelTipo {
+        Int arancelTipoId PK
+        String descripcion
+        Byte medioArancel
+        Int arancelTipoIdCompleto
     }
 
     ChequeraFacturacionElectronica {

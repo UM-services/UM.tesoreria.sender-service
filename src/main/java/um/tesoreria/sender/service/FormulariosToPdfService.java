@@ -44,9 +44,7 @@ public class FormulariosToPdfService {
     private final ChequeraSerieClient chequeraSerieClient;
     private final ChequeraCuotaClient chequeraCuotaClient;
     private final FacultadClient facultadClient;
-    private final TipoChequeraClient tipoChequeraClient;
     private final PersonaClient personaClient;
-    private final LectivoClient lectivoClient;
     private final LegajoClient legajoClient;
     private final CarreraClient carreraClient;
     private final LectivoAlternativaClient lectivoAlternativaClient;
@@ -74,7 +72,7 @@ public class FormulariosToPdfService {
             return "";
         }
 
-        var data = fetchData(serie.getFacultadId(), serie.getTipoChequeraId(), serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivoId());
+        var data = fetchData(serie.getFacultad(), serie.getTipoChequera(), serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivo(), serie.getArancelTipo());
 
         String path = environment.getProperty("path.reports");
         String filename = String.format("%schequera-%s-%s-%s-%s.pdf", path, serie.getPersonaId(), serie.getFacultadId(), serie.getTipoChequeraId(), serie.getChequeraSerieId());
@@ -86,9 +84,20 @@ public class FormulariosToPdfService {
             document.open();
 
             addHeader(document, facultadId, data.facultad().getNombre());
-            addCommonHeaderInfo(document, data.tipoChequera().getNombre(), data.lectivo().getNombre(),
-                    codigoBarras ? "RapiPago" : "MercadoPago", alternativaId, data.persona(), data.carrera(),
-                    "Chequera", serie.getChequeraSerieId(), serie.getFacultadId(), serie.getTipoChequeraId());
+            addCommonHeaderInfo(document,
+                    data.tipoChequera().getNombre(),
+                    data.lectivo().getNombre(),
+                    data.arancelTipo().getDescripcion(),
+                    codigoBarras ? "RapiPago" : "MercadoPago",
+                    alternativaId,
+                    data.persona(),
+                    data.carrera(),
+                    "Chequera",
+                    serie.getChequeraSerieId(),
+                    serie.getFacultadId(),
+                    serie.getTipoChequeraId(),
+                    serie.getBecaPorcentaje()
+            );
 
             for (var umPreferenceMPDto : preferences) {
                 var cuota = umPreferenceMPDto.getChequeraCuota();
@@ -119,7 +128,7 @@ public class FormulariosToPdfService {
             return "";
         }
 
-        var data = fetchData(serie.getFacultadId(), serie.getTipoChequeraId(), serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivoId());
+        var data = fetchData(serie.getFacultad(), serie.getTipoChequera(), serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivo(), serie.getArancelTipo());
 
         String path = environment.getProperty("path.reports");
         String filename = String.format("%schequera-reemplazo-%s-%s-%s-%s.pdf", path, serie.getPersonaId(), serie.getFacultadId(), serie.getTipoChequeraId(), serie.getChequeraSerieId());
@@ -131,9 +140,20 @@ public class FormulariosToPdfService {
             document.open();
 
             addHeader(document, facultadId, data.facultad().getNombre());
-            addCommonHeaderInfo(document, data.tipoChequera().getNombre(), data.lectivo().getNombre(), "RapiPago",
-                    alternativaId, data.persona(), data.carrera(), "Chequera Reemplazo", serie.getChequeraSerieId(),
-                    serie.getFacultadId(), serie.getTipoChequeraId());
+            addCommonHeaderInfo(document,
+                    data.tipoChequera().getNombre(),
+                    data.lectivo().getNombre(),
+                    data.arancelTipo().getDescripcion(),
+                    "RapiPago",
+                    alternativaId,
+                    data.persona(),
+                    data.carrera(),
+                    "Chequera Reemplazo",
+                    serie.getChequeraSerieId(),
+                    serie.getFacultadId(),
+                    serie.getTipoChequeraId(),
+                    BigDecimal.ZERO
+            );
 
             for (ChequeraCuotaReemplazoDto cuota : cuotas) {
                 boolean printCuota = completa ? cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0
@@ -161,7 +181,7 @@ public class FormulariosToPdfService {
             return "";
         }
 
-        var data = fetchData(serie.getFacultadId(), serie.getTipoChequeraId(), serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivoId());
+        var data = fetchData(serie.getFacultad(), serie.getTipoChequera(), serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivo(), serie.getArancelTipo());
 
         String path = environment.getProperty("path.reports");
         String filename = String.format("%scuota-%s-%s-%s-%s-%s-%s.pdf", path, serie.getPersonaId(), serie.getFacultadId(), serie.getTipoChequeraId(), serie.getChequeraSerieId(), cuota.getProductoId(), cuota.getCuotaId());
@@ -173,9 +193,19 @@ public class FormulariosToPdfService {
             document.open();
 
             addHeader(document, facultadId, data.facultad().getNombre());
-            addCommonHeaderInfo(document, data.tipoChequera().getNombre(), data.lectivo().getNombre(), "RapiPago",
-                    alternativaId, data.persona(), data.carrera(), "Chequera", serie.getChequeraSerieId(),
-                    serie.getFacultadId(), serie.getTipoChequeraId());
+            addCommonHeaderInfo(document,
+                    data.tipoChequera().getNombre(),
+                    data.lectivo().getNombre(),
+                    data.arancelTipo.getDescripcion(),
+                    "RapiPago",
+                    alternativaId, data.persona(),
+                    data.carrera(),
+                    "Chequera",
+                    serie.getChequeraSerieId(),
+                    serie.getFacultadId(),
+                    serie.getTipoChequeraId(),
+                    serie.getBecaPorcentaje()
+            );
 
             addCuotaTable(document, writer, cuota, serie, null, true);
 
@@ -214,14 +244,29 @@ public class FormulariosToPdfService {
         document.add(table);
     }
 
-    private void addCommonHeaderInfo(Document document, String tipoChequeraNombre, String lectivoNombre, String tipoImpresion,
-                                     Integer alternativaId, PersonaDto persona, CarreraDto carrera, String chequeraLabel,
-                                     Long chequeraSerieId, Integer facultadId, Integer tipoChequeraId) throws DocumentException {
+    private void addCommonHeaderInfo(Document document,
+                                     String tipoChequeraNombre,
+                                     String lectivoNombre,
+                                     String arancelTipoNombre,
+                                     String tipoImpresion,
+                                     Integer alternativaId,
+                                     PersonaDto persona,
+                                     CarreraDto carrera,
+                                     String chequeraLabel,
+                                     Long chequeraSerieId,
+                                     Integer facultadId,
+                                     Integer tipoChequeraId,
+                                     BigDecimal becaPorcentaje) throws DocumentException {
         Paragraph paragraph = new Paragraph(tipoChequeraNombre, new Font(Font.HELVETICA, 16, Font.BOLD));
         paragraph.setAlignment(Element.ALIGN_CENTER);
         document.add(paragraph);
 
         paragraph = new Paragraph(lectivoNombre, new Font(Font.HELVETICA, 12));
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        document.add(paragraph);
+
+        paragraph = new Paragraph(new Phrase(arancelTipoNombre + " - Beca: ", new Font(Font.HELVETICA, 12)));
+        paragraph.add(new Phrase(String.format("%.2f%%", becaPorcentaje.multiply(BigDecimal.valueOf(100))), new Font(Font.HELVETICA, 12, Font.BOLD)));
         paragraph.setAlignment(Element.ALIGN_CENTER);
         document.add(paragraph);
 
@@ -363,29 +408,21 @@ public class FormulariosToPdfService {
         table.addCell(cell);
     }
 
-    private PdfData fetchData(Integer facultadId, Integer tipoChequeraId, BigDecimal personaId, Integer documentoId, Integer lectivoId) {
-        var facultad = facultadClient.findByFacultadId(facultadId);
-        var tipoChequera = tipoChequeraClient.findByTipoChequeraId(tipoChequeraId);
+    private PdfData fetchData(FacultadDto facultad, TipoChequeraDto tipoChequera, BigDecimal personaId, Integer documentoId, LectivoDto lectivo, ArancelTipoDto arancelTipo) {
         PersonaDto persona;
         try {
             persona = personaClient.findByUnique(personaId, documentoId);
         } catch (Exception e) {
             persona = new PersonaDto();
         }
-        LectivoDto lectivo;
         try {
-            lectivo = lectivoClient.findByLectivoId(lectivoId);
-        } catch (Exception e) {
-            lectivo = new LectivoDto();
-        }
-        try {
-            sincronizeClient.sincronizeCarreraAlumno(facultadId, persona.getPersonaId(), persona.getDocumentoId());
+            sincronizeClient.sincronizeCarreraAlumno(facultad.getFacultadId(), persona.getPersonaId(), persona.getDocumentoId());
         } catch (Exception e) {
             log.error("Sin sincronizar carrera");
         }
         LegajoDto legajo;
         try {
-            legajo = legajoClient.findByFacultadIdAndPersonaIdAndDocumentoId(facultadId, personaId, documentoId);
+            legajo = legajoClient.findByFacultadIdAndPersonaIdAndDocumentoId(facultad.getFacultadId(), personaId, documentoId);
         } catch (Exception e) {
             legajo = new LegajoDto();
         }
@@ -395,10 +432,12 @@ public class FormulariosToPdfService {
         } catch (Exception e) {
             carrera = new CarreraDto();
         }
-        return new PdfData(facultad, tipoChequera, persona, lectivo, legajo, carrera);
+        return new PdfData(facultad, tipoChequera, persona, lectivo, legajo, carrera, arancelTipo);
     }
 
-    private record PdfData(FacultadDto facultad, TipoChequeraDto tipoChequera, PersonaDto persona, LectivoDto lectivo, LegajoDto legajo, CarreraDto carrera) {}
+    private record PdfData(FacultadDto facultad, TipoChequeraDto tipoChequera, PersonaDto persona, LectivoDto lectivo,
+                           LegajoDto legajo, CarreraDto carrera, ArancelTipoDto arancelTipo) {
+    }
 
     public String generateMatriculaPdf(BigDecimal personaId, Integer documentoId, Integer facultadId,
                                        Integer lectivoId) {
