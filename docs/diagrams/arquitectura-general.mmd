@@ -10,7 +10,7 @@ graph TD
         B --> I[ChequeraSerieClient];
         B --> J[ChequeraFacturacionElectronicaClient];
         B --> K[ReciboMessageCheckClient];
-        N[ChequeraEventListener] --> O{FormulariosToPdfService};
+        N[ChequeraEventListener] --> O{ChequeraService};
     end
 
     subgraph "External Systems"

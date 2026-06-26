@@ -6,10 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.1.0] - 2026-06-17
+## [2.2.0] - 2026-06-25
 
 ### Added
-- Mostrado del tipo de arancel (`arancelTipo`) y porcentaje de beca (`becaPorcentaje`) en los encabezados de los PDFs generados ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+- Manejo robusto de errores en Kafka consumer con `ErrorHandlingDeserializer` y `DefaultErrorHandler` con retry backoff (2 reintentos con 1s de espera) ([src/main/java/um/tesoreria/sender/configuration/KafkaConsumerConfig.java])
+- Type mapping explícito para `SendChequeraEvent` en `JacksonJsonDeserializer`, eliminando la dependencia de serilización genérica (`Object`) ([src/main/java/um/tesoreria/sender/configuration/KafkaConsumerConfig.java])
+- Logging de inicialización del Kafka Consumer Factory con bootstrap servers y groupId ([src/main/java/um/tesoreria/sender/configuration/KafkaConsumerConfig.java])
+
+### Changed
+- Simplificado `ChequeraEventListener`: reemplazada inyección de `FormulariosToPdfService` + `ObjectMapper` por `ChequeraService`, eliminando la deserialización manual de JSON ([src/main/java/um/tesoreria/sender/consumer/ChequeraEventListener.java])
+- Refactorizado `listen()` para recibir `SendChequeraEvent` tipado en lugar de `Object`, con mapeo directo de todos los parámetros incluyendo `copiaInformes` ([src/main/java/um/tesoreria/sender/consumer/ChequeraEventListener.java])
+
+### Fixed
+- Corregida deserialización de Kafka para usar `FAIL_ON_UNKNOWN_PROPERTIES` deshabilitado, evitando errores ante cambios en el esquema del evento ([src/main/java/um/tesoreria/sender/configuration/KafkaConsumerConfig.java])
+
+## [2.1.0] - 2026-06-17
 
 ### Changed
 - Refactorizado `FormulariosToPdfService.fetchData()` para recibir objetos de dominio completos (`FacultadDto`, `TipoChequeraDto`, `LectivoDto`, `ArancelTipoDto`) en lugar de IDs primitivos, eliminando llamadas redundantes a clientes de facultad, tipo chequera y lectivo ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])

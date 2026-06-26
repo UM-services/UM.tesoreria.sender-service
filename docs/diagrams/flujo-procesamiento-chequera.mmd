@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant KafkaBroker as Kafka Broker
+    participant ChequeraEventListener
+    participant ChequeraService
+    participant FormulariosToPdfService
+    participant JavaMailSender
+    participant ChequeraMessageCheckClient
+
+    KafkaBroker->>ChequeraEventListener: SendChequeraEvent (topic: send-chequera)
+    activate ChequeraEventListener
+    ChequeraEventListener->>ChequeraService: sendChequera(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula)
+    activate ChequeraService
+    ChequeraService->>FormulariosToPdfService: generateChequeraPdf(...)
+    activate FormulariosToPdfService
+    FormulariosToPdfService-->>ChequeraService: byte[] PDF
+    deactivate FormulariosToPdfService
+    ChequeraService->>JavaMailSender: send(mimeMessage)
+    activate JavaMailSender
+    JavaMailSender-->>ChequeraService: (void)
+    deactivate JavaMailSender
+    ChequeraService->>ChequeraMessageCheckClient: add(chequeraMessageCheck)
+    activate ChequeraMessageCheckClient
+    ChequeraMessageCheckClient-->>ChequeraService: chequeraMessageCheck
+    deactivate ChequeraMessageCheckClient
+    ChequeraService-->>ChequeraEventListener: UUID (messageId)
+    deactivate ChequeraService
+    deactivate ChequeraEventListener

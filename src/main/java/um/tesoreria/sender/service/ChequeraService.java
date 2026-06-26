@@ -50,7 +50,7 @@ public class ChequeraService {
 
     public String sendChequera(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
                                Boolean copiaInformes, Boolean codigoBarras, Boolean incluyeMatricula) throws MessagingException {
-        log.debug("Sending chequera for facultadId: {}, tipoChequeraId: {}, chequeraSerieId: {}, alternativaId: {}, copiaInformes: {}, codigoBarras: {}, incluyeMatricula: {}", facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula);
+        log.debug("\n\nSending chequera for facultadId: {}, tipoChequeraId: {}, chequeraSerieId: {}, alternativaId: {}, copiaInformes: {}, codigoBarras: {}, incluyeMatricula: {}\n\n", facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula);
 
         var chequeraSerie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
         var inscripcionFull = personaClient.findInscripcionFull(facultadId, chequeraSerie.getPersonaId(), chequeraSerie.getDocumentoId(), chequeraSerie.getLectivoId());

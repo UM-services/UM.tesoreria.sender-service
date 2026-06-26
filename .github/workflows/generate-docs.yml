@@ -76,6 +76,7 @@ jobs:
               <div id="stats" class="stats"></div>
               <div id="architecture" class="section"></div>
               <div id="sequence-diagram" class="section"></div>
+              <div id="chequera-sequence" class="section"></div>
               <div id="erd-diagram" class="section"></div>
               <div id="deployment-diagram" class="section"></div>
               <div id="dependencies" class="section">
@@ -150,8 +151,17 @@ jobs:
                       mermaid.init(undefined, erdContainer.querySelector('.mermaid'));
                   });
 
+              // --- Chequera Processing Sequence Diagram ---
+              fetch('diagrams/flujo-procesamiento-chequera.mmd')
+                  .then(response => response.text())
+                  .then(data => {
+                      const chequeraContainer = document.getElementById('chequera-sequence');
+                      chequeraContainer.innerHTML = '<h2>📬 Diagrama de Secuencia: Procesamiento de Chequera por Kafka</h2><div class="mermaid">' + data + '</div>';
+                      mermaid.init(undefined, chequeraContainer.querySelector('.mermaid'));
+                  });
+
               // --- Deployment Diagram ---
-              fetch('diagrams/despliegue.mmd')
+               fetch('diagrams/despliegue.mmd')
                   .then(response => response.text())
                   .then(data => {
                       const deploymentContainer = document.getElementById('deployment-diagram');
