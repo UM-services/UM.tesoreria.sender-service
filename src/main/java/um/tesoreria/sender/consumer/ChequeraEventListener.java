@@ -1,45 +1,35 @@
 package um.tesoreria.sender.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import um.tesoreria.sender.event.SendChequeraEvent;
-import um.tesoreria.sender.service.FormulariosToPdfService;
+import um.tesoreria.sender.service.ChequeraService;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChequeraEventListener {
 
-    private final FormulariosToPdfService formulariosToPdfService;
-    private final ObjectMapper objectMapper;
+    private final ChequeraService chequeraService;
 
     @KafkaListener(topics = "send-chequera", groupId = "${spring.kafka.consumer.group-id}")
-    public void listen(Object message) {
-        log.debug("Received message: {}", message);
+    public void listen(SendChequeraEvent event) {
+        log.info("Processing SendChequeraEvent: {}", event);
         try {
-            SendChequeraEvent event;
-            if (message instanceof String) {
-                event = objectMapper.readValue((String) message, SendChequeraEvent.class);
-            } else {
-                event = objectMapper.convertValue(message, SendChequeraEvent.class);
-            }
-
-            log.info("Processing SendChequeraEvent: {}", event);
-            formulariosToPdfService.generateChequeraPdf(
+            chequeraService.sendChequera(
                     event.getFacultadId(),
                     event.getTipoChequeraId(),
                     event.getChequeraSerieId(),
                     event.getAlternativaId(),
+                    event.getCopiaInformes(),
                     event.getCodigoBarras(),
-                    event.getIncluyeMatricula(), // mapping 'incluyeMatricula' to 'completa' parameter if appropriate,
-                                                 // checking signature next.
-                    null // preferences list, assuming null is handled as per original code
+                    event.getIncluyeMatricula()
             );
         } catch (Exception e) {
-            log.error("Error processing message: {}", message, e);
+            log.error("Error processing message: {}", event, e);
         }
     }
 }
+
