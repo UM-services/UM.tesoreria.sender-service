@@ -1,6 +1,7 @@
 package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
 import um.tesoreria.sender.util.Jsonifier
+import um.tesoreria.sender.util.Jsonifyable
 
 data class ChequeraFacturacionElectronicaDto(
 
@@ -12,8 +13,4 @@ data class ChequeraFacturacionElectronicaDto(
     var email: String = "",
     var condicionIva: String = ""
 
-) {
-    fun jsonify(): String {
-        return Jsonifier.builder(this).build()
-    }
-}
+) : Jsonifyable

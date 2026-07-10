@@ -2,6 +2,7 @@ package um.tesoreria.sender.kotlin.dto.tesoreria.core
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import um.tesoreria.sender.util.Jsonifier
+import um.tesoreria.sender.util.Jsonifyable
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
@@ -42,10 +43,4 @@ data class ChequeraCuotaDto(
     var producto: ProductoDto? = null,
     var chequeraSerie: ChequeraSerieDto? = null
 
-) {
-
-    fun jsonify(): String {
-        return Jsonifier.builder(this).build()
-    }
-
-}
+) : Jsonifyable

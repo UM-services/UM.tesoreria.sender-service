@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.2.1] - 2026-07-10
+
+### Changed
+- Refactorizado `jsonify()` en DTOs extrayendo la implementación a una nueva interfaz `Jsonifyable` con método `default`, eliminando duplicación de código en `FacturacionElectronicaDto`, `ChequeraCuotaDto`, `ChequeraFacturacionElectronicaDto`, `ChequeraPagoDto` y `ChequeraSerieDto` ([src/main/java/um/tesoreria/sender/util/Jsonifyable.java])
+- Mejorado logging en `ReciboService`: mensajes más descriptivos con formato `\n\n`, cambio de `log.debug` a `log.error` para visibilidad de errores en `makePage` ([src/main/java/um/tesoreria/sender/service/ReciboService.java])
+- Reemplazado `replaceAll` por `replace` en `ReciboService.generatePdf()` para reemplazo simple de cadena ([src/main/java/um/tesoreria/sender/service/ReciboService.java])
+
 ## [2.2.0] - 2026-06-25
 
 ### Added
