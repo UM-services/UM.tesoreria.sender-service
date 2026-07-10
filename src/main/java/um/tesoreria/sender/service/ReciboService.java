@@ -94,7 +94,7 @@ public class ReciboService {
     }
 
     public String generatePdf(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica, ChequeraSerieDto chequeraSerie) {
-        log.debug("Processing ReciboService.generatePdf");
+        log.debug("\n\nProcessing ReciboService.generatePdf\n\n");
         Image imageQr = null;
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
@@ -110,6 +110,7 @@ public class ReciboService {
         }
         assert chequeraPago != null;
         ChequeraCuotaDto chequeraCuota = chequeraCuotaClient.findByUnique(chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId(), chequeraPago.getProductoId(), chequeraPago.getAlternativaId(), chequeraPago.getCuotaId());
+        log.debug("\n\nChequeraCuota -> {}\n\n", chequeraCuota.jsonify());
         if (chequeraSerie == null) {
             chequeraSerie = chequeraSerieClient.findByUnique(chequeraPago.getFacultadId(), chequeraPago.getTipoChequeraId(), chequeraPago.getChequeraSerieId());
         }
@@ -117,9 +118,11 @@ public class ReciboService {
         try {
             chequeraFacturacionElectronica = chequeraFacturacionElectronicaClient.findByChequeraId(chequeraSerie.getChequeraId());
         } catch (Exception e) {
+            log.error("Sin datos particulares");
             chequeraFacturacionElectronica = new ChequeraFacturacionElectronicaDto();
         }
 
+        log.debug("\n\nIniciando pdf\n\n");
         String path = environment.getProperty("path.reports");
         String empresaCuit = "30-51859446-6";
 
@@ -129,7 +132,7 @@ public class ReciboService {
             jsonObject.put("ver", 1);
             jsonObject.put("fecha", DateTimeFormatter.ofPattern("yyyy-MM-dd")
                     .format(Objects.requireNonNull(facturacionElectronica.getFechaRecibo())));
-            jsonObject.put("cuit", Long.parseLong(empresaCuit.replaceAll("-", "")));
+            jsonObject.put("cuit", Long.parseLong(empresaCuit.replace("-", "")));
             assert comprobante != null;
             jsonObject.put("ptoVta", comprobante.getPuntoVenta());
             jsonObject.put("tipoCmp", comprobante.getComprobanteAfipId());
@@ -171,11 +174,12 @@ public class ReciboService {
         } catch (IOException ex) {
             log.info("IOException in PDF generation");
         }
-
+        log.debug("\n\nFilename -> {}\n\n",  filename);
         return filename;
     }
 
     private void mergePdf(String filename, List<String> filenames) throws DocumentException, IOException {
+        log.debug("\n\nMerging pdf\n\n");
         OutputStream outputStream = new FileOutputStream(filename);
         Document document = new Document();
         PdfWriter pdfWriter = PdfWriter.getInstance(document, outputStream);
@@ -197,6 +201,7 @@ public class ReciboService {
     private void makePage(String filename, String titulo, ComprobanteDto comprobante,
                           FacturacionElectronicaDto facturacionElectronica, ChequeraCuotaDto chequeraCuota, ChequeraPagoDto chequeraPago, ChequeraSerieDto chequeraSerie,
                           ChequeraFacturacionElectronicaDto chequeraFacturacionElectronica, Image imageQr) {
+        log.debug("\n\nMaking PDF Page\n\n");
         PdfPTable table;
         PdfPCell cell;
 
@@ -735,14 +740,14 @@ public class ReciboService {
             tableCAE.addCell(cell);
             document.add(tableCAE);
             document.close();
-        } catch (Exception ex) {
-            log.debug(ex.getMessage());
+        } catch (Exception e) {
+            log.error("Error generando makePage -> {}", e.getMessage());
         }
 
     }
 
     public String send(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica) {
-        log.debug("Processing ReciboService.send()");
+        log.debug("\n\nProcessing ReciboService.send\n\n");
 
         if (facturacionElectronica == null) {
             facturacionElectronica = facturacionElectronicaClient.findByFacturacionElectronicaId(facturacionElectronicaId);
@@ -768,7 +773,7 @@ public class ReciboService {
 
         // Genera PDF
         String filenameRecibo = this.generatePdf(facturacionElectronicaId, facturacionElectronica, chequeraSerie);
-        log.info("Filename_recibo -> {}", filenameRecibo);
+        log.info("\n\nFilename_recibo -> {}\n\n", filenameRecibo);
         if (filenameRecibo.isEmpty()) {
             log.debug("Sin Recibo para ENVIAR");
             facturacionElectronica.setRetries(facturacionElectronica.getRetries() + 1);

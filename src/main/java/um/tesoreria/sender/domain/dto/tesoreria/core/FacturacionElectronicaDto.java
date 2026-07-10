@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraPagoDto;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ComprobanteDto;
-import um.tesoreria.sender.util.Jsonifier;
+import um.tesoreria.sender.util.Jsonifyable;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FacturacionElectronicaDto {
+public class FacturacionElectronicaDto implements Jsonifyable {
 
     private Long facturacionElectronicaId;
     private Long chequeraPagoId;
@@ -38,9 +38,5 @@ public class FacturacionElectronicaDto {
     private Integer retries;
     private ChequeraPagoDto chequeraPago;
     private ComprobanteDto comprobante;
-
-    public String jsonify() {
-        return Jsonifier.builder(this).build();
-    }
 
 }
