@@ -1,16 +1,15 @@
 package um.tesoreria.sender.domain.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import um.tesoreria.sender.kotlin.dto.tesoreria.core.ChequeraCuotaDto;
+import um.tesoreria.sender.util.Jsonifyable;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UMPreferenceMPDto {
+public class UMPreferenceMPDto implements Jsonifyable {
 
     private MercadoPagoContextDto mercadoPagoContext;
     private ChequeraCuotaDto chequeraCuota;

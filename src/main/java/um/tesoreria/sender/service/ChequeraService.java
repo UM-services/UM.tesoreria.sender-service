@@ -75,6 +75,33 @@ public class ChequeraService {
         return "\n\nEnvío de Chequera Ok!!!\n\n";
     }
 
+    public String sendChequeraBulk(Integer facultadId, Integer tipoChequeraId, Long chequeraSerieId, Integer alternativaId,
+                               Boolean copiaInformes, Boolean codigoBarras, Boolean incluyeMatricula) throws MessagingException {
+        log.debug("\n\nSending chequera bulk for facultadId: {}, tipoChequeraId: {}, chequeraSerieId: {}, alternativaId: {}, copiaInformes: {}, codigoBarras: {}, incluyeMatricula: {}\n\n", facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula);
+
+        var chequeraSerie = chequeraSerieClient.findByUnique(facultadId, tipoChequeraId, chequeraSerieId);
+        var inscripcionFull = personaClient.findInscripcionFull(facultadId, chequeraSerie.getPersonaId(), chequeraSerie.getDocumentoId(), chequeraSerie.getLectivoId());
+        var preferences = chequeraClient.createChequeraContextBulk(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
+
+        String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
+        log.debug("ChequeraService.sendChequeraBulk - filenameChequera -> {}", filenameChequera);
+        if (filenameChequera.isEmpty()) {
+            return "\n\nERROR: Sin CUOTAS para ENVIAR\n\n";
+        }
+
+        String nombreAlumno = Objects.requireNonNull(chequeraSerie.getPersona()).getApellidoNombre();
+
+        String emailBodyChequera = buildEmailBodyChequera(nombreAlumno, preferences, chequeraSerie);
+
+        List<String> recipients = collectRecipients(chequeraSerie, inscripcionFull, copiaInformes);
+
+        sendMessage(recipients, nombreAlumno, emailBodyChequera, filenameChequera, facultadId);
+
+        markAsSent(facultadId, tipoChequeraId, chequeraSerieId);
+
+        return "\n\nEnvío de Chequera Ok!!!\n\n";
+    }
+
     public String sendCuota(Long chequeraCuotaId) throws MessagingException {
         log.debug("Sending cuota {}", chequeraCuotaId);
 
@@ -248,8 +275,24 @@ public class ChequeraService {
         return addresses;
     }
 
+    private boolean localMailValidate(String mail) {
+        if (mail == null || mail.isEmpty()) {
+            return false;
+        }
+        if (mail.toLowerCase().contains("ñ")) {
+            return false;
+        }
+        try {
+            jakarta.mail.internet.InternetAddress address = new jakarta.mail.internet.InternetAddress(mail);
+            address.validate();
+        } catch (jakarta.mail.internet.AddressException e) {
+            return false;
+        }
+        return true;
+    }
+
     private void addValidEmail(List<String> addresses, String email, String type) {
-        if (email != null && !email.isEmpty() && toolClient.mailValidate(List.of(email))) {
+        if (email != null && !email.isEmpty() && localMailValidate(email)) {
             addresses.add(email);
             log.debug("adding {} email -> {}", type, email);
         }

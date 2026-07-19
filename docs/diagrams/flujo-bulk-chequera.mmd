@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    actor User as Usuario
+    participant Ctrl as ChequeraController
+    participant FPDF as FormulariosToPdfService
+    participant CheqClient as ChequeraClient
+    participant LAClient as LectivoAlternativaClient
+    participant CheqServ as ChequeraService
+    participant Mail as JavaMailSender
+    participant MsgChk as ChequeraMessageCheckClient
+
+    User->>Ctrl: GET /sendChequera/bulk/...
+    activate Ctrl
+    Ctrl->>CheqServ: sendChequeraBulk(...)
+    activate CheqServ
+
+    CheqServ->>CheqClient: createChequeraContextBulk(...)
+    activate CheqClient
+    CheqClient-->>CheqServ: List~UMPreferenceMPDto~
+    deactivate CheqClient
+
+    CheqServ->>FPDF: generateChequeraPdf(..., preferences)
+    activate FPDF
+    FPDF->>LAClient: findAllByTipo(...) [batch]
+    activate LAClient
+    LAClient-->>FPDF: List~LectivoAlternativaDto~
+    deactivate LAClient
+    Note over FPDF: Filtra alternativas en memoria<br/>por cuota.getProductoId()
+    FPDF-->>CheqServ: filenameChequera
+    deactivate FPDF
+
+    CheqServ->>Mail: send(mimeMessage)
+    activate Mail
+    Mail-->>CheqServ: void
+    deactivate Mail
+
+    CheqServ->>MsgChk: add(chequeraMessageCheck)
+    activate MsgChk
+    MsgChk-->>CheqServ: messageCheck
+    deactivate MsgChk
+
+    CheqServ-->>Ctrl: "Envio de Chequera Ok!!!"
+    deactivate CheqServ
+    Ctrl-->>User: HTTP 200 OK
+    deactivate Ctrl

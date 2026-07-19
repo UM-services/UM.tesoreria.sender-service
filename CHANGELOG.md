@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.3.0] - 2026-07-19
+
+### Added
+- Nuevos endpoints bulk para generación y envío de chequeras: `GET /generatePdf/bulk/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{codigoBarras}`, `GET /generatePdf/completa/bulk/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{codigoBarras}` y `GET /sendChequera/bulk/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{copiaInformes}/{codigoBarras}` ([src/main/java/um/tesoreria/sender/controller/ChequeraController.java])
+- Nuevo método `createChequeraContextBulk()` en `ChequeraClient` para obtención de contexto de chequera en lote ([src/main/java/um/tesoreria/sender/client/tesoreria/mercadopago/ChequeraClient.java])
+- Nuevo método `generateChequeraPdfBulk()` en `FormulariosToPdfService` para generación de PDF en lote con prefetch de alternativas ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+- Nuevo método `sendChequeraBulk()` en `ChequeraService` para envío de chequeras en lote ([src/main/java/um/tesoreria/sender/service/ChequeraService.java])
+- Validación local de emails con `localMailValidate()` en `ChequeraService`, reemplazando llamada remota a `toolClient.mailValidate()` ([src/main/java/um/tesoreria/sender/service/ChequeraService.java])
+
+### Changed
+- `UMPreferenceMPDto` ahora implementa `Jsonifyable` y usa `@Getter`/`@Setter` en lugar de `@Data` ([src/main/java/um/tesoreria/sender/domain/dto/UMPreferenceMPDto.java])
+- Optimizado `FormulariosToPdfService`: pre-fetch de `LectivoAlternativa` list para bulk, evitando llamadas individuales por cuota ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+- Refactorizado `addCuotaTable()` y `addCuotaTableReemplazo()` con sobrecarga que acepta lista pre-cargada de alternativas ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+- Mejorado logging en `FormulariosToPdfService.generateChequeraPdf()` para iterar preferences individualmente ([src/main/java/um/tesoreria/sender/service/FormulariosToPdfService.java])
+
 ## [2.2.1] - 2026-07-10
 
 ### Changed
