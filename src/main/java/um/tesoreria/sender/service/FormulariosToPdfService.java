@@ -53,6 +53,17 @@ public class FormulariosToPdfService {
     private final ChequeraCuotaReemplazoClient chequeraCuotaReemplazoClient;
     private final ChequeraClient chequeraClient;
 
+    public String generateChequeraPdfBulk(Integer facultadId,
+                                          Integer tipoChequeraId,
+                                          Long chequeraSerieId,
+                                          Integer alternativaId,
+                                          Boolean codigoBarras,
+                                          Boolean completa) {
+        log.debug("\n\nProcessing FormulariosToPdfService.generateChequeraPdfBulk\n\n");
+        List<UMPreferenceMPDto> preferences = chequeraClient.createChequeraContextBulk(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
+        return generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, completa, preferences);
+    }
+
     public String generateChequeraPdf(Integer facultadId,
                                       Integer tipoChequeraId,
                                       Long chequeraSerieId,
@@ -65,7 +76,9 @@ public class FormulariosToPdfService {
         if (preferences == null) {
             preferences = chequeraClient.createChequeraContext(facultadId, tipoChequeraId, chequeraSerieId, alternativaId);
         }
-        log.debug("Preferences -> {}", Jsonifier.builder(preferences).build());
+        preferences.forEach(preference -> {
+            log.debug("\n\nPreference -> {}\n\n", preference);
+        });
         List<ChequeraCuotaDto> cuotas = preferences.stream().map(UMPreferenceMPDto::getChequeraCuota).toList();
         if (cuotas.stream().noneMatch(c -> c.getPagado() == 0 && c.getBaja() == 0 && c.getCompensada() == 0 && c.getImporte1().compareTo(BigDecimal.ZERO) != 0)) {
             log.debug("No hay nada para imprimir.");
@@ -99,13 +112,20 @@ public class FormulariosToPdfService {
                     serie.getBecaPorcentaje()
             );
 
+            List<LectivoAlternativaDto> alternatives = List.of();
+            try {
+                alternatives = lectivoAlternativaClient.findAllByTipo(serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(), serie.getAlternativaId());
+            } catch (Exception e) {
+                log.error("Error fetching alternatives in bulk: {}", e.getMessage());
+            }
+
             for (var umPreferenceMPDto : preferences) {
                 var cuota = umPreferenceMPDto.getChequeraCuota();
                 boolean printCuota = completa ? cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0
                         : cuota.getPagado() == 0 && cuota.getBaja() == 0 && cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0;
 
                 if (printCuota) {
-                    addCuotaTable(document, writer, cuota, serie, umPreferenceMPDto, codigoBarras);
+                    addCuotaTable(document, writer, cuota, serie, umPreferenceMPDto, codigoBarras, alternatives);
                 }
             }
 
@@ -155,12 +175,19 @@ public class FormulariosToPdfService {
                     BigDecimal.ZERO
             );
 
+            List<LectivoAlternativaDto> alternatives = List.of();
+            try {
+                alternatives = lectivoAlternativaClient.findAllByTipo(serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(), serie.getAlternativaId());
+            } catch (Exception e) {
+                log.error("Error fetching alternatives for replacement in bulk: {}", e.getMessage());
+            }
+
             for (ChequeraCuotaReemplazoDto cuota : cuotas) {
                 boolean printCuota = completa ? cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0
                         : cuota.getPagado() == 0 && cuota.getBaja() == 0 && cuota.getImporte1().compareTo(BigDecimal.ZERO) != 0;
 
                 if (printCuota) {
-                    addCuotaTableReemplazo(document, writer, cuota, serie);
+                    addCuotaTableReemplazo(document, writer, cuota, serie, alternatives);
                 }
             }
 
@@ -298,8 +325,21 @@ public class FormulariosToPdfService {
     }
 
     private void addCuotaTable(Document document, PdfWriter writer, ChequeraCuotaDto cuota, ChequeraSerieDto serie, UMPreferenceMPDto preference, boolean codigoBarras) throws DocumentException {
-        var lectivoAlternativa = lectivoAlternativaClient.findByFacultadIdAndLectivoIdAndTipochequeraIdAndProductoIdAndAlternativaId(
-                serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(), cuota.getProductoId(), serie.getAlternativaId());
+        addCuotaTable(document, writer, cuota, serie, preference, codigoBarras, null);
+    }
+
+    private void addCuotaTable(Document document, PdfWriter writer, ChequeraCuotaDto cuota, ChequeraSerieDto serie, UMPreferenceMPDto preference, boolean codigoBarras, List<LectivoAlternativaDto> alternatives) throws DocumentException {
+        LectivoAlternativaDto lectivoAlternativa = null;
+        if (alternatives != null) {
+            lectivoAlternativa = alternatives.stream()
+                .filter(a -> Objects.equals(a.getProductoId(), cuota.getProductoId()))
+                .findFirst()
+                .orElse(null);
+        }
+        if (lectivoAlternativa == null) {
+            lectivoAlternativa = lectivoAlternativaClient.findByFacultadIdAndLectivoIdAndTipochequeraIdAndProductoIdAndAlternativaId(
+                    serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(), cuota.getProductoId(), serie.getAlternativaId());
+        }
 
         PdfPTable table = createCuotaTableStructure(lectivoAlternativa, cuota.getCuotaId(), cuota.getMes(), cuota.getAnho(),
                 cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),
@@ -315,8 +355,21 @@ public class FormulariosToPdfService {
     }
 
     private void addCuotaTableReemplazo(Document document, PdfWriter writer, ChequeraCuotaReemplazoDto cuota, ChequeraSerieReemplazoDto serie) throws DocumentException {
-        var lectivoAlternativa = lectivoAlternativaClient.findByFacultadIdAndLectivoIdAndTipochequeraIdAndProductoIdAndAlternativaId(
-                serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(), cuota.getProductoId(), serie.getAlternativaId());
+        addCuotaTableReemplazo(document, writer, cuota, serie, null);
+    }
+
+    private void addCuotaTableReemplazo(Document document, PdfWriter writer, ChequeraCuotaReemplazoDto cuota, ChequeraSerieReemplazoDto serie, List<LectivoAlternativaDto> alternatives) throws DocumentException {
+        LectivoAlternativaDto lectivoAlternativa = null;
+        if (alternatives != null) {
+            lectivoAlternativa = alternatives.stream()
+                .filter(a -> Objects.equals(a.getProductoId(), cuota.getProductoId()))
+                .findFirst()
+                .orElse(null);
+        }
+        if (lectivoAlternativa == null) {
+            lectivoAlternativa = lectivoAlternativaClient.findByFacultadIdAndLectivoIdAndTipochequeraIdAndProductoIdAndAlternativaId(
+                    serie.getFacultadId(), serie.getLectivoId(), serie.getTipoChequeraId(), cuota.getProductoId(), serie.getAlternativaId());
+        }
 
         PdfPTable table = createCuotaTableStructure(lectivoAlternativa, cuota.getCuotaId(), cuota.getMes(), cuota.getAnho(),
                 cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),

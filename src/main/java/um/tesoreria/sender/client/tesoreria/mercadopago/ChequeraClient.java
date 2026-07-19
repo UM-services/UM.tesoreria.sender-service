@@ -18,4 +18,12 @@ public interface ChequeraClient {
         @PathVariable Integer alternativaId
     );
 
+    @GetMapping("/create/context/bulk/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}")
+    List<UMPreferenceMPDto> createChequeraContextBulk(
+        @PathVariable Integer facultadId,
+        @PathVariable Integer tipoChequeraId,
+        @PathVariable Long chequeraSerieId,
+        @PathVariable Integer alternativaId
+    );
+
 }

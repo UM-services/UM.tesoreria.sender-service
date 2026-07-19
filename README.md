@@ -7,7 +7,7 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.2-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.5.0--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.3-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.2.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.3.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -17,13 +17,14 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Generación de formularios de pago (RapiPago/MercadoPago)
 - Validación de emails antes del envío usando ToolClient
 - Soporte para múltiples tipos de chequeras
+- Generación y envío de chequeras en lote (bulk)
 - Integración con servicios de email
 - Generación de PDFs con logos institucionales
 - Sistema de deduplicación de mensajes con UUID tracking
 - Manejo de inscripciones y pagos
 - Soporte para múltiples destinatarios de email (personal, institucional, copias)
 - Validación y procesamiento de emails de pago
-- Validación en tiempo real de direcciones de email
+- Validación local de direcciones de email
 - Integración con servicio de herramientas (ToolClient) para validación de emails
 
 ## Requisitos
@@ -86,7 +87,9 @@ La documentación de la API está disponible en:
 
 Los diagramas del proyecto se encuentran en `docs/diagrams/` e incluyen:
 - **Arquitectura General** — Componentes del servicio y sus interacciones
-- **Diagrama de Secuencia** — Flujo de envío de recibos
+- **Diagrama de Secuencia: Envío de Recibo** — Flujo de envío de recibos
+- **Diagrama de Secuencia: Procesamiento de Chequera** — Flujo de procesamiento por Kafka
+- **Diagrama de Secuencia: Chequera en Lote** — Flujo de generación y envío bulk de chequeras
 - **Diagrama de Despliegue** — Infraestructura y sistemas externos
 - **Modelo Entidad-Relación** — Entidades principales del dominio
 
