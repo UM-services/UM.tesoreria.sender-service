@@ -26,6 +26,12 @@ spring:
         instance-id: ${spring.application.name}-${spring.cloud.client.ip-address}-${server.port}
         prefer-ip-address: true
         tags: tesoreria,sender
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 10000
+            readTimeout: 60000
   kafka:
     bootstrap-servers: kafka:9092
     consumer:

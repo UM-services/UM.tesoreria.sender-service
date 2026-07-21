@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.3.1] - 2026-07-21
+
+### Fixed
+- Agregada validación null-safety en `ChequeraController` para todos los endpoints de generación de PDF: retorna HTTP 204 No Content cuando el filename es null o vacío, evitando `FileNotFoundException` ([src/main/java/um/tesoreria/sender/controller/ChequeraController.java])
+- Corregida validación null-safety en `ChequeraService.sendChequera()` y `sendChequeraBulk()`: cambiado `filenameChequera.isEmpty()` a `filenameChequera == null || filenameChequera.isEmpty()` para prevenir `NullPointerException` ([src/main/java/um/tesoreria/sender/service/ChequeraService.java])
+
+### Changed
+- Configurado timeout de conexión y lectura para OpenFeign clients: `connectTimeout: 10000ms`, `readTimeout: 60000ms` ([src/main/resources/bootstrap.yml])
+
 ## [2.3.0] - 2026-07-19
 
 ### Added
