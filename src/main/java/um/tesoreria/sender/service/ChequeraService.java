@@ -58,7 +58,7 @@ public class ChequeraService {
 
         String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
         log.debug("ChequeraService.sendChequera - filenameChequera -> {}", filenameChequera);
-        if (filenameChequera.isEmpty()) {
+        if (filenameChequera == null || filenameChequera.isEmpty()) {
             return "\n\nERROR: Sin CUOTAS para ENVIAR\n\n";
         }
 
@@ -85,7 +85,7 @@ public class ChequeraService {
 
         String filenameChequera = formulariosToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, codigoBarras, false, preferences);
         log.debug("ChequeraService.sendChequeraBulk - filenameChequera -> {}", filenameChequera);
-        if (filenameChequera.isEmpty()) {
+        if (filenameChequera == null || filenameChequera.isEmpty()) {
             return "\n\nERROR: Sin CUOTAS para ENVIAR\n\n";
         }
 

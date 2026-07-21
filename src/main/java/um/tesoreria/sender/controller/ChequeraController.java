@@ -34,6 +34,9 @@ public class ChequeraController {
         log.debug("\n\nProcessing ChequeraController.generatePdf\n\n");
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, codigoBarras, false, null);
+        if (filename == null || filename.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
         log.debug("Generando archivo {}", filename);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
@@ -53,6 +56,9 @@ public class ChequeraController {
         log.debug("\n\nProcessing ChequeraController.generatePdfBulk\n\n");
         String filename = formularioToPdfService.generateChequeraPdfBulk(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, codigoBarras, false);
+        if (filename == null || filename.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
         log.debug("Generando archivo {}", filename);
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
@@ -71,6 +77,9 @@ public class ChequeraController {
                                                         @PathVariable Boolean codigoBarras) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraPdf(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, codigoBarras, true, null);
+        if (filename == null || filename.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
@@ -88,6 +97,9 @@ public class ChequeraController {
                                                             @PathVariable Boolean codigoBarras) throws FileNotFoundException {
         String filename = formularioToPdfService.generateChequeraPdfBulk(facultadId, tipoChequeraId, chequeraSerieId,
                 alternativaId, codigoBarras, true);
+        if (filename == null || filename.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
         File file = new File(filename);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         HttpHeaders headers = new HttpHeaders();
