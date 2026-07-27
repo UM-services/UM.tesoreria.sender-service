@@ -23,7 +23,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
 import um.tesoreria.sender.client.tesoreria.core.*;
 import um.tesoreria.sender.client.tesoreria.core.facade.ToolClient;
 import um.tesoreria.sender.domain.dto.tesoreria.core.FacturacionElectronicaDto;
@@ -744,6 +746,12 @@ public class ReciboService {
             log.error("Error generando makePage -> {}", e.getMessage());
         }
 
+    }
+
+    @Async
+    public CompletableFuture<String> sendAsync(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica) {
+        log.info("Iniciando procesamiento asíncrono de envío de recibo ID: {}", facturacionElectronicaId);
+        return CompletableFuture.completedFuture(this.send(facturacionElectronicaId, facturacionElectronica));
     }
 
     public String send(Long facturacionElectronicaId, FacturacionElectronicaDto facturacionElectronica) {

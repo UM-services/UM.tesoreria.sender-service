@@ -30,8 +30,8 @@ spring:
       client:
         config:
           default:
-            connectTimeout: 10000
-            readTimeout: 60000
+            connectTimeout: 15000
+            readTimeout: 300000
   kafka:
     bootstrap-servers: kafka:9092
     consumer:

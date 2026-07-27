@@ -7,13 +7,13 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.2-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.5.0--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.3-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.3.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.4.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
 ## Características
 
-- Generación y envío de recibos de pago
+- Generación y envío de recibos de pago (asíncrono)
 - Generación de formularios de pago (RapiPago/MercadoPago)
 - Validación de emails antes del envío usando ToolClient
 - Soporte para múltiples tipos de chequeras
@@ -26,6 +26,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Validación y procesamiento de emails de pago
 - Validación local de direcciones de email
 - Integración con servicio de herramientas (ToolClient) para validación de emails
+- Procesamiento asíncrono con Spring @Async para operaciones de larga duración
 
 ## Requisitos
 

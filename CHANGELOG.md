@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.4.0] - 2026-07-27
+
+### Added
+- Habilitado `@EnableAsync` en `SenderApplication` para soporte de procesamiento asíncrono con Spring ([src/main/java/um/tesoreria/sender/SenderApplication.java])
+- Nuevo método `sendAsync()` en `ReciboService` con `@Async` y `CompletableFuture<String>` para envío asíncrono de recibos ([src/main/java/um/tesoreria/sender/service/ReciboService.java])
+
+### Changed
+- Endpoint `GET /send/{facturacionElectronicaId}` cambiado de síncrono a asíncrono: ahora retorna `HTTP 202 Accepted` con mensaje informativo en lugar de `HTTP 200 OK` o `HTTP 400 Bad Request`, delegando el procesamiento real a un hilo asíncrono ([src/main/java/um/tesoreria/sender/controller/ReciboController.java])
+- Incrementado `connectTimeout` de OpenFeign de `10000ms` a `15000ms` y `readTimeout` de `60000ms` a `300000ms` para operaciones de larga duración ([src/main/resources/bootstrap.yml])
+
 ## [2.3.1] - 2026-07-21
 
 ### Fixed
