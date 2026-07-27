@@ -42,11 +42,9 @@ public class ReciboController {
 
     @GetMapping("/send/{facturacionElectronicaId}")
     public ResponseEntity<String> send(@PathVariable Long facturacionElectronicaId) {
-        String result = service.send(facturacionElectronicaId, null);
-        if (result.startsWith("ERROR:")) {
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok(result);
+        service.sendAsync(facturacionElectronicaId, null);
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body("Proceso de envío iniciado en segundo plano para facturación ID: " + facturacionElectronicaId);
     }
 
     @GetMapping("/sendNext")

@@ -1,6 +1,7 @@
 sequenceDiagram
     actor User
     participant ReciboController
+    participant AsyncPool as Spring Async Pool
     participant ReciboService
     participant FacturacionElectronicaClient
     participant JavaMailSender
@@ -9,7 +10,13 @@ sequenceDiagram
 
     User->>ReciboController: GET /api/tesoreria/sender/recibo/send/{id}
     activate ReciboController
-    ReciboController->>ReciboService: send(id, null)
+    ReciboController->>AsyncPool: sendAsync(id, null)
+    ReciboController-->>User: HTTP 202 Accepted
+    Note over ReciboController: Proceso de envío iniciado en segundo plano
+    deactivate ReciboController
+
+    activate AsyncPool
+    AsyncPool->>ReciboService: send(id, null)
     activate ReciboService
     
     ReciboService->>FacturacionElectronicaClient: findByFacturacionElectronicaId(id)
@@ -46,7 +53,6 @@ sequenceDiagram
     ReciboMessageCheckClient-->>ReciboService: reciboMessageCheck
     deactivate ReciboMessageCheckClient
     
-    ReciboService-->>ReciboController: "Envío de Correo Ok!!!"
+    ReciboService-->>AsyncPool: "Envío de Correo Ok!!!"
     deactivate ReciboService
-    ReciboController-->>User: HTTP 200 OK
-    deactivate ReciboController
+    deactivate AsyncPool
