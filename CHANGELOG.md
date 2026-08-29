@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.4.1] - 2026-08-29
+
+### Added
+- Nuevo workflow de CI/CD `deploy-develop`: verificación con Maven (JDK 25), build y publicación de imagen Docker por SHA y despliegue en el runner self-hosted del entorno `develop` ante push a `develop` ([.github/workflows/deploy-develop.yml])
+- Nuevo workflow de CI/CD `deploy-staging`: verificación con Maven (JDK 25), build y publicación de imagen Docker por SHA y despliegue en el runner self-hosted del entorno `staging` ante push a `staging` ([.github/workflows/deploy-staging.yml])
+
+### Changed
+- Actualizado Spring Boot a versión 4.1.1 (desde 4.1.0) ([pom.xml])
+- Actualizado Spring Cloud a versión 2025.1.3 (desde 2025.1.2) ([pom.xml])
+
 ## [2.4.0] - 2026-07-27
 
 ### Added
