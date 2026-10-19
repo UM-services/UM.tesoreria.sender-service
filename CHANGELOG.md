@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.4.2] - 2026-10-19
+
+### Changed
+- Job `deploy` de `deploy-staging` convertido en matriz con `fail-fast: false` sobre los entornos `staging` y `staging-new`: el runner self-hosted y el `environment` de GitHub se resuelven dinámicamente con `${{ matrix.environment }}`, por lo que cada push a `staging` despliega la misma imagen (por SHA) en ambos entornos ([.github/workflows/deploy-staging.yml])
+
 ## [2.4.1] - 2026-08-29
 
 ### Added
