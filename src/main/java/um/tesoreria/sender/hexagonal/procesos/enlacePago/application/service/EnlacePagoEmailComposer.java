@@ -1,0 +1,87 @@
+package um.tesoreria.sender.hexagonal.procesos.enlacePago.application.service;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import org.springframework.stereotype.Service;
+import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraCuota;
+import um.tesoreria.sender.hexagonal.shared.domain.model.MercadoPagoContext;
+
+@Service
+public class EnlacePagoEmailComposer {
+
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public String cuerpo(String nombreAlumno, ChequeraCuota chequeraCuota, MercadoPagoContext contexto) {
+        String fechaVencimientoFormatted = contexto.getFechaVencimiento().format(FORMATO_FECHA);
+        var serie = Objects.requireNonNull(chequeraCuota.getChequeraSerie());
+        return "<html>" +
+                "<head>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; }" +
+                ".container { background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }" +
+                ".header { background-color: #007BFF; color: white; padding: 20px; text-align: center; }" +
+                ".header h1 { margin: 0; font-size: 24px; }" +
+                ".content { padding: 20px; }" +
+                ".info-section { background-color: #f4f4f4; padding: 15px; margin-bottom: 20px; border-radius: 8px; }" +
+                ".info-section p { margin: 5px 0; }" +
+                ".details-table { width: 100%; border-collapse: collapse; margin-top: 20px; }" +
+                ".details-table th, .details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }" +
+                ".details-table th { background-color: #007BFF; color: white; }" +
+                ".footer { background-color: #e9ecef; padding: 10px; text-align: center; font-size: 12px; color: #333; }" +
+                ".qr-section { text-align: center; margin-top: 20px; }" +
+                "@media only screen and (max-width: 600px) {" +
+                "    .container { width: 100%; padding: 0; }" +
+                "    .header h1 { font-size: 20px; }" +
+                "    .content, .info-section { padding: 10px; }" +
+                "    .details-table th, .details-table td { font-size: 14px; padding: 8px; }" +
+                "}" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='header'>" +
+                "<h1>Universidad de Mendoza te envió un enlace de pago</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<p><strong>Estimad@ " + nombreAlumno + ",</strong></p>" +
+                "<p>Le compartimos los detalles:</p>" +
+                "<div class='info-section'>" +
+                "<p>Unidad Académica: <strong>" + Objects.requireNonNull(chequeraCuota.getFacultad()).getNombre() + "</strong></p>" +
+                "<br/>" +
+                "<p>Tipo de Chequera: <strong>" + Objects.requireNonNull(chequeraCuota.getTipoChequera()).getNombre() + "</strong></p>" +
+                "<br/>" +
+                "<p>Sede: <strong>" + Objects.requireNonNull(serie.getGeografica()).getNombre() + "</strong></p>" +
+                "<br/>" +
+                "<p>Ciclo Lectivo: <strong>" + Objects.requireNonNull(serie.getLectivo()).getNombre() + "</strong></p>" +
+                "<br/>" +
+                "<p>Tipo de Arancel: <strong>" + Objects.requireNonNull(serie.getArancelTipo()).getDescripcion() + "</strong></p>" +
+                "<br/>" +
+                "<p>Alternativa: <strong>" + serie.getAlternativaId() + "</strong></p>" +
+                "</div>" +
+                "<table class='details-table'>" +
+                "<tr>" +
+                "<th>Producto</th>" +
+                "<th>Período</th>" +
+                "<th>Fecha de Vencimiento</th>" +
+                "<th>Importe</th>" +
+                "<th>Enlace</th>" +
+                "</tr>" +
+                "<tr>" +
+                "<td>" + Objects.requireNonNull(chequeraCuota.getProducto()).getNombre() + "</td>" +
+                "<td>" + chequeraCuota.getMes() + "/" + chequeraCuota.getAnho() + "</td>" +
+                "<td>" + fechaVencimientoFormatted + "</td>" +
+                "<td>$" + String.format("%.2f", contexto.getImporte()) + "</td>" +
+                "<td><a href='" + contexto.getInitPoint() + "' style='color: #007BFF; font-weight: bold;'>Click aquí para realizar el pago</a></td>" +
+                "</tr>" +
+                "</table>" +
+                "</div>" +
+                "<div class='footer'>" +
+                "<p>Universidad de Mendoza</p>" +
+                "<p><small>Por favor no responda este mail, fue generado automáticamente. Su respuesta no será leída.</small></p>" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+    }
+
+}

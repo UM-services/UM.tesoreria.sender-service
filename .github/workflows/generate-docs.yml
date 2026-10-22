@@ -78,6 +78,7 @@ jobs:
               <div id="sequence-diagram" class="section"></div>
               <div id="chequera-sequence" class="section"></div>
               <div id="chequera-bulk-sequence" class="section"></div>
+              <div id="notificacion-sequence" class="section"></div>
               <div id="erd-diagram" class="section"></div>
               <div id="deployment-diagram" class="section"></div>
               <div id="dependencies" class="section">
@@ -125,12 +126,19 @@ jobs:
               `;
               document.getElementById('stats').innerHTML = statsHTML;
 
+              // Los .mmd se inyectan con innerHTML: escapar &, < y > evita que el parser HTML
+              // corrompa anotaciones y que Mermaid reciba el texto alterado.
+              const escaparMermaid = (texto) => texto
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;');
+
               // --- Architecture Diagram ---
               fetch('diagrams/arquitectura-general.mmd')
                   .then(response => response.text())
                   .then(data => {
                       const architectureContainer = document.getElementById('architecture');
-                      architectureContainer.innerHTML = '<h2>🏛️ Arquitectura General del Servicio</h2><div class="mermaid">' + data + '</div>';
+                      architectureContainer.innerHTML = '<h2>🏛️ Arquitectura General del Servicio</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
                       mermaid.init(undefined, architectureContainer.querySelector('.mermaid'));
                   });
 
@@ -139,7 +147,7 @@ jobs:
                   .then(response => response.text())
                   .then(data => {
                       const sequenceContainer = document.getElementById('sequence-diagram');
-                      sequenceContainer.innerHTML = '<h2>🔄 Diagrama de Secuencia: Envío de Recibo</h2><div class="mermaid">' + data + '</div>';
+                      sequenceContainer.innerHTML = '<h2>🔄 Diagrama de Secuencia: Envío de Recibo</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
                       mermaid.init(undefined, sequenceContainer.querySelector('.mermaid'));
                   });
 
@@ -148,7 +156,7 @@ jobs:
                   .then(response => response.text())
                   .then(data => {
                       const erdContainer = document.getElementById('erd-diagram');
-                      erdContainer.innerHTML = '<h2>🗃️ Diagrama de Entidad-Relación (Simplificado)</h2><div class="mermaid">' + data + '</div>';
+                      erdContainer.innerHTML = '<h2>🗃️ Diagrama de Entidad-Relación (Simplificado)</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
                       mermaid.init(undefined, erdContainer.querySelector('.mermaid'));
                   });
 
@@ -157,7 +165,7 @@ jobs:
                   .then(response => response.text())
                   .then(data => {
                       const chequeraContainer = document.getElementById('chequera-sequence');
-                      chequeraContainer.innerHTML = '<h2>📬 Diagrama de Secuencia: Procesamiento de Chequera por Kafka</h2><div class="mermaid">' + data + '</div>';
+                      chequeraContainer.innerHTML = '<h2>📬 Diagrama de Secuencia: Procesamiento de Chequera por Kafka</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
                       mermaid.init(undefined, chequeraContainer.querySelector('.mermaid'));
                   });
 
@@ -166,8 +174,17 @@ jobs:
                   .then(response => response.text())
                   .then(data => {
                       const chequeraBulkContainer = document.getElementById('chequera-bulk-sequence');
-                      chequeraBulkContainer.innerHTML = '<h2>📦 Diagrama de Secuencia: Procesamiento de Chequera en Lote (Bulk)</h2><div class="mermaid">' + data + '</div>';
+                      chequeraBulkContainer.innerHTML = '<h2>📦 Diagrama de Secuencia: Procesamiento de Chequera en Lote (Bulk)</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
                       mermaid.init(undefined, chequeraBulkContainer.querySelector('.mermaid'));
+                  });
+
+              // --- Notificación Sequence Diagram ---
+              fetch('diagrams/flujo-notificacion.mmd')
+                  .then(response => response.text())
+                  .then(data => {
+                      const notificacionContainer = document.getElementById('notificacion-sequence');
+                      notificacionContainer.innerHTML = '<h2>✉️ Diagrama de Secuencia: Notificación Genérica</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
+                      mermaid.init(undefined, notificacionContainer.querySelector('.mermaid'));
                   });
 
               // --- Deployment Diagram ---
@@ -175,7 +192,7 @@ jobs:
                   .then(response => response.text())
                   .then(data => {
                       const deploymentContainer = document.getElementById('deployment-diagram');
-                      deploymentContainer.innerHTML = '<h2>🚀 Diagrama de Despliegue</h2><div class="mermaid">' + data + '</div>';
+                      deploymentContainer.innerHTML = '<h2>🚀 Diagrama de Despliegue</h2><div class="mermaid">' + escaparMermaid(data) + '</div>';
                       mermaid.init(undefined, deploymentContainer.querySelector('.mermaid'));
                   });
           

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
-@EnableFeignClients(basePackages = "um.tesoreria.sender.client")
+@EnableFeignClients(basePackages = "um.tesoreria.sender.hexagonal")
 @PropertySource("classpath:config/reports.properties")
 public class SenderConfiguration {
 

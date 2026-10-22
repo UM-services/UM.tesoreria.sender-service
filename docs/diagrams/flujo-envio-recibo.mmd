@@ -2,57 +2,42 @@ sequenceDiagram
     actor User
     participant ReciboController
     participant AsyncPool as Spring Async Pool
-    participant ReciboService
-    participant FacturacionElectronicaClient
-    participant JavaMailSender
-    participant MimeMessageHelper
-    participant ReciboMessageCheckClient
+    participant ReciboService as ReciboService
+    participant UseCase as EnviarReciboUseCase
+    participant Assembler as ReciboDatosAssembler
+    participant Pdf as ReciboPdfGenerator
+    participant Datos as datos/facturacion · datos/chequera · datos/validacionEmail
+    participant Correo as CorreoService
 
     User->>ReciboController: GET /api/tesoreria/sender/recibo/send/{id}
     activate ReciboController
-    ReciboController->>AsyncPool: sendAsync(id, null)
+    ReciboController->>AsyncPool: enviarAsync(id)
     ReciboController-->>User: HTTP 202 Accepted
-    Note over ReciboController: Proceso de envío iniciado en segundo plano
     deactivate ReciboController
 
     activate AsyncPool
-    AsyncPool->>ReciboService: send(id, null)
-    activate ReciboService
-    
-    ReciboService->>FacturacionElectronicaClient: findByFacturacionElectronicaId(id)
-    activate FacturacionElectronicaClient
-    FacturacionElectronicaClient-->>ReciboService: facturacionElectronica
-    deactivate FacturacionElectronicaClient
-    
-    ReciboService->>ReciboService: generatePdf(id, facturacionElectronica, chequeraSerie)
-    Note over ReciboService: Genera archivo PDF del recibo
-    
-    ReciboService->>JavaMailSender: createMimeMessage()
-    activate JavaMailSender
-    JavaMailSender-->>ReciboService: message
-    deactivate JavaMailSender
-    
-    ReciboService->>MimeMessageHelper: MimeMessageHelper(message, true)
-    activate MimeMessageHelper
-    ReciboService->>MimeMessageHelper: setTo(), setText(), setSubject(), addAttachment()
-    MimeMessageHelper-->>ReciboService: helper
-    deactivate MimeMessageHelper
-    
-    ReciboService->>JavaMailSender: send(message)
-    activate JavaMailSender
-    JavaMailSender-->>ReciboService: (void)
-    deactivate JavaMailSender
-    
-    ReciboService->>FacturacionElectronicaClient: update(facturacionElectronica)
-    activate FacturacionElectronicaClient
-    FacturacionElectronicaClient-->>ReciboService: facturacionElectronica
-    deactivate FacturacionElectronicaClient
-    
-    ReciboService->>ReciboMessageCheckClient: add(reciboMessageCheck)
-    activate ReciboMessageCheckClient
-    ReciboMessageCheckClient-->>ReciboService: reciboMessageCheck
-    deactivate ReciboMessageCheckClient
-    
-    ReciboService-->>AsyncPool: "Envío de Correo Ok!!!"
-    deactivate ReciboService
+    AsyncPool->>ReciboService: enviarAsync(id)
+    ReciboService->>UseCase: enviar(id)
+    activate UseCase
+    UseCase->>Assembler: armar(id, null)
+    Assembler->>Datos: facturación · comprobante · pago · cuota · serie
+    Datos-->>Assembler: datos de core
+    Assembler-->>UseCase: DatosRecibo
+
+    UseCase->>Pdf: generar(id, datos)
+    Note over Pdf: genera QR AFIP, ORIGINAL + DUPLICADO y los une
+    Pdf-->>UseCase: DocumentoPdf (ruta)
+
+    alt sin PDF / sin domicilio / sin e-mails
+        UseCase->>Datos: incrementar retries + update
+        UseCase-->>ReciboService: "ERROR: ..."
+    else envío
+        UseCase->>Datos: validar e-mails (ToolClient de core)
+        UseCase->>Correo: enviar(correo con adjunto)
+        Correo-->>UseCase: void
+        UseCase->>Datos: marcar enviada + update + ReciboMessageCheck
+        UseCase-->>ReciboService: "Recibo de Cuota ... Envío de Correo Ok!!!"
+    end
+    deactivate UseCase
+    ReciboService-->>AsyncPool: CompletableFuture
     deactivate AsyncPool
