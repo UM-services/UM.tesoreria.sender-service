@@ -1,27 +1,33 @@
 sequenceDiagram
     participant KafkaBroker as Kafka Broker
-    participant ChequeraEventListener
-    participant ChequeraService
-    participant FormulariosToPdfService
-    participant JavaMailSender
-    participant ChequeraMessageCheckClient
+    participant Listener as ChequeraEventListener
+    participant Service as ChequeraService
+    participant UseCase as EnviarChequeraUseCase
+    participant Datos as datos/chequera · datos/persona · datos/preferenciaPago
+    participant Assembler as ChequeraDatosAssembler
+    participant Pdf as ChequeraPdfGenerator
+    participant Correo as CorreoService
 
-    KafkaBroker->>ChequeraEventListener: SendChequeraEvent (topic: send-chequera)
-    activate ChequeraEventListener
-    ChequeraEventListener->>ChequeraService: sendChequera(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, copiaInformes, codigoBarras, incluyeMatricula)
-    activate ChequeraService
-    ChequeraService->>FormulariosToPdfService: generateChequeraPdf(...)
-    activate FormulariosToPdfService
-    FormulariosToPdfService-->>ChequeraService: byte[] PDF
-    deactivate FormulariosToPdfService
-    ChequeraService->>JavaMailSender: send(mimeMessage)
-    activate JavaMailSender
-    JavaMailSender-->>ChequeraService: (void)
-    deactivate JavaMailSender
-    ChequeraService->>ChequeraMessageCheckClient: add(chequeraMessageCheck)
-    activate ChequeraMessageCheckClient
-    ChequeraMessageCheckClient-->>ChequeraService: chequeraMessageCheck
-    deactivate ChequeraMessageCheckClient
-    ChequeraService-->>ChequeraEventListener: UUID (messageId)
-    deactivate ChequeraService
-    deactivate ChequeraEventListener
+    KafkaBroker->>Listener: SendChequeraEvent (topic: send-chequera)
+    activate Listener
+    Listener->>Service: enviarChequera(SolicitudEnvioChequera)
+    activate Service
+    Service->>UseCase: enviar(solicitud)
+    activate UseCase
+    UseCase->>Datos: actualizarCodigosBarras + obtenerSerie + inscripción
+    Datos-->>UseCase: ChequeraSerie / InscripcionFull
+    UseCase->>Datos: crearContexto(s) de preferencias
+    Datos-->>UseCase: List~PreferenciaPago~
+    UseCase->>Assembler: armar(serie, preferencias)
+    Assembler->>Datos: persona · legajo · carrera · alternativas
+    Assembler-->>UseCase: DatosChequera
+    UseCase->>Pdf: generarChequera(datos, codigoBarras, completa=false)
+    Pdf-->>UseCase: DocumentoPdf (ruta)
+    UseCase->>Correo: enviar(Correo con adjunto + imágenes inline)
+    Correo-->>UseCase: void
+    UseCase->>Datos: marcarEnviada + registrar ChequeraMessageCheck
+    UseCase-->>Service: "Envío de Chequera Ok!!!"
+    Service-->>Listener: resultado
+    deactivate UseCase
+    deactivate Service
+    deactivate Listener

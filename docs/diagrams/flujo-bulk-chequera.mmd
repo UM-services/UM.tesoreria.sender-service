@@ -2,44 +2,52 @@ sequenceDiagram
     autonumber
     actor User as Usuario
     participant Ctrl as ChequeraController
-    participant FPDF as FormulariosToPdfService
-    participant CheqClient as ChequeraClient
-    participant LAClient as LectivoAlternativaClient
-    participant CheqServ as ChequeraService
-    participant Mail as JavaMailSender
-    participant MsgChk as ChequeraMessageCheckClient
+    participant Pub as SolicitudChequeraPublisher
+    participant Kafka as Kafka (send-chequera)
+    participant Listener as ChequeraEventListener
+    participant Service as ChequeraService
+    participant UseCase as EnviarChequeraUseCase
+    participant Pref as datos/preferenciaPago
+    participant Pdf as ChequeraPdfGenerator
+    participant Mail as CorreoService
+    participant MsgChk as datos/chequera (message check)
 
     User->>Ctrl: GET /sendChequera/bulk/...
     activate Ctrl
-    Ctrl->>CheqServ: sendChequeraBulk(...)
-    activate CheqServ
+    Ctrl->>Pub: publicar(SolicitudEnvioChequera con bulk=true)
+    Pub->>Kafka: evento JSON (sin __TypeId__)
+    Ctrl-->>User: HTTP 202 Accepted (solicitud en proceso)
+    deactivate Ctrl
 
-    CheqServ->>CheqClient: createChequeraContextBulk(...)
-    activate CheqClient
-    CheqClient-->>CheqServ: List~UMPreferenceMPDto~
-    deactivate CheqClient
+    Kafka->>Listener: SendChequeraEvent
+    activate Listener
+    Listener->>Service: enviarChequera(solicitud)
+    activate Service
+    Service->>UseCase: enviar(solicitud)
+    activate UseCase
+    UseCase->>Pref: crearContextoBulk(...)
+    activate Pref
+    Pref-->>UseCase: List~PreferenciaPago~
+    deactivate Pref
 
-    CheqServ->>FPDF: generateChequeraPdf(..., preferences)
-    activate FPDF
-    FPDF->>LAClient: findAllByTipo(...) [batch]
-    activate LAClient
-    LAClient-->>FPDF: List~LectivoAlternativaDto~
-    deactivate LAClient
-    Note over FPDF: Filtra alternativas en memoria<br/>por cuota.getProductoId()
-    FPDF-->>CheqServ: filenameChequera
-    deactivate FPDF
+    UseCase->>Pdf: generarChequera(datos, codigoBarras, false)
+    activate Pdf
+    Pdf->>Pdf: resolver alternativas en memoria + fallback por producto
+    Pdf-->>UseCase: DocumentoPdf (ruta)
+    deactivate Pdf
 
-    CheqServ->>Mail: send(mimeMessage)
+    UseCase->>Mail: enviar(correo con adjunto)
     activate Mail
-    Mail-->>CheqServ: void
+    Mail-->>UseCase: void
     deactivate Mail
 
-    CheqServ->>MsgChk: add(chequeraMessageCheck)
+    UseCase->>MsgChk: marcarEnviada + registrar message check
     activate MsgChk
-    MsgChk-->>CheqServ: messageCheck
+    MsgChk-->>UseCase: ok
     deactivate MsgChk
 
-    CheqServ-->>Ctrl: "Envio de Chequera Ok!!!"
-    deactivate CheqServ
-    Ctrl-->>User: HTTP 200 OK
-    deactivate Ctrl
+    UseCase-->>Service: "Envío de Chequera Ok!!!"
+    deactivate UseCase
+    Service-->>Listener: resultado
+    deactivate Service
+    deactivate Listener

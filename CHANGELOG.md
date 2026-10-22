@@ -6,6 +6,74 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+## [2.5.2] - 2026-10-22
+
+### Fixed
+- Los consumidores Kafka aplican explícitamente `ConsumerConfig.AUTO_OFFSET_RESET_CONFIG` al construir sus `ConsumerFactory`, por lo que `spring.kafka.consumer.auto-offset-reset` deja de ignorarse ([ChequeraKafkaConfig.java], [NotificacionKafkaConfig.java])
+
+### Changed
+- `spring.kafka.consumer.auto-offset-reset` pasa de `earliest` a `latest` en el perfil de ejecución: si el grupo de consumidores no tiene offsets (nuevo o expirados) ya no se reenvían correos viejos ([src/main/resources/bootstrap.yml])
+- Los tests sobrescriben la propiedad a `earliest` para no perder el evento que se publica apenas arranca el contexto, antes de que el listener tenga asignada la partición ([src/test/resources/bootstrap.yml])
+
+## [2.5.1] - 2026-10-22
+
+### Fixed
+- `CuotaIntegracionIT` ahora espera dos mensajes en GreenMail (una copia por destinatario: casilla personal e institucional) y verifica un único envío lógico comparando el `Message-ID`, en lugar de asumir un solo mensaje recibido ([src/test/java/um/tesoreria/sender/hexagonal/integration/CuotaIntegracionIT.java])
+
+## [2.5.0] - 2026-10-22
+
+### Added
+- Slice `procesos/notificacion`: consumidor del topic `send-correo` (envelope `CorreoEvent` + `CorreoPayload`), caso de uso idempotente por `eventId` y publicación del resultado en `notificacion-resultado`.
+- Endpoint genérico `POST /api/tesoreria/sender/correo/enviar` para correos sin adjunto (disparo manual u otros servicios), con validación de destinatarios, asunto y cuerpo.
+- Remitente lógico `remitente` (`CHEQUERA` | `RECIBO` | `NOTIFICACION`) y `app.mail.fromnotificacion`; el productor no puede fijar el `From` real.
+- Consumidor y endpoint de cuota por ID (topic `send-cuota`) y publicación de `send-chequera` desde el endpoint REST (shim): el envío de chequera se resuelve siempre en el listener.
+- `KafkaProducerConfig` del sender (JSON sin `__TypeId__`) y DLT (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`) con `DeadLetterPublishingRecoverer`.
+- Tests `NotificacionKafkaConfigTest`, `EnviarNotificacionUseCaseImplTest`, `NotificacionIntegracionIT` (envío, idempotencia, resultado y endpoint HTTP) y Kafka embebido compartido por los IT.
+- Tests de integración end-to-end (`*IT`) con Failsafe: chequera, recibo, enlace de pago y consumo Kafka ([src/test/java/um/tesoreria/sender/hexagonal/integration])
+- Test de contrato del consumidor Kafka: deserializa `send-chequera` sin headers de tipo, con el `__TypeId__` de core y con un type id desconocido ([src/test/java/um/tesoreria/sender/hexagonal/procesos/chequera/infrastructure/kafka/config/ChequeraKafkaConfigTest.java])
+- Infraestructura de integración con WireMock (core/MercadoPago), GreenMail (SMTP), `@EmbeddedKafka` y directorio temporal para PDFs/QR ([IntegracionSoporte.java], [StubsCore.java])
+- Refactor completo a arquitectura hexagonal con vertical slicing estricto ([src/main/java/um/tesoreria/sender/hexagonal])
+- Kernel compartido `hexagonal/shared`: modelos de dominio puros, DTOs de core, mappers y puertos transversales (`SenderSettings`, `DireccionCorreoValidador`) ([src/main/java/um/tesoreria/sender/hexagonal/shared])
+- Slices de datos `chequera`, `facturacion`, `persona`, `catalogo`, `preferenciaPago` y `validacionEmail`, cada uno con sus puertos, adaptadores Feign y fachada de aplicación ([src/main/java/um/tesoreria/sender/hexagonal/datos])
+- Gateway de correo único (`hexagonal/gateways/correo`) que centraliza `JavaMailSender` para chequeras, recibos y enlaces de pago ([src/main/java/um/tesoreria/sender/hexagonal/gateways/correo])
+- Slices de proceso `chequera`, `recibo` y `enlacePago` con casos de uso, puertos de entrada/salida y adaptadores web/Kafka ([src/main/java/um/tesoreria/sender/hexagonal/procesos])
+- Tests de casos de uso con Mockito para envío de chequera, envío de recibo y envío de enlace de pago ([src/test/java/um/tesoreria/sender/hexagonal/procesos])
+- Reglas de arquitectura con ArchUnit: dominio puro, dependencias hacia adentro y aislamiento entre slices ([src/test/java/um/tesoreria/sender/hexagonal/ArquitecturaHexagonalTest.java])
+- Documentación de la nueva estructura y del flujo en `README.md` y `docs/refactor-hexagonal-plan.md`
+- Test `DtoSerializationTest` que protege defaults, nombres de propiedades JSON, la propiedad calculada `apellidoNombre`, los builders y el formato de fechas de los DTOs migrados ([src/test/java/um/tesoreria/sender/hexagonal/shared/infrastructure/dto/DtoSerializationTest.java])
+
+### Changed
+- Los endpoints `GET /chequera/sendChequera`, `/sendChequera/bulk` y `/sendCuota/{chequeraCuotaId}` responden `202 Accepted` y publican el evento; ya no envían en el hilo HTTP.
+- `app.mail.fromnotificacion` con fallback a `fromrecibo`; se elimina `value-deserializer`/`trusted.packages("*")` del `bootstrap.yml` (las factories son explícitas).
+- El consumidor de `send-chequera` deserializa por **tipo target** (`useHeadersIfPresent=false`) e ignora `__TypeId__`; el contrato es el JSON del evento, no el FQCN del productor ([ChequeraKafkaConfig.java])
+- Tests de integración separados del build rápido con `maven-failsafe-plugin`: `mvn test` corre unitarios y `mvn verify` agrega los `*IT`; el reporte de JaCoCo se genera en `post-integration-test` para incluir la cobertura de integración
+- Agregadas dependencias de test `wiremock-standalone`, `greenmail-junit5`, `spring-kafka-test` y `awaitility` ([pom.xml])
+- Actualizadas las dependencias `springdoc-openapi-starter-webmvc-ui` 3.0.2 → 3.1.1, `openpdf` 3.0.3 → 3.0.5, `guava` 33.5.0-jre → 33.7.2-jre y `commons-lang3` 3.20.0 → 3.21.0 ([pom.xml])
+- Consul publica el estado con `health-check-path: /actuator/health/readiness` y poda la instancia si queda crítica por más de 5 minutos ([bootstrap.yml])
+- DTOs de core y de MercadoPago movidos a `hexagonal/shared/infrastructure/dto`; `Jsonifier`/`Jsonifyable` movidos a `hexagonal/shared/infrastructure/support`
+- Clientes Feign movidos a los slices de datos y normalizados a `@FeignClient(name = ..., path = ...)`; `@EnableFeignClients` ahora escanea `um.tesoreria.sender.hexagonal`
+- Configuración de Kafka movida a `procesos/chequera/infrastructure/kafka/config` conservando topic y group id; el consumidor usa tipo target (sin `trusted.packages("*")`) y el error handler publica en el DLT
+- Controladores, servicios y listeners reescritos sobre casos de uso; el topic `send-chequera` conserva su contrato y los endpoints de envío pasan a `202 Accepted`
+- `ReciboService.enviarAsync` se mantiene con `@Async` y `CompletableFuture` en la fachada de aplicación del slice `recibo`
+- Migrados los 23 DTOs de `um.tesoreria.sender.kotlin.dto.tesoreria.core` (Kotlin) a Java, preservando campos, tipos JVM (primitivo/boxed), valores por defecto, nombres de propiedades JSON, propiedades calculadas y builders ([src/main/java/um/tesoreria/sender/hexagonal/shared/infrastructure/dto/])
+- Actualizados los imports de los 26 archivos Java que consumían los DTOs Kotlin
+- Eliminado `kotlin-maven-plugin` y rehabilitadas las ejecuciones por defecto de `maven-compiler-plugin` ([pom.xml])
+
+### Removed
+- Del consumidor Kafka: `DefaultJacksonJavaTypeMapper` con el mapping `um.tesoreria.core.event.SendChequeraEvent`, `addTrustedPackages("*")` y `setUseTypeMapperForKey(true)`
+- Paquetes horizontales `client/`, `controller/`, `consumer/`, `event/`, `service/`, `dto/`, `domain/dto/` y `util/`
+- Código sin uso: `PdfDocumentBuilder`, `PdfConstants`, `ChequeraDataProvider`, `PreferenceClient`, `LectivoClient`, `TipoChequeraClient`, `GoogleMailTestRequest`, `generateMatriculaPdf()` y `sendPendientes()`
+- Dependencias `kotlin-stdlib` y `jackson-module-kotlin`: el proyecto ya no contiene código ni artefactos Kotlin ([pom.xml])
+
+### Fixed
+- `EnviarReciboUseCase` usa el `chequeraPago` ya resuelto en lugar de releerlo del DTO (evitaba un `NullPointerException` cuando la facturación venía sin el anidado)
+- Incremento de `retries` null-safe en facturación electrónica
+- Los endpoints de PDF de recibo, cuota y chequera de reemplazo devuelven `204 No Content` cuando no hay documento, en lugar de fallar con `FileNotFoundException`
+- Corregido el orden de `productoId`/`alternativaId` al buscar la cuota en `generateCuotaPdf` (antes se enviaban invertidos a core)
+
+
 ## [2.4.2] - 2026-10-19
 
 ### Changed
