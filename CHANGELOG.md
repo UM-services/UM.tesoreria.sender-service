@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.2] - 2026-10-22
+
+### Fixed
+- Los consumidores Kafka aplican explícitamente `ConsumerConfig.AUTO_OFFSET_RESET_CONFIG` al construir sus `ConsumerFactory`, por lo que `spring.kafka.consumer.auto-offset-reset` deja de ignorarse ([ChequeraKafkaConfig.java], [NotificacionKafkaConfig.java])
+
+### Changed
+- `spring.kafka.consumer.auto-offset-reset` pasa de `earliest` a `latest` en el perfil de ejecución: si el grupo de consumidores no tiene offsets (nuevo o expirados) ya no se reenvían correos viejos ([src/main/resources/bootstrap.yml])
+- Los tests sobrescriben la propiedad a `earliest` para no perder el evento que se publica apenas arranca el contexto, antes de que el listener tenga asignada la partición ([src/test/resources/bootstrap.yml])
+
 ## [2.5.1] - 2026-10-22
 
 ### Fixed

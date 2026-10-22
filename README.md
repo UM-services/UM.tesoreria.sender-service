@@ -6,7 +6,7 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.1-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.7.2--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.5-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.5.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.5.2-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -56,7 +56,16 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 
 # Configuración de servicios
 um.tesoreria.core-service.url=http://core-service:8080
+
+# Configuración de Kafka (bootstrap.yml)
+spring.kafka.bootstrap-servers=kafka:9092
+spring.kafka.consumer.group-id=tesoreria-sender-group
+spring.kafka.consumer.auto-offset-reset=latest
 ```
+
+El consumidor arranca con `auto-offset-reset: latest`: si el grupo no tiene offsets (nuevo o
+expirados) no se reenvían correos históricos. Los tests lo sobreescriben a `earliest` en
+`src/test/resources/bootstrap.yml` para no perder el evento publicado al arrancar el contexto.
 
 ## Construcción
 

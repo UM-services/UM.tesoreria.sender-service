@@ -40,7 +40,9 @@ spring:
     bootstrap-servers: kafka:9092
     consumer:
       group-id: tesoreria-sender-group
-      auto-offset-reset: earliest
+      # latest: si el grupo no tiene offsets (nuevo o expirados) no se reenvían correos viejos.
+      # Las factories de Kafka leen esta propiedad; los tests la sobreescriben a earliest.
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   mail:
     host: ${app.mail.host}
