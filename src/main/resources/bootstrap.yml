@@ -8,6 +8,7 @@ app:
   mail:
     fromchequera: fromchequera
     fromrecibo: fromrecibo
+    fromnotificacion: fromnotificacion
     host: host
     username: uid
     password: pwd
@@ -25,6 +26,9 @@ spring:
       discovery:
         instance-id: ${spring.application.name}-${spring.cloud.client.ip-address}-${server.port}
         prefer-ip-address: true
+        # Consul: readiness (sin dependencias) + poda si queda critico.
+        health-check-path: /actuator/health/readiness
+        health-check-critical-timeout: 5m
         tags: tesoreria,sender
     openfeign:
       client:
@@ -38,9 +42,6 @@ spring:
       group-id: tesoreria-sender-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
   mail:
     host: ${app.mail.host}
     port: 587

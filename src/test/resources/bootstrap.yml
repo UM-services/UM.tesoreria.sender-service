@@ -13,6 +13,7 @@ app:
   mail:
     fromchequera: fromchequera
     fromrecibo: fromrecibo
+    fromnotificacion: fromnotificacion
     username: test
     password: test
   testing: true
