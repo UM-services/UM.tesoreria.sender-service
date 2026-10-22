@@ -40,6 +40,9 @@ public class ChequeraKafkaConfig {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
+    @Value("${spring.kafka.consumer.auto-offset-reset:latest}")
+    private String autoOffsetReset = "latest";
+
     @Bean
     public ConsumerFactory<String, SendChequeraEvent> consumerFactory() {
         log.info("Initializing Kafka Consumer Factory with bootstrapServers: {} and groupId: {}", bootstrapServers,
@@ -78,6 +81,7 @@ public class ChequeraKafkaConfig {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         return props;
