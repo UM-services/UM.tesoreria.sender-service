@@ -6,7 +6,7 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.1-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.7.2--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.5-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.5.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.5.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -113,6 +113,8 @@ Cobertura funcional:
 - `EnlacePagoIntegracionIT`: enlace de MercadoPago en el cuerpo HTML y caso sin e-mails.
 - `KafkaChequeraIntegracionIT`: evento publicado al topic **sin `__TypeId__`** (contrato JSON,
   tipo target) y un caso legacy con el header que emitía core; ambos disparan el envío.
+- `CuotaIntegracionIT`: recordatorio de cuota por el topic `send-cuota`, con una copia por
+  destinatario en GreenMail (personal e institucional) y un único `Message-ID` por envío.
 - `NotificacionIntegracionIT`: consumo de `send-correo`, idempotencia por `eventId`, publicación
   del resultado en `notificacion-resultado` y envío directo por `POST /correo/enviar`.
 

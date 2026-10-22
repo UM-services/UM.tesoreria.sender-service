@@ -5,7 +5,10 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -25,10 +28,30 @@ class CuotaIntegracionIT extends IntegracionSoporte {
 
         publicarCuota(9L);
 
-        await().atMost(Duration.ofSeconds(30)).until(() -> CORREO.getReceivedMessages().length > 0);
-        var mensaje = CORREO.getReceivedMessages()[0];
-        assertTrue(mensaje.getSubject().contains("Perez, Ana"));
-        assertEquals(1, CORREO.getReceivedMessages().length);
+        // GreenMail guarda una copia por destinatario: el recordatorio va a la casilla personal
+        // y a la institucional, así que un único envío deja dos mensajes recibidos.
+        await().atMost(Duration.ofSeconds(30)).until(() -> CORREO.getReceivedMessages().length >= 2);
+
+        var mensajes = CORREO.getReceivedMessages();
+        assertEquals(2, mensajes.length);
+        assertEquals(1, mensajesUnicos(mensajes));
+        assertTrue(mensajes[0].getSubject().contains("Perez, Ana"));
+    }
+
+    /** Cantidad de envíos lógicos: dos copias del mismo correo comparten el Message-ID. */
+    private long mensajesUnicos(MimeMessage[] mensajes) {
+        return Arrays.stream(mensajes)
+                .map(CuotaIntegracionIT::messageId)
+                .distinct()
+                .count();
+    }
+
+    private static String messageId(MimeMessage mensaje) {
+        try {
+            return mensaje.getMessageID();
+        } catch (MessagingException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void publicarCuota(Long chequeraCuotaId) throws Exception {
