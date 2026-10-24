@@ -1,12 +1,12 @@
 # UM.tesoreria.sender-service
 
 [![Java](https://img.shields.io/badge/Java-25-red.svg)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.3-blue.svg)](https://spring.io/projects/spring-cloud)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.4-blue.svg)](https://spring.io/projects/spring-cloud)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.1-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.7.2--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.5-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.5.2-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.5.3-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -66,6 +66,9 @@ spring.kafka.consumer.auto-offset-reset=latest
 El consumidor arranca con `auto-offset-reset: latest`: si el grupo no tiene offsets (nuevo o
 expirados) no se reenvían correos históricos. Los tests lo sobreescriben a `earliest` en
 `src/test/resources/bootstrap.yml` para no perder el evento publicado al arrancar el contexto.
+
+El descubrimiento por Consul usa `spring.cloud.consul.discovery.query-passing: true`: los clientes
+Feign/LoadBalancer sólo resuelven instancias cuyos health checks están en `passing`.
 
 ## Construcción
 
@@ -230,8 +233,8 @@ Este proyecto es privado y confidencial. Todos los derechos reservados.
 ## Tecnologías
 
 - Java 25
-- Spring Boot 4.1.1
-- Spring Cloud 2025.1.3
+- Spring Boot 4.1.2
+- Spring Cloud 2025.1.4
 - Kafka
 - Spring Mail
 - Spring Cloud Consul Discovery
