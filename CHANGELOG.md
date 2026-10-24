@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.3] - 2026-10-23
+
+### Fixed
+- Consul Discovery resuelve sólo instancias con los health checks en `passing` (`query-passing: true`), evitando que Feign/LoadBalancer enruten hacia instancias fuera de servicio ([src/main/resources/bootstrap.yml])
+
+### Changed
+- Actualizado Spring Boot a versión 4.1.2 (desde 4.1.1) ([pom.xml])
+- Actualizado Spring Cloud a versión 2025.1.4 (desde 2025.1.3) ([pom.xml])
+- Actualizado `archunit-junit5` a versión 1.5.1 (desde 1.4.1) y `jacoco-maven-plugin` a versión 0.8.15 (desde 0.8.13) ([pom.xml])
+
 ## [2.5.2] - 2026-10-22
 
 ### Fixed
