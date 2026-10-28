@@ -6,7 +6,7 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.1-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.7.2--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.5-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.5.3-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.6.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -26,6 +26,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Validación local de direcciones de email
 - Procesamiento asíncrono de chequeras y cuotas vía Kafka (`send-chequera`, `send-cuota`)
 - Envío de notificaciones genéricas por HTTP (`POST /api/tesoreria/sender/correo/enviar`) y por el topic `send-correo`, con idempotencia por `eventId` y resultado en `notificacion-resultado`
+- Creación al arrancar de los topics propios (`notificacion-resultado`) y de los DLT (`send-chequera.DLT`, `send-correo.DLT`) con particiones y replicación configurables
 - Remitente lógico (`CHEQUERA`, `RECIBO`, `NOTIFICACION`) resuelto por el servicio a partir de `app.mail.*`
 
 ## Requisitos
@@ -61,11 +62,22 @@ um.tesoreria.core-service.url=http://core-service:8080
 spring.kafka.bootstrap-servers=kafka:9092
 spring.kafka.consumer.group-id=tesoreria-sender-group
 spring.kafka.consumer.auto-offset-reset=latest
+
+# Topics propios del servicio (KafkaTopicsConfiguration)
+app.kafka.topics.partitions=${APP_KAFKA_TOPIC_PARTITIONS:1}
+app.kafka.topics.replicas=${APP_KAFKA_TOPIC_REPLICAS:1}
 ```
 
 El consumidor arranca con `auto-offset-reset: latest`: si el grupo no tiene offsets (nuevo o
 expirados) no se reenvían correos históricos. Los tests lo sobreescriben a `earliest` en
 `src/test/resources/bootstrap.yml` para no perder el evento publicado al arrancar el contexto.
+
+El servicio declara los topics de los que es dueño y los crea al arrancar con el `KafkaAdmin`
+auto-configurado: `notificacion-resultado` y los DLT `send-chequera.DLT` y `send-correo.DLT`
+(retención de 14 días). Los topics principales (`send-chequera`, `send-cuota`, `send-correo`)
+los declara `tesoreria-core`. `app.kafka.topics.partitions` y `app.kafka.topics.replicas` deben
+coincidir con las particiones del topic origen de cada DLT, porque el
+`DeadLetterPublishingRecoverer` publica en la misma partición del registro original.
 
 El descubrimiento por Consul usa `spring.cloud.consul.discovery.query-passing: true`: los clientes
 Feign/LoadBalancer sólo resuelven instancias cuyos health checks están en `passing`.
@@ -165,7 +177,7 @@ como único lugar con framework.
 src/
 ├── main/java/um/tesoreria/sender/
 │   ├── SenderApplication.java
-│   ├── configuration/                     # Feign + reports.properties + Kafka producer
+│   ├── configuration/                     # Feign + reports.properties + Kafka producer/topics
 │   └── hexagonal/
 │       ├── shared/                        # Kernel compartido
 │       │   ├── domain/model/              # POJOs Lombok (sin frameworks)
