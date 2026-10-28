@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-10-28
+
+### Added
+- `KafkaTopicsConfiguration` declara los topics de los que el servicio es dueño y los crea al arrancar mediante el `KafkaAdmin` auto-configurado: `notificacion-resultado` (lo produce) y los DLT de los listeners que deriva, `send-chequera.DLT` y `send-correo.DLT` ([KafkaTopicsConfiguration.java])
+- Los DLT se crean con `app.kafka.topics.partitions` (debe coincidir con las particiones del topic origen, porque el `DeadLetterPublishingRecoverer` publica en la partición del registro original), retención de 14 días (`retention.ms=1209600000`) y `cleanup.policy=delete` ([KafkaTopicsConfiguration.java])
+- `min.insync.replicas` se ajusta al replication factor configurado (`min(2, replicas)`), por lo que un clúster de un solo broker sigue siendo arrancable ([KafkaTopicsConfiguration.java])
+- Propiedades `app.kafka.topics.partitions` y `app.kafka.topics.replicas`, sobreescribibles por entorno con `APP_KAFKA_TOPIC_PARTITIONS` y `APP_KAFKA_TOPIC_REPLICAS` (por defecto `1`/`1`) ([src/main/resources/bootstrap.yml])
+- Test `KafkaTopicsConfigurationTest` que verifica nombre, particiones, replication factor, `min.insync.replicas` y retención de cada topic ([src/test/java/um/tesoreria/sender/configuration/KafkaTopicsConfigurationTest.java])
+
 ## [2.5.3] - 2026-10-23
 
 ### Fixed
