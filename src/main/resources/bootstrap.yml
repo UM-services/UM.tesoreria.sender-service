@@ -2,6 +2,11 @@ app:
   port: 0
   logging: debug
   testing: false
+  # Topics de los que este servicio es dueño (KafkaTopicsConfiguration).
+  kafka:
+    topics:
+      replicas: ${APP_KAFKA_TOPIC_REPLICAS:1}
+      partitions: ${APP_KAFKA_TOPIC_PARTITIONS:1}
   consul:
     host: consul-service
     port: 8500
