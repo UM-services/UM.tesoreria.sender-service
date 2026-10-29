@@ -16,14 +16,17 @@ public class ChequeraEventListener {
     private final ChequeraService chequeraService;
     private final SendChequeraEventMapper sendChequeraEventMapper;
 
-    @KafkaListener(topics = "send-chequera", groupId = "${spring.kafka.consumer.group-id}")
+    /**
+     * Sin {@code try/catch}: si el envío falla, la excepción tiene que llegar al
+     * {@code DefaultErrorHandler} de {@code kafkaListenerContainerFactory} para que Kafka
+     * reintente con backoff y, agotados los intentos, derive a {@code send-chequera.DLT}.
+     * Atraparla acá commiteaba el offset y el correo se perdía sin reintento.
+     */
+    @KafkaListener(topics = "send-chequera", groupId = "${spring.kafka.consumer.group-id}",
+            containerFactory = "kafkaListenerContainerFactory")
     public void listen(SendChequeraEvent event) {
         log.info("Processing SendChequeraEvent: {}", event);
-        try {
-            chequeraService.enviarChequera(sendChequeraEventMapper.toSolicitud(event));
-        } catch (Exception e) {
-            log.error("Error processing message: {}", event, e);
-        }
+        chequeraService.enviarChequera(sendChequeraEventMapper.toSolicitud(event));
     }
 
 }

@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-29
+
+### Fixed
+- `ChequeraEventListener` ya no captura las excepciones del envío: se propagan al `DefaultErrorHandler` de `kafkaListenerContainerFactory`, que reintenta con backoff y, agotados los intentos, deriva a `send-chequera.DLT`. Antes el `catch` commiteaba el offset y el correo se perdía sin reintento ([ChequeraEventListener.java])
+- Se declara el DLT faltante `send-cuota.DLT` con las mismas particiones, replication factor y retención de 14 días que los demás DLT; hasta ahora nadie lo declaraba y quedaba sujeto al auto-create del broker en lugar de las particiones y la retención del servicio ([KafkaTopicsConfiguration.java])
+- La creación de topics al arrancar vuelve a funcionar: se reemplaza `spring-kafka` por `spring-boot-starter-kafka`, que aporta el módulo `spring-boot-kafka` con `KafkaAutoConfiguration` y el bean `KafkaAdmin` en Spring Boot 4. Sin él los `NewTopic` quedaban inertes ([pom.xml], [KafkaAutoconfiguracionTest.java])
+
+### Changed
+- `spring.kafka.admin.fail-fast: true` y `spring.kafka.admin.modify-topic-configs: true`: el servicio no arranca si no puede crear o actualizar sus topics. Los tests desactivan `fail-fast` porque los tests de contexto no levantan broker ([src/main/resources/bootstrap.yml], [src/test/resources/bootstrap.yml])
+- `spring.kafka.bootstrap-servers` es sobreescribible por entorno con `SPRING_KAFKA_BOOTSTRAP_SERVERS` ([src/main/resources/bootstrap.yml])
+- Los serializadores y deserializadores se pasan como instancias a las factories en lugar de declarar sus clases en las propiedades; se elimina `spring.kafka.consumer.key-deserializer` de la configuración ([KafkaProducerConfig.java], [ChequeraKafkaConfig.java], [NotificacionKafkaConfig.java], [src/main/resources/bootstrap.yml])
+- `KafkaChequeraIntegracionIT` verifica el estado del grupo con el enum `GroupState.STABLE` en lugar del string `"Stable"` ([KafkaChequeraIntegracionIT.java])
+
+## [2.6.0] - 2026-10-28
+
+### Added
+- `KafkaTopicsConfiguration` declara los topics de los que el servicio es dueño y los crea al arrancar mediante el `KafkaAdmin` auto-configurado: `notificacion-resultado` (lo produce) y los DLT de los listeners que deriva, `send-chequera.DLT` y `send-correo.DLT` ([KafkaTopicsConfiguration.java])
+- Los DLT se crean con `app.kafka.topics.partitions` (debe coincidir con las particiones del topic origen, porque el `DeadLetterPublishingRecoverer` publica en la partición del registro original), retención de 14 días (`retention.ms=1209600000`) y `cleanup.policy=delete` ([KafkaTopicsConfiguration.java])
+- `min.insync.replicas` se ajusta al replication factor configurado (`min(2, replicas)`), por lo que un clúster de un solo broker sigue siendo arrancable ([KafkaTopicsConfiguration.java])
+- Propiedades `app.kafka.topics.partitions` y `app.kafka.topics.replicas`, sobreescribibles por entorno con `APP_KAFKA_TOPIC_PARTITIONS` y `APP_KAFKA_TOPIC_REPLICAS` (por defecto `1`/`1`) ([src/main/resources/bootstrap.yml])
+- Test `KafkaTopicsConfigurationTest` que verifica nombre, particiones, replication factor, `min.insync.replicas` y retención de cada topic ([src/test/java/um/tesoreria/sender/configuration/KafkaTopicsConfigurationTest.java])
+
+## [2.5.3] - 2026-10-23
+
+### Fixed
+- Consul Discovery resuelve sólo instancias con los health checks en `passing` (`query-passing: true`), evitando que Feign/LoadBalancer enruten hacia instancias fuera de servicio ([src/main/resources/bootstrap.yml])
+
+### Changed
+- Actualizado Spring Boot a versión 4.1.2 (desde 4.1.1) ([pom.xml])
+- Actualizado Spring Cloud a versión 2025.1.4 (desde 2025.1.3) ([pom.xml])
+- Actualizado `archunit-junit5` a versión 1.5.1 (desde 1.4.1) y `jacoco-maven-plugin` a versión 0.8.15 (desde 0.8.13) ([pom.xml])
+
 ## [2.5.2] - 2026-10-22
 
 ### Fixed

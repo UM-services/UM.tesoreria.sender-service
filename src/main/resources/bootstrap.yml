@@ -2,6 +2,11 @@ app:
   port: 0
   logging: debug
   testing: false
+  # Topics de los que este servicio es dueño (KafkaTopicsConfiguration).
+  kafka:
+    topics:
+      replicas: ${APP_KAFKA_TOPIC_REPLICAS:1}
+      partitions: ${APP_KAFKA_TOPIC_PARTITIONS:1}
   consul:
     host: consul-service
     port: 8500
@@ -26,6 +31,8 @@ spring:
       discovery:
         instance-id: ${spring.application.name}-${spring.cloud.client.ip-address}-${server.port}
         prefer-ip-address: true
+        # Solo resolver instancias con los checks en passing (Feign/LoadBalancer).
+        query-passing: true
         # Consul: readiness (sin dependencias) + poda si queda critico.
         health-check-path: /actuator/health/readiness
         health-check-critical-timeout: 5m
@@ -37,13 +44,15 @@ spring:
             connectTimeout: 15000
             readTimeout: 300000
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    admin:
+      fail-fast: true
+      modify-topic-configs: true
     consumer:
       group-id: tesoreria-sender-group
       # latest: si el grupo no tiene offsets (nuevo o expirados) no se reenvían correos viejos.
       # Las factories de Kafka leen esta propiedad; los tests la sobreescriben a earliest.
       auto-offset-reset: latest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   mail:
     host: ${app.mail.host}
     port: 587
