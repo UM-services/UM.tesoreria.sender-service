@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-29
+
+### Fixed
+- `ChequeraEventListener` ya no captura las excepciones del envío: se propagan al `DefaultErrorHandler` de `kafkaListenerContainerFactory`, que reintenta con backoff y, agotados los intentos, deriva a `send-chequera.DLT`. Antes el `catch` commiteaba el offset y el correo se perdía sin reintento ([ChequeraEventListener.java])
+- Se declara el DLT faltante `send-cuota.DLT` con las mismas particiones, replication factor y retención de 14 días que los demás DLT; hasta ahora nadie lo declaraba y quedaba sujeto al auto-create del broker en lugar de las particiones y la retención del servicio ([KafkaTopicsConfiguration.java])
+- La creación de topics al arrancar vuelve a funcionar: se reemplaza `spring-kafka` por `spring-boot-starter-kafka`, que aporta el módulo `spring-boot-kafka` con `KafkaAutoConfiguration` y el bean `KafkaAdmin` en Spring Boot 4. Sin él los `NewTopic` quedaban inertes ([pom.xml], [KafkaAutoconfiguracionTest.java])
+
+### Changed
+- `spring.kafka.admin.fail-fast: true` y `spring.kafka.admin.modify-topic-configs: true`: el servicio no arranca si no puede crear o actualizar sus topics. Los tests desactivan `fail-fast` porque los tests de contexto no levantan broker ([src/main/resources/bootstrap.yml], [src/test/resources/bootstrap.yml])
+- `spring.kafka.bootstrap-servers` es sobreescribible por entorno con `SPRING_KAFKA_BOOTSTRAP_SERVERS` ([src/main/resources/bootstrap.yml])
+- Los serializadores y deserializadores se pasan como instancias a las factories en lugar de declarar sus clases en las propiedades; se elimina `spring.kafka.consumer.key-deserializer` de la configuración ([KafkaProducerConfig.java], [ChequeraKafkaConfig.java], [NotificacionKafkaConfig.java], [src/main/resources/bootstrap.yml])
+- `KafkaChequeraIntegracionIT` verifica el estado del grupo con el enum `GroupState.STABLE` en lugar del string `"Stable"` ([KafkaChequeraIntegracionIT.java])
+
 ## [2.6.0] - 2026-10-28
 
 ### Added

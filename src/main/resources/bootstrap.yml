@@ -44,13 +44,15 @@ spring:
             connectTimeout: 15000
             readTimeout: 300000
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    admin:
+      fail-fast: true
+      modify-topic-configs: true
     consumer:
       group-id: tesoreria-sender-group
       # latest: si el grupo no tiene offsets (nuevo o expirados) no se reenvían correos viejos.
       # Las factories de Kafka leen esta propiedad; los tests la sobreescriben a earliest.
       auto-offset-reset: latest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   mail:
     host: ${app.mail.host}
     port: 587

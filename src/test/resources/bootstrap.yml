@@ -7,6 +7,9 @@ spring:
     host: smtp.gmail.com
   kafka:
     bootstrap-servers: localhost:9092
+    # En tests unitarios no hay broker (los IT usan @EmbeddedKafka): no fallar al arrancar.
+    admin:
+      fail-fast: false
     consumer:
       group-id: test-group
       # Los tests publican el evento apenas arranca el contexto, antes de que el

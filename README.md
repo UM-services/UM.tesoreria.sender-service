@@ -6,7 +6,12 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.1-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.7.2--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.5-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.6.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20.svg?logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
+[![Caffeine](https://img.shields.io/badge/Caffeine-grey.svg)](https://github.com/ben-manes/caffeine)
+[![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![JUnit 6](https://img.shields.io/badge/JUnit%206-6.0.3-25A162.svg?logo=junit5&logoColor=white)](https://junit.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Version](https://img.shields.io/badge/Version-2.6.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -26,7 +31,8 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Validación local de direcciones de email
 - Procesamiento asíncrono de chequeras y cuotas vía Kafka (`send-chequera`, `send-cuota`)
 - Envío de notificaciones genéricas por HTTP (`POST /api/tesoreria/sender/correo/enviar`) y por el topic `send-correo`, con idempotencia por `eventId` y resultado en `notificacion-resultado`
-- Creación al arrancar de los topics propios (`notificacion-resultado`) y de los DLT (`send-chequera.DLT`, `send-correo.DLT`) con particiones y replicación configurables
+- Creación al arrancar de los topics propios (`notificacion-resultado`) y de los DLT (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`) con particiones y replicación configurables
+- Reintentos con backoff y derivación al DLT del topic cuando falla el procesamiento de un evento de Kafka
 - Remitente lógico (`CHEQUERA`, `RECIBO`, `NOTIFICACION`) resuelto por el servicio a partir de `app.mail.*`
 
 ## Requisitos
@@ -59,9 +65,11 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 um.tesoreria.core-service.url=http://core-service:8080
 
 # Configuración de Kafka (bootstrap.yml)
-spring.kafka.bootstrap-servers=kafka:9092
+spring.kafka.bootstrap-servers=${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
 spring.kafka.consumer.group-id=tesoreria-sender-group
 spring.kafka.consumer.auto-offset-reset=latest
+spring.kafka.admin.fail-fast=true
+spring.kafka.admin.modify-topic-configs=true
 
 # Topics propios del servicio (KafkaTopicsConfiguration)
 app.kafka.topics.partitions=${APP_KAFKA_TOPIC_PARTITIONS:1}
@@ -73,11 +81,17 @@ expirados) no se reenvían correos históricos. Los tests lo sobreescriben a `ea
 `src/test/resources/bootstrap.yml` para no perder el evento publicado al arrancar el contexto.
 
 El servicio declara los topics de los que es dueño y los crea al arrancar con el `KafkaAdmin`
-auto-configurado: `notificacion-resultado` y los DLT `send-chequera.DLT` y `send-correo.DLT`
-(retención de 14 días). Los topics principales (`send-chequera`, `send-cuota`, `send-correo`)
-los declara `tesoreria-core`. `app.kafka.topics.partitions` y `app.kafka.topics.replicas` deben
-coincidir con las particiones del topic origen de cada DLT, porque el
-`DeadLetterPublishingRecoverer` publica en la misma partición del registro original.
+auto-configurado: `notificacion-resultado` y los DLT `send-chequera.DLT`, `send-cuota.DLT` y
+`send-correo.DLT` (retención de 14 días). Los topics principales (`send-chequera`, `send-cuota`,
+`send-correo`) los declara `tesoreria-core`. `app.kafka.topics.partitions` y
+`app.kafka.topics.replicas` deben coincidir con las particiones del topic origen de cada DLT,
+porque el `DeadLetterPublishingRecoverer` publica en la misma partición del registro original.
+Con `spring.kafka.admin.fail-fast: true` el servicio no arranca si no puede crear o actualizar
+sus topics.
+
+Si el procesamiento de un evento falla, la excepción se propaga al `DefaultErrorHandler` de la
+factory del listener: el registro se reintenta con backoff y, agotados los intentos, se publica
+en el DLT de su topic (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`).
 
 El descubrimiento por Consul usa `spring.cloud.consul.discovery.query-passing: true`: los clientes
 Feign/LoadBalancer sólo resuelven instancias cuyos health checks están en `passing`.
@@ -96,7 +110,7 @@ docker build -t um.tesoreria.sender-service .
 
 ```bash
 # Ejecutar con Java
-java -jar target/sender-service.jar
+java -jar target/um.tesoreria.sender-service.jar
 
 # Ejecutar con Docker
 docker run -p 8080:8080 um.tesoreria.sender-service

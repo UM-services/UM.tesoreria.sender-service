@@ -14,6 +14,7 @@ import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.GroupState;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
@@ -63,7 +64,7 @@ class KafkaChequeraIntegracionIT extends IntegracionSoporte {
                     var descripcion = admin.describeConsumerGroups(List.of("test-group"))
                             .all().get().get("test-group");
                     return descripcion != null
-                            && "Stable".equals(descripcion.state().toString())
+                            && descripcion.groupState() == GroupState.STABLE
                             && !descripcion.members().isEmpty();
                 } catch (Exception e) {
                     return false;
