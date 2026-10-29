@@ -110,7 +110,7 @@ docker build -t um.tesoreria.sender-service .
 
 ```bash
 # Ejecutar con Java
-java -jar target/sender-service.jar
+java -jar target/um.tesoreria.sender-service.jar
 
 # Ejecutar con Docker
 docker run -p 8080:8080 um.tesoreria.sender-service
