@@ -6,7 +6,12 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.1-lightblue.svg)](https://www.openapis.org/)
 [![Guava](https://img.shields.io/badge/Guava-33.7.2--jre-orange.svg)](https://github.com/google/guava)
 [![OpenPDF](https://img.shields.io/badge/OpenPDF-3.0.5-yellow.svg)](https://github.com/LibrePDF/OpenPDF)
-[![Version](https://img.shields.io/badge/Version-2.6.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20.svg?logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
+[![Caffeine](https://img.shields.io/badge/Caffeine-grey.svg)](https://github.com/ben-manes/caffeine)
+[![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![JUnit 6](https://img.shields.io/badge/JUnit%206-6.0.3-25A162.svg?logo=junit5&logoColor=white)](https://junit.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Version](https://img.shields.io/badge/Version-2.6.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
