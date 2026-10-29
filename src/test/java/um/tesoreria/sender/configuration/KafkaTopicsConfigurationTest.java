@@ -18,11 +18,14 @@ class KafkaTopicsConfigurationTest {
     void declaraLasDltDeLosListenersQueDeriva() {
         NewTopic chequera = configuration.sendChequeraDltTopic(1, 1);
         NewTopic correo = configuration.sendCorreoDltTopic(1, 1);
+        NewTopic cuota = configuration.sendCuotaDltTopic(1, 1);
 
         assertTopic(chequera, "send-chequera.DLT", 1, 1);
         assertTopic(correo, "send-correo.DLT", 1, 1);
+        assertTopic(cuota, "send-cuota.DLT", 1, 1);
         assertThat(chequera.configs()).containsEntry("retention.ms", "1209600000");
         assertThat(correo.configs()).containsEntry("retention.ms", "1209600000");
+        assertThat(cuota.configs()).containsEntry("retention.ms", "1209600000");
     }
 
     @Test

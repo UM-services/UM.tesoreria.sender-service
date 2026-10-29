@@ -51,3 +51,4 @@ sequenceDiagram
     Service-->>Listener: resultado
     deactivate Service
     deactivate Listener
+    Note over Listener,Kafka: si el envío falla, el DefaultErrorHandler reintenta con backoff y deriva a send-chequera.DLT
