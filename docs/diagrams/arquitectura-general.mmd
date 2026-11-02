@@ -1,56 +1,83 @@
 graph TD
-    subgraph "UM Tesoreria Sender Service"
-        A["ReciboController"] --> B["ReciboService"];
-        B --> C["JavaMailSender"];
-        B --> D["FacturacionElectronicaClient"];
-        B --> E["ChequeraPagoClient"];
-        B --> F["ComprobanteClient"];
-        B --> G["ToolClient"];
-        B --> H["ChequeraCuotaClient"];
-        B --> I["ChequeraSerieClient"];
-        B --> J["ChequeraFacturacionElectronicaClient"];
-        B --> K["ReciboMessageCheckClient"];
-
-        CC["ChequeraController"] --> CS["ChequeraService"];
-        CC --> FPS["FormulariosToPdfService"];
-        CS --> H;
-        CS --> I;
-        CS --> G;
-        CS --> P["ChequeraClient"];
-        CS --> Q["PersonaClient"];
-        CS --> R["ChequeraMessageCheckClient"];
-        CS --> C;
-        FPS --> P;
-        FPS --> S["LectivoAlternativaClient"];
-
-        N["ChequeraEventListener"] --> CS;
+    subgraph Entrada["Adaptadores de entrada (infrastructure/web · infrastructure/kafka)"]
+        CC["ChequeraController"]
+        RC["ReciboController"]
+        MC["MercadoPagoController"]
+        NC["CorreoController"]
+        PC["PingController"]
+        KL["ChequeraEventListener"]
+        CL["CuotaEventListener"]
+        NL["NotificacionEventListener"]
     end
 
-    subgraph "External Systems"
-        C --> L(("SMTP Server"));
-        D --> M["Tesoreria Core API"];
-        E --> M;
-        F --> M;
-        G --> M;
-        H --> M;
-        I --> M;
-        J --> M;
-        K --> M;
-        P --> M;
-        Q --> M;
-        R --> M;
-        S --> M;
-        O(("Kafka Broker")) --> N;
+    subgraph Procesos["procesos/* (application · ports)"]
+        CS["ChequeraService"]
+        RS["ReciboService"]
+        ES["EnlacePagoService"]
+        CUC["Casos de uso: generar PDF / enviar chequera / enviar cuota"]
+        NS["Notificación: enviar correo / procesar evento"]
     end
 
-    U["Usuario"] --> A;
-    U --> CC;
+    subgraph Salida["Puertos de salida + adaptadores"]
+        PDF["ChequeraPdfGenerator → OpenPdfChequeraGenerator"]
+        RPDF["ReciboPdfGenerator → OpenPdfReciboGenerator + QrAfipGenerator"]
+        MAIL["gateways/correo → JavaMailCorreoEnviadorAdapter"]
+        PUB["SolicitudChequera/CuotaPublisher → send-chequera · send-cuota"]
+        RES["ResultadoNotificacionPublisher → notificacion-resultado"]
+    end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px;
-    style B fill:#ccf,stroke:#333,stroke-width:2px;
-    style CC fill:#f9f,stroke:#333,stroke-width:2px;
-    style CS fill:#ccf,stroke:#333,stroke-width:2px;
-    style FPS fill:#ccf,stroke:#333,stroke-width:2px;
-    style L fill:#bbf,stroke:#333,stroke-width:2px;
-    style M fill:#bbf,stroke:#333,stroke-width:2px;
-    style U fill:#9cf,stroke:#333,stroke-width:2px;
+    subgraph Datos["datos/* (fachadas + ports out + adapters Feign)"]
+        DQ["chequera"]
+        DF["facturacion"]
+        DP["persona"]
+        DC["catalogo"]
+        DPP["preferenciaPago"]
+        DV["validacionEmail"]
+    end
+
+    subgraph Shared["shared (kernel)"]
+        MODEL["domain/model"]
+        DTOS["infrastructure/dto + mapper"]
+        SET["SenderSettings"]
+    end
+
+    CC --> CS
+    CC --> PUB
+    RC --> RS
+    MC --> ES
+    NC --> NS
+    KL --> CS
+    CL --> CUC
+    NL --> NS
+    CS --> CUC
+    RS --> CUC
+    ES --> CUC
+    CUC --> PDF
+    CUC --> RPDF
+    CUC --> MAIL
+    CUC --> DQ
+    CUC --> DF
+    CUC --> DP
+    CUC --> DC
+    CUC --> DPP
+    CUC --> DV
+    NS --> MAIL
+    NS --> RES
+    PUB --> KB[("Kafka Broker")]
+    KB --> KL
+    KB --> CL
+    KB --> NL
+    DQ --> CORE[("tesoreria-core-service")]
+    DF --> CORE
+    DP --> CORE
+    DC --> CORE
+    DPP --> CORE
+    DPP --> MP[("tesoreria-mercadopago-service")]
+    DV --> CORE
+    MAIL --> SMTP[("SMTP")]
+    PDF --> FS[("path.reports")]
+    RPDF --> FS
+    MODEL -.-> CUC
+    MODEL -.-> NS
+    DTOS -.-> DQ
+    SET -.-> NS

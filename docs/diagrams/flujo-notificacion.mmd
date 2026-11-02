@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    actor Productor as core / otros servicios
+    participant Kafka as Kafka (send-correo)
+    participant HTTP as CorreoController
+    participant Listener as NotificacionEventListener
+    participant UseCase as ProcesarCorreoEventUseCase
+    participant Enviar as EnviarNotificacionUseCase
+    participant Mail as CorreoService
+    participant Res as Kafka (notificacion-resultado)
+
+    alt vía Kafka
+        Productor->>Kafka: CorreoEvent (eventType CORREO, version 1, eventId)
+        Kafka->>Listener: consume (group tesoreria-sender-group)
+        Listener->>UseCase: procesar(event)
+        UseCase->>UseCase: valida envelope + idempotencia por eventId
+        UseCase->>Enviar: enviar(payload)
+    else vía HTTP
+        Productor->>HTTP: POST /api/tesoreria/sender/correo/enviar
+        HTTP->>Enviar: enviar(payload)
+    end
+
+    Enviar->>Enviar: resuelve remitente lógico y redirect de testing
+    Enviar->>Mail: enviar(Correo sin adjunto)
+    Mail-->>Enviar: void
+
+    alt respuesta Kafka
+        Enviar-->>UseCase: ok
+        UseCase->>Res: resultado del envío (eventId, enviado, error)
+    else respuesta HTTP
+        Enviar-->>HTTP: ok
+        HTTP-->>Productor: 200 OK
+    end
