@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-11-17
+
+### Changed
+- Rediseño visual del PDF de chequera, reemplazo y cuota: encabezado con logo reducido y línea azul institucional, título y subtítulo (lectivo · arancel · beca) centrados, ficha de datos del alumno en dos columnas con el Código de Pago Electrónico destacado, y cada cuota como una tarjeta con franja azul (cuota y período), importes alineados a la derecha con formato `$ 193.000,00` y enlace subrayado "Click aquí para pagar" de MercadoPago ([OpenPdfChequeraGenerator.java])
+- El código de barras se escala al ancho de la tarjeta y se imprime su número debajo ([OpenPdfChequeraGenerator.java])
+- La beca sólo se muestra cuando es mayor a 0 ([OpenPdfChequeraGenerator.java])
+- Pie de página con la fecha de emisión y el número de página ([OpenPdfChequeraGenerator.java])
+- Márgenes simétricos de 36 pt (antes 40/25/40/30) ([OpenPdfChequeraGenerator.java])
 
 ## [Unreleased]
 

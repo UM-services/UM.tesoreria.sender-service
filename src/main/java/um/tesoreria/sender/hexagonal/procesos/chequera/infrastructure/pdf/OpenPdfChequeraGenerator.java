@@ -5,10 +5,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +28,10 @@ import org.openpdf.text.Paragraph;
 import org.openpdf.text.Phrase;
 import org.openpdf.text.Rectangle;
 import org.openpdf.text.pdf.BarcodeInter25;
+import org.openpdf.text.pdf.ColumnText;
 import org.openpdf.text.pdf.PdfPCell;
 import org.openpdf.text.pdf.PdfPTable;
+import org.openpdf.text.pdf.PdfPageEventHelper;
 import org.openpdf.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -51,6 +58,14 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
     private static final String ETEC_LOGO = "marca_etec.png";
     private static final int ETEC_FACULTAD_ID = 15;
     private static final int FACULTAD_SIN_CARRERA_ID = 6;
+    private static final ZoneId ZONA_MENDOZA = ZoneId.of("America/Argentina/Mendoza");
+    private static final Locale LOCALE_AR = Locale.forLanguageTag("es-AR");
+
+    private static final Color AZUL = new Color(11, 58, 140);
+    private static final Color AZUL_LINK = new Color(0, 102, 204);
+    private static final Color GRIS_TEXTO = new Color(90, 98, 110);
+    private static final Color GRIS_BORDE = new Color(208, 214, 222);
+    private static final Color GRIS_FONDO = new Color(244, 246, 249);
 
     private final CatalogoDatosService catalogoDatosService;
 
@@ -65,7 +80,7 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         log.debug("Generando {}", filename);
         try {
             Document document = crearDocumento();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter writer = crearWriter(document, filename);
             document.open();
 
             agregarEncabezado(document, serie.getFacultadId(),
@@ -111,7 +126,7 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         log.debug("Generando {}", filename);
         try {
             Document document = crearDocumento();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter writer = crearWriter(document, filename);
             document.open();
 
             agregarEncabezado(document, serie.getFacultadId(),
@@ -154,7 +169,7 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         log.debug("Generando {}", filename);
         try {
             Document document = crearDocumento();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter writer = crearWriter(document, filename);
             document.open();
 
             agregarEncabezado(document, serie.getFacultadId(),
@@ -182,32 +197,72 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         return DocumentoPdf.de(filename);
     }
 
+    private record Dato(String etiqueta, String valor, float tamano) {
+    }
+
+    private static Font fuente(float tamano, int estilo, Color color) {
+        return new Font(Font.HELVETICA, tamano, estilo, color);
+    }
+
     private Document crearDocumento() {
         Document document = new Document(PageSize.A4);
-        document.setMargins(40, 25, 40, 30);
+        document.setMargins(36, 36, 36, 40);
         return document;
+    }
+
+    private PdfWriter crearWriter(Document document, String filename) throws DocumentException, IOException {
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filename));
+        writer.setPageEvent(new PieDePagina());
+        return writer;
+    }
+
+    private static class PieDePagina extends PdfPageEventHelper {
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            String texto = String.format("Emitido el %s  ·  Página %d",
+                    FORMATO_FECHA.format(LocalDate.now(ZONA_MENDOZA)), writer.getPageNumber());
+            float x = (document.getPageSize().getLeft() + document.getPageSize().getRight()) / 2;
+            ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER,
+                    new Phrase(texto, fuente(8, Font.NORMAL, GRIS_TEXTO)), x, 22, 0);
+        }
+
     }
 
     private void agregarEncabezado(Document document, Integer facultadId, String facultadNombre)
             throws DocumentException, IOException {
-        PdfPTable table = new PdfPTable(new float[]{1, 1});
+        PdfPTable table = new PdfPTable(new float[]{1, 2});
         table.setWidthPercentage(100);
 
         String logoPath = facultadId != null && facultadId == ETEC_FACULTAD_ID ? ETEC_LOGO : UM_LOGO;
         Image image = Image.getInstance(logoPath);
-        image.scalePercent(80);
+        image.scaleToFit(125, 65);
         PdfPCell cell = new PdfPCell(image);
-        cell.setBorder(Rectangle.NO_BORDER);
+        estilarCeldaEncabezado(cell);
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
         table.addCell(cell);
 
         cell = new PdfPCell();
-        cell.setBorder(Rectangle.NO_BORDER);
-        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        cell.addElement(new Paragraph("UNIVERSIDAD DE MENDOZA", new Font(Font.HELVETICA, 16, Font.BOLD)));
-        cell.addElement(new Paragraph(facultadNombre, new Font(Font.HELVETICA, 14, Font.BOLD)));
+        estilarCeldaEncabezado(cell);
+        Paragraph universidad = new Paragraph("UNIVERSIDAD DE MENDOZA", fuente(15, Font.BOLD, AZUL));
+        universidad.setAlignment(Element.ALIGN_RIGHT);
+        cell.addElement(universidad);
+        Paragraph facultad = new Paragraph(facultadNombre, fuente(12, Font.NORMAL, GRIS_TEXTO));
+        facultad.setAlignment(Element.ALIGN_RIGHT);
+        cell.addElement(facultad);
         table.addCell(cell);
 
         document.add(table);
+    }
+
+    private void estilarCeldaEncabezado(PdfPCell cell) {
+        cell.setBorder(Rectangle.BOTTOM);
+        cell.setBorderColorBottom(AZUL);
+        cell.setBorderWidthBottom(1.5f);
+        cell.setPaddingBottom(8);
+        cell.setPaddingLeft(0);
+        cell.setPaddingRight(0);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
     }
 
     private void agregarInfoComun(Document document,
@@ -223,48 +278,67 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
                                   Integer facultadId,
                                   Integer tipoChequeraId,
                                   BigDecimal becaPorcentaje) throws DocumentException {
-        Paragraph paragraph = new Paragraph(tipoChequeraNombre, new Font(Font.HELVETICA, 16, Font.BOLD));
+        Paragraph paragraph = new Paragraph(tipoChequeraNombre, fuente(18, Font.BOLD, AZUL));
         paragraph.setAlignment(Element.ALIGN_CENTER);
+        paragraph.setSpacingBefore(16);
         document.add(paragraph);
 
-        paragraph = new Paragraph(lectivoNombre, new Font(Font.HELVETICA, 12));
-        paragraph.setAlignment(Element.ALIGN_CENTER);
-        document.add(paragraph);
-
-        paragraph = new Paragraph(new Phrase(arancelTipoNombre + " - Beca: ", new Font(Font.HELVETICA, 12)));
-        paragraph.add(new Phrase(String.format("%.2f%%", becaPorcentaje.multiply(BigDecimal.valueOf(100))),
-                new Font(Font.HELVETICA, 12, Font.BOLD)));
-        paragraph.setAlignment(Element.ALIGN_CENTER);
-        document.add(paragraph);
-
-        paragraph = new Paragraph(tipoImpresion, new Font(Font.HELVETICA, 12, Font.BOLD));
-        paragraph.setAlignment(Element.ALIGN_RIGHT);
-        document.add(paragraph);
-
-        paragraph = new Paragraph(new Phrase("         Alumno: (" + persona.getPersonaId() + ") ",
-                new Font(Font.HELVETICA, 11)));
-        paragraph.add(new Phrase(persona.getApellido() + ", " + persona.getNombre(),
-                new Font(Font.HELVETICA, 11, Font.BOLD)));
-        if (facultadId != FACULTAD_SIN_CARRERA_ID) {
-            paragraph.add(new Phrase(" - (" + carrera.getNombre() + ")", new Font(Font.HELVETICA, 11)));
+        String subtitulo = lectivoNombre + "  ·  " + arancelTipoNombre;
+        if (becaPorcentaje != null && becaPorcentaje.signum() > 0) {
+            String beca = becaPorcentaje.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString();
+            subtitulo += "  ·  Beca " + beca + "%";
         }
-        document.add(paragraph);
-
-        paragraph = new Paragraph(new Phrase(chequeraLabel + ": ", new Font(Font.HELVETICA, 11)));
-        paragraph.add(new Phrase(Objects.requireNonNull(chequeraSerieId).toString(),
-                new Font(Font.HELVETICA, 11, Font.BOLD)));
-        paragraph.setAlignment(Element.ALIGN_RIGHT);
-        document.add(paragraph);
-
-        paragraph = new Paragraph(new Phrase("Código de Pago Electrónico: ", new Font(Font.HELVETICA, 11)));
-        String codigoPago = String.format("%02d%03d%05d", facultadId, tipoChequeraId, chequeraSerieId);
-        paragraph.add(new Phrase(codigoPago, new Font(Font.HELVETICA, 11, Font.BOLD)));
-        document.add(paragraph);
-
-        paragraph = new Paragraph("Alternativa " + alternativaId, new Font(Font.HELVETICA, 12, Font.BOLD));
+        paragraph = new Paragraph(subtitulo, fuente(10.5f, Font.NORMAL, GRIS_TEXTO));
         paragraph.setAlignment(Element.ALIGN_CENTER);
+        paragraph.setSpacingBefore(3);
         document.add(paragraph);
-        document.add(new Paragraph(" ", new Font(Font.HELVETICA, 8)));
+
+        List<Dato> izquierda = new ArrayList<>();
+        izquierda.add(new Dato("Alumno",
+                persona.getApellido() + ", " + persona.getNombre() + "  (" + persona.getPersonaId() + ")", 11.5f));
+        if (facultadId != FACULTAD_SIN_CARRERA_ID && carrera != null) {
+            izquierda.add(new Dato("Carrera", carrera.getNombre(), 10.5f));
+        }
+        izquierda.add(new Dato("Medio de pago", tipoImpresion, 10.5f));
+
+        List<Dato> derecha = new ArrayList<>();
+        derecha.add(new Dato(chequeraLabel, Objects.requireNonNull(chequeraSerieId).toString(), 11.5f));
+        derecha.add(new Dato("Alternativa", String.valueOf(alternativaId), 11.5f));
+        derecha.add(new Dato("Código de Pago Electrónico",
+                String.format("%02d%03d%05d", facultadId, tipoChequeraId, chequeraSerieId), 13));
+
+        agregarFicha(document, izquierda, derecha);
+    }
+
+    private void agregarFicha(Document document, List<Dato> izquierda, List<Dato> derecha)
+            throws DocumentException {
+        PdfPTable table = new PdfPTable(new float[]{1.3f, 1});
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(14);
+        table.setSpacingAfter(14);
+
+        int filas = Math.max(izquierda.size(), derecha.size());
+        for (int i = 0; i < filas; i++) {
+            table.addCell(celdaFicha(i < izquierda.size() ? izquierda.get(i) : null));
+            table.addCell(celdaFicha(i < derecha.size() ? derecha.get(i) : null));
+        }
+        document.add(table);
+    }
+
+    private PdfPCell celdaFicha(Dato dato) {
+        PdfPCell cell = new PdfPCell();
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setBackgroundColor(GRIS_FONDO);
+        cell.setPadding(7);
+        cell.setPaddingLeft(12);
+        if (dato != null) {
+            Paragraph p = new Paragraph();
+            p.add(new Chunk(dato.etiqueta().toUpperCase(LOCALE_AR), fuente(7, Font.BOLD, GRIS_TEXTO)));
+            p.add(Chunk.NEWLINE);
+            p.add(new Chunk(dato.valor(), fuente(dato.tamano(), Font.BOLD, Color.BLACK)));
+            cell.addElement(p);
+        }
+        return cell;
     }
 
     private void agregarTablaCuota(Document document, PdfWriter writer, ChequeraCuota cuota, ChequeraSerie serie,
@@ -276,12 +350,12 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
                 cuota.getImporte1(), cuota.getImporte2(), cuota.getImporte3());
 
         if (preferencia != null && preferencia.getMercadoPagoContext() != null) {
-            agregarEnlaceMercadoPago(table, preferencia.getMercadoPagoContext().getInitPoint(), codigoBarras);
+            agregarEnlaceMercadoPago(table, preferencia.getMercadoPagoContext().getInitPoint());
         }
         if (codigoBarras) {
             agregarCodigoBarras(table, writer, cuota.getCodigoBarras());
         }
-        document.add(table);
+        document.add(envolverTarjeta(table));
     }
 
     private void agregarTablaCuotaReemplazo(Document document, PdfWriter writer, ChequeraCuotaReemplazo cuota,
@@ -292,7 +366,22 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
                 cuota.getAnho(), cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),
                 cuota.getImporte1(), cuota.getImporte2(), cuota.getImporte3());
         agregarCodigoBarras(table, writer, cuota.getCodigoBarras());
-        document.add(table);
+        document.add(envolverTarjeta(table));
+    }
+
+    private PdfPTable envolverTarjeta(PdfPTable interior) {
+        PdfPTable externa = new PdfPTable(1);
+        externa.setWidthPercentage(100);
+        externa.setKeepTogether(true);
+        externa.setSpacingAfter(14);
+
+        PdfPCell cell = new PdfPCell(interior);
+        cell.setPadding(0);
+        cell.setBorder(Rectangle.BOX);
+        cell.setBorderColor(GRIS_BORDE);
+        cell.setBorderWidth(0.75f);
+        externa.addCell(cell);
+        return externa;
     }
 
     private LectivoAlternativa buscarAlternativa(List<LectivoAlternativa> alternativas, Integer productoId,
@@ -328,67 +417,79 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         PdfPTable table = new PdfPTable(new float[]{1, 1, 1, 1});
         table.setWidthPercentage(100);
 
-        PdfPCell cell = new PdfPCell();
-        cell.setBorder(Rectangle.TOP);
-        cell.addElement(new Paragraph(new Phrase(
+        PdfPCell cell = celdaCuota(new Phrase(
                 String.format("%s: %d de %d", lectivoAlternativa.getTitulo(), cuotaId, lectivoAlternativa.getCuotas()),
-                new Font(Font.HELVETICA, 8, Font.BOLD))));
+                fuente(10.5f, Font.BOLD, Color.WHITE)), 2, Element.ALIGN_LEFT);
+        cell.setBackgroundColor(AZUL);
+        cell.setPadding(7);
+        cell.setPaddingLeft(12);
         table.addCell(cell);
 
-        cell = new PdfPCell();
-        cell.setBorder(Rectangle.TOP);
-        var paragraph = new Paragraph(new Phrase("Período: ", new Font(Font.HELVETICA, 8)));
-        paragraph.add(new Phrase(String.format("%d/%d", mes, anho), new Font(Font.HELVETICA, 8, Font.BOLD)));
-        cell.addElement(paragraph);
+        cell = celdaCuota(new Phrase(String.format("Período: %d/%d", mes, anho),
+                fuente(10.5f, Font.NORMAL, Color.WHITE)), 2, Element.ALIGN_RIGHT);
+        cell.setBackgroundColor(AZUL);
+        cell.setPadding(7);
+        cell.setPaddingRight(12);
         table.addCell(cell);
 
-        cell = new PdfPCell();
-        cell.setBorder(Rectangle.TOP);
-        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        cell.addElement(crearParrafoVencimiento("Primer Vencimiento: ", vencimiento1));
-        cell.addElement(crearParrafoVencimiento("Segundo Vencimiento: ", vencimiento2));
-        cell.addElement(crearParrafoVencimiento("Tercer Vencimiento: ", vencimiento3));
-        table.addCell(cell);
-
-        cell = new PdfPCell();
-        cell.setBorder(Rectangle.TOP);
-        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
-        cell.addElement(crearParrafoImporte(importe1, decimalFormat));
-        cell.addElement(crearParrafoImporte(importe2, decimalFormat));
-        cell.addElement(crearParrafoImporte(importe3, decimalFormat));
-        table.addCell(cell);
+        agregarFilaVencimiento(table, "Primer Vencimiento", vencimiento1, importe1, true);
+        agregarFilaVencimiento(table, "Segundo Vencimiento", vencimiento2, importe2, false);
+        agregarFilaVencimiento(table, "Tercer Vencimiento", vencimiento3, importe3, false);
 
         return table;
     }
 
-    private Paragraph crearParrafoVencimiento(String label, OffsetDateTime date) {
-        Paragraph p = new Paragraph(new Phrase(label, new Font(Font.HELVETICA, 8)));
-        p.add(new Phrase(FORMATO_FECHA.format(date.withOffsetSameInstant(ZoneOffset.UTC)),
-                new Font(Font.HELVETICA, 8, Font.BOLD)));
-        p.setAlignment(Element.ALIGN_RIGHT);
-        return p;
+    private PdfPCell celdaCuota(Phrase contenido, int colspan, int alineacion) {
+        PdfPCell cell = new PdfPCell(contenido);
+        cell.setColspan(colspan);
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setHorizontalAlignment(alineacion);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        return cell;
     }
 
-    private Paragraph crearParrafoImporte(BigDecimal importe, DecimalFormat formatter) {
-        Paragraph p = new Paragraph(new Phrase("Importe: ", new Font(Font.HELVETICA, 8)));
-        p.add(new Phrase(formatter.format(importe), new Font(Font.HELVETICA, 8, Font.BOLD)));
-        p.setAlignment(Element.ALIGN_RIGHT);
-        return p;
+    private void agregarFilaVencimiento(PdfPTable table, String etiqueta, OffsetDateTime fecha, BigDecimal importe,
+                                        boolean destacado) {
+        float tamano = destacado ? 11 : 9.5f;
+        Phrase vencimiento = new Phrase();
+        vencimiento.add(new Chunk(etiqueta + ":  ", fuente(tamano - 1, Font.NORMAL, GRIS_TEXTO)));
+        vencimiento.add(new Chunk(FORMATO_FECHA.format(fecha.withOffsetSameInstant(ZoneOffset.UTC)),
+                fuente(tamano, Font.BOLD, Color.BLACK)));
+
+        PdfPCell izquierda = celdaCuota(vencimiento, 2, Element.ALIGN_LEFT);
+        izquierda.setPaddingLeft(12);
+        PdfPCell derecha = celdaCuota(new Phrase(formatearImporte(importe),
+                fuente(destacado ? 13 : tamano, Font.BOLD, destacado ? AZUL : Color.BLACK)), 2, Element.ALIGN_RIGHT);
+        derecha.setPaddingRight(12);
+
+        for (PdfPCell cell : List.of(izquierda, derecha)) {
+            cell.setPaddingTop(destacado ? 9 : 5);
+            cell.setPaddingBottom(destacado ? 7 : 5);
+            table.addCell(cell);
+        }
     }
 
-    private void agregarEnlaceMercadoPago(PdfPTable table, String initPoint, boolean codigoBarras) {
-        Chunk link = new Chunk("Click aquí para pagar",
-                new Font(Font.HELVETICA, 10, Font.BOLD, new Color(0, 0, 255)));
+    private String formatearImporte(BigDecimal importe) {
+        DecimalFormat formato = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(LOCALE_AR));
+        return "$ " + formato.format(importe);
+    }
+
+    private void agregarEnlaceMercadoPago(PdfPTable table, String initPoint) {
+        Chunk link = new Chunk("Click aquí para pagar", fuente(10.5f, Font.UNDERLINE, AZUL_LINK));
         link.setAnchor(initPoint);
-        Paragraph paragraph = new Paragraph(new Phrase("\nEnlace de MERCADOPAGO en ", new Font(Font.HELVETICA, 10)));
+
+        Paragraph paragraph = new Paragraph();
+        paragraph.add(new Chunk("Pagá online con MercadoPago:  ", fuente(10, Font.NORMAL, GRIS_TEXTO)));
         paragraph.add(link);
-        paragraph.add(new Phrase("\n\n"));
 
         PdfPCell cell = new PdfPCell(paragraph);
         cell.setColspan(4);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setBorder(codigoBarras ? Rectangle.NO_BORDER : Rectangle.BOTTOM);
+        cell.setBorder(Rectangle.TOP);
+        cell.setBorderColor(GRIS_BORDE);
+        cell.setBorderWidth(0.5f);
+        cell.setPaddingTop(11);
+        cell.setPaddingBottom(11);
         table.addCell(cell);
     }
 
@@ -399,10 +500,21 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         code25.setX(1.3f);
         Image image = code25.createImageWithBarcode(writer.getDirectContent(), null, null);
 
-        PdfPCell cell = new PdfPCell(image);
+        PdfPCell cell = new PdfPCell(image, true);
         cell.setColspan(4);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setBorder(Rectangle.BOTTOM);
+        cell.setBorder(Rectangle.TOP);
+        cell.setBorderColor(GRIS_BORDE);
+        cell.setBorderWidth(0.5f);
+        cell.setPaddingTop(12);
+        cell.setPaddingLeft(12);
+        cell.setPaddingRight(12);
+        cell.setPaddingBottom(2);
+        table.addCell(cell);
+
+        cell = celdaCuota(new Phrase(barcodeText, new Font(Font.COURIER, 8, Font.NORMAL, GRIS_TEXTO)), 4,
+                Element.ALIGN_CENTER);
+        cell.setPaddingBottom(10);
         table.addCell(cell);
     }
 
