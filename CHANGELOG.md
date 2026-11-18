@@ -5,16 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.7.0] - 2026-11-17
+## [Unreleased]
+
+## [2.7.0] - 2026-11-18
+
+### Added
+- Endpoint `GET /api/tesoreria/sender/chequera/borrador/{borradorId}`: imprime el borrador de una chequera con la leyenda `BORRADOR — DOCUMENTO SIN VALIDEZ`, marca de agua diagonal y pie `no válido como comprobante de pago`; número `S/N`, sin código de barras, sin código de pago electrónico y sin enlace de MercadoPago. Responde `409 Conflict` cuando el borrador no existe o ya no está `ABIERTO`, y `204 No Content` cuando un borrador abierto no tiene cuotas adeudadas ([ChequeraController.java], [GenerarBorradorPdfUseCaseImpl.java], [OpenPdfChequeraGenerator.java])
+- Nuevo slice `datos/borrador`: puerto `BorradorImpresionRepository` y adaptador Feign contra `GET /api/tesoreria/core/emision/chequera/borradores/{borradorId}/impresion` de core, con el snapshot de impresión y su cuota como modelo de dominio ([BorradorChequeraClient.java], [BorradorImpresionClientAdapter.java], [BorradorImpresion.java])
+- `DatosBorradorChequera` define el modelo propio del render de borrador y el criterio de cuota adeudada (ni pagada, ni de baja, ni compensada, con `importe1` distinto de cero), por lo que el documento sólo imprime lo que el alumno debe pagar ([DatosBorradorChequera.java])
+- `BorradorImpresionDto` deserializa las fechas ISO-8601 del core con o sin fracciones de segundo, sin imponer un patrón que rechace `2026-11-18T12:05:13.692435Z` ([BorradorImpresionDto.java])
+- Tests `GenerarBorradorPdfUseCaseImplTest` (borrador abierto, emitido, sin cuotas adeudadas y con al menos una adeudada), `OpenPdfChequeraGeneratorTest` (leyenda `BORRADOR`, `S/N`, ausencia de código de pago y de cuotas pagadas/compensadas/de baja) y `BorradorImpresionDtoTest` (Jackson 2 y Jackson 3) ([src/test/java/um/tesoreria/sender/hexagonal/procesos/chequera/], [BorradorImpresionDtoTest.java])
 
 ### Changed
+- `crearEstructuraTablaCuota` recibe el título y la cantidad total de cuotas de la alternativa en lugar del `LectivoAlternativa` completo, de modo que el borrador reutilice el mismo layout sin falsificar `ChequeraSerie` ni `ChequeraCuota` ([OpenPdfChequeraGenerator.java])
+- El `Dockerfile` copia los PNG de logos institucionales antes de `mvn clean package`: los tests del generador OpenPDF renderizan con ellos y necesitan estar en el directorio de trabajo, igual que en la imagen final ([Dockerfile])
 - Rediseño visual del PDF de chequera, reemplazo y cuota: encabezado con logo reducido y línea azul institucional, título y subtítulo (lectivo · arancel · beca) centrados, ficha de datos del alumno en dos columnas con el Código de Pago Electrónico destacado, y cada cuota como una tarjeta con franja azul (cuota y período), importes alineados a la derecha con formato `$ 193.000,00` y enlace subrayado "Click aquí para pagar" de MercadoPago ([OpenPdfChequeraGenerator.java])
 - El código de barras se escala al ancho de la tarjeta y se imprime su número debajo ([OpenPdfChequeraGenerator.java])
 - La beca sólo se muestra cuando es mayor a 0 ([OpenPdfChequeraGenerator.java])
 - Pie de página con la fecha de emisión y el número de página ([OpenPdfChequeraGenerator.java])
 - Márgenes simétricos de 36 pt (antes 40/25/40/30) ([OpenPdfChequeraGenerator.java])
-
-## [Unreleased]
 
 ## [2.6.1] - 2026-10-29
 

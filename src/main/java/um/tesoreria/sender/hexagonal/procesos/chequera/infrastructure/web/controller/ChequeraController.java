@@ -8,12 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import um.tesoreria.sender.hexagonal.procesos.chequera.application.exception.BorradorNoImprimibleException;
 import um.tesoreria.sender.hexagonal.procesos.chequera.application.service.ChequeraService;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudChequeraPdf;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudEnvioChequera;
@@ -97,6 +99,26 @@ public class ChequeraController {
         var documento = service.generarCuotaPdf(facultadId, tipoChequeraId, chequeraSerieId, alternativaId,
                 productoId, cuotaId);
         return responder(documento, "cuota.pdf");
+    }
+
+    /**
+     * Documento del borrador (revisión previa a la emisión): mismo layout, con leyenda BORRADOR
+     * visible, sin código de barras, sin enlace de pago y con número {@code S/N}.
+     */
+    @GetMapping("/borrador/{borradorId}")
+    public ResponseEntity<Resource> generateBorradorPdf(@PathVariable Long borradorId) throws FileNotFoundException {
+        log.debug("\n\nProcessing ChequeraController.generateBorradorPdf {}\n\n", borradorId);
+        DocumentoPdf documento;
+        try {
+            documento = service.generarBorradorPdf(borradorId);
+        } catch (BorradorNoImprimibleException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        if (documento.estaVacio()) {
+            // Borrador abierto sin cuotas adeudadas: no hay nada que imprimir.
+            return ResponseEntity.noContent().build();
+        }
+        return responder(documento, "borrador-chequera-" + borradorId + ".pdf");
     }
 
     @GetMapping("/sendChequera/{facultadId}/{tipoChequeraId}/{chequeraSerieId}/{alternativaId}/{copiaInformes}/{codigoBarras}")
