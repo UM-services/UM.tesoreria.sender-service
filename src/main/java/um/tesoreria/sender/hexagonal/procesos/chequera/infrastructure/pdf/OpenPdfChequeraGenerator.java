@@ -29,6 +29,8 @@ import org.openpdf.text.Phrase;
 import org.openpdf.text.Rectangle;
 import org.openpdf.text.pdf.BarcodeInter25;
 import org.openpdf.text.pdf.ColumnText;
+import org.openpdf.text.pdf.PdfContentByte;
+import org.openpdf.text.pdf.PdfGState;
 import org.openpdf.text.pdf.PdfPCell;
 import org.openpdf.text.pdf.PdfPTable;
 import org.openpdf.text.pdf.PdfPageEventHelper;
@@ -36,6 +38,7 @@ import org.openpdf.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import um.tesoreria.sender.hexagonal.datos.catalogo.application.service.CatalogoDatosService;
+import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.DatosBorradorChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.DatosChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.DatosChequeraReemplazo;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.DatosCuota;
@@ -345,8 +348,9 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
                                    PreferenciaPago preferencia, boolean codigoBarras,
                                    List<LectivoAlternativa> alternativas) throws DocumentException {
         var lectivoAlternativa = buscarAlternativa(alternativas, cuota.getProductoId(), serie);
-        PdfPTable table = crearEstructuraTablaCuota(lectivoAlternativa, cuota.getCuotaId(), cuota.getMes(),
-                cuota.getAnho(), cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),
+        PdfPTable table = crearEstructuraTablaCuota(lectivoAlternativa.getTitulo(), cuota.getCuotaId(),
+                lectivoAlternativa.getCuotas(), cuota.getMes(), cuota.getAnho(),
+                cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),
                 cuota.getImporte1(), cuota.getImporte2(), cuota.getImporte3());
 
         if (preferencia != null && preferencia.getMercadoPagoContext() != null) {
@@ -362,8 +366,9 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
                                             ChequeraSerieReemplazo serie, List<LectivoAlternativa> alternativas)
             throws DocumentException {
         var lectivoAlternativa = buscarAlternativaReemplazo(alternativas, cuota.getProductoId(), serie);
-        PdfPTable table = crearEstructuraTablaCuota(lectivoAlternativa, cuota.getCuotaId(), cuota.getMes(),
-                cuota.getAnho(), cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),
+        PdfPTable table = crearEstructuraTablaCuota(lectivoAlternativa.getTitulo(), cuota.getCuotaId(),
+                lectivoAlternativa.getCuotas(), cuota.getMes(), cuota.getAnho(),
+                cuota.getVencimiento1(), cuota.getVencimiento2(), cuota.getVencimiento3(),
                 cuota.getImporte1(), cuota.getImporte2(), cuota.getImporte3());
         agregarCodigoBarras(table, writer, cuota.getCodigoBarras());
         document.add(envolverTarjeta(table));
@@ -410,7 +415,7 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         return alternativa;
     }
 
-    private PdfPTable crearEstructuraTablaCuota(LectivoAlternativa lectivoAlternativa, Integer cuotaId, Integer mes,
+    private PdfPTable crearEstructuraTablaCuota(String titulo, Integer cuotaId, Integer cuotas, Integer mes,
                                                 Integer anho, OffsetDateTime vencimiento1,
                                                 OffsetDateTime vencimiento2, OffsetDateTime vencimiento3,
                                                 BigDecimal importe1, BigDecimal importe2, BigDecimal importe3) {
@@ -418,7 +423,7 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         table.setWidthPercentage(100);
 
         PdfPCell cell = celdaCuota(new Phrase(
-                String.format("%s: %d de %d", lectivoAlternativa.getTitulo(), cuotaId, lectivoAlternativa.getCuotas()),
+                String.format("%s: %d de %d", titulo, cuotaId, cuotas),
                 fuente(10.5f, Font.BOLD, Color.WHITE)), 2, Element.ALIGN_LEFT);
         cell.setBackgroundColor(AZUL);
         cell.setPadding(7);
@@ -437,6 +442,148 @@ public class OpenPdfChequeraGenerator implements ChequeraPdfGenerator {
         agregarFilaVencimiento(table, "Tercer Vencimiento", vencimiento3, importe3, false);
 
         return table;
+    }
+
+    @Override
+    public DocumentoPdf generarBorradorChequera(DatosBorradorChequera datos) {
+        String filename = String.format("%sborrador-chequera-%s-%s-%s.pdf", pathReports, datos.personaId(),
+                datos.facultadId(), datos.tipoChequeraId());
+        log.debug("Generando {}", filename);
+        try {
+            Document document = crearDocumento();
+            PdfWriter writer = crearWriterBorrador(document, filename);
+            document.open();
+
+            agregarEncabezado(document, datos.facultadId(), valor(datos.facultadNombre(), "Universidad de Mendoza"));
+            agregarBandaBorrador(document);
+            agregarInfoBorrador(document, datos);
+
+            for (DatosBorradorChequera.CuotaBorrador cuota : datos.cuotas()) {
+                // Un borrador se imprime sólo con lo adeudado: ni pagada, ni de baja, ni compensada.
+                if (!cuota.adeudada()) {
+                    continue;
+                }
+                PdfPTable table = crearEstructuraTablaCuota(
+                        valor(cuota.productoNombre(), "Cuota"), cuota.cuotaId(), totalCuotas(datos, cuota),
+                        cuota.mes(), cuota.anio(), cuota.vencimiento1(), cuota.vencimiento2(),
+                        cuota.vencimiento3(), cuota.importe1(), cuota.importe2(), cuota.importe3());
+                document.add(envolverTarjeta(table));
+            }
+
+            document.add(new Paragraph("Total adeudado: " + formatearImporte(datos.total()),
+                    fuente(12, Font.BOLD, AZUL)));
+            document.close();
+        } catch (Exception ex) {
+            log.error("Error generando PDF del borrador", ex);
+            return DocumentoPdf.vacio();
+        }
+        return DocumentoPdf.de(filename);
+    }
+
+    /**
+     * Leyenda visible: banda de color arriba del documento. La marca de agua y el pie los dibuja
+     * {@link MarcaBorrador} en cada página.
+     */
+    private void agregarBandaBorrador(Document document) throws DocumentException {
+        PdfPTable banda = new PdfPTable(1);
+        banda.setWidthPercentage(100);
+        banda.setSpacingBefore(10);
+        PdfPCell cell = new PdfPCell(new Phrase("BORRADOR — DOCUMENTO SIN VALIDEZ",
+                fuente(13, Font.BOLD, new Color(150, 30, 30))));
+        cell.setBackgroundColor(new Color(255, 236, 179));
+        cell.setBorderColor(new Color(200, 120, 0));
+        cell.setBorderWidth(1.2f);
+        cell.setPadding(9);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        banda.addCell(cell);
+        document.add(banda);
+    }
+
+    private void agregarInfoBorrador(Document document, DatosBorradorChequera datos) throws DocumentException {
+        Paragraph paragraph = new Paragraph(valor(datos.tipoChequeraNombre(), "Chequera"),
+                fuente(18, Font.BOLD, AZUL));
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        paragraph.setSpacingBefore(14);
+        document.add(paragraph);
+
+        String subtitulo = valor(datos.lectivoNombre(), "—") + "  ·  " + valor(datos.arancelTipoDescripcion(), "—");
+        if (datos.becaPorcentaje() != null && datos.becaPorcentaje().signum() > 0) {
+            String beca = datos.becaPorcentaje().multiply(BigDecimal.valueOf(100)).stripTrailingZeros()
+                    .toPlainString();
+            subtitulo += "  ·  Beca " + beca + "%";
+        }
+        paragraph = new Paragraph(subtitulo, fuente(10.5f, Font.NORMAL, GRIS_TEXTO));
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        paragraph.setSpacingBefore(3);
+        document.add(paragraph);
+
+        List<Dato> izquierda = new ArrayList<>();
+        izquierda.add(new Dato("Alumno",
+                valor(datos.apellido(), "") + ", " + valor(datos.nombre(), "") + "  (" + datos.personaId() + ")",
+                11.5f));
+        if (datos.carrera() != null && !datos.carrera().isBlank()
+                && !Objects.equals(datos.facultadId(), FACULTAD_SIN_CARRERA_ID)) {
+            izquierda.add(new Dato("Carrera", datos.carrera(), 10.5f));
+        }
+        izquierda.add(new Dato("Estado", "BORRADOR — no válido para pago", 10.5f));
+
+        List<Dato> derecha = new ArrayList<>();
+        derecha.add(new Dato("Chequera", "S/N (BORRADOR)", 11.5f));
+        derecha.add(new Dato("Alternativa", String.valueOf(datos.alternativaId()), 11.5f));
+        derecha.add(new Dato("Concepto", valor(datos.alternativaTitulo(), "—"), 10.5f));
+
+        agregarFicha(document, izquierda, derecha);
+    }
+
+    private int totalCuotas(DatosBorradorChequera datos, DatosBorradorChequera.CuotaBorrador cuota) {
+        return datos.cuotas().stream()
+                .filter(otra -> Objects.equals(otra.productoId(), cuota.productoId())
+                        && Objects.equals(otra.alternativaId(), cuota.alternativaId()))
+                .map(DatosBorradorChequera.CuotaBorrador::cuotaId)
+                .filter(Objects::nonNull)
+                .max(Integer::compareTo)
+                .orElse(cuota.cuotaId() == null ? 0 : cuota.cuotaId());
+    }
+
+    private PdfWriter crearWriterBorrador(Document document, String filename) throws DocumentException, IOException {
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filename));
+        writer.setPageEvent(new MarcaBorrador());
+        return writer;
+    }
+
+    private static String valor(String texto, String porDefecto) {
+        return texto == null || texto.isBlank() ? porDefecto : texto;
+    }
+
+    private static class MarcaBorrador extends PdfPageEventHelper {
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            try {
+                PdfContentByte under = writer.getDirectContentUnder();
+                under.saveState();
+                PdfGState estado = new PdfGState();
+                estado.setFillOpacity(0.08f);
+                under.setGState(estado);
+                ColumnText.showTextAligned(under, Element.ALIGN_CENTER,
+                        new Phrase("BORRADOR", fuente(120, Font.BOLD, GRIS_TEXTO)),
+                        (document.getPageSize().getLeft() + document.getPageSize().getRight()) / 2,
+                        (document.getPageSize().getBottom() + document.getPageSize().getTop()) / 2, 45);
+                under.restoreState();
+
+                float x = (document.getPageSize().getLeft() + document.getPageSize().getRight()) / 2;
+                // El pie del comprobante real dice "Emitido el ...": en un borrador eso sería falso.
+                ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER,
+                        new Phrase(String.format("BORRADOR · generado el %s  ·  Página %d",
+                                FORMATO_FECHA.format(LocalDate.now(ZONA_MENDOZA)), writer.getPageNumber()),
+                                fuente(8, Font.BOLD, GRIS_TEXTO)), x, 22, 0);
+                ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER,
+                        new Phrase("no válido como comprobante de pago", fuente(8, Font.NORMAL, GRIS_TEXTO)),
+                        x, 12, 0);
+            } catch (RuntimeException ex) {
+                log.warn("No se pudo dibujar la marca de BORRADOR en la página {}", writer.getPageNumber());
+            }
+        }
     }
 
     private PdfPCell celdaCuota(Phrase contenido, int colspan, int alineacion) {
