@@ -11,7 +11,7 @@
 [![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![JUnit 6](https://img.shields.io/badge/JUnit%206-6.0.3-25A162.svg?logo=junit5&logoColor=white)](https://junit.org/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Version](https://img.shields.io/badge/Version-2.6.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.7.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -31,6 +31,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Validación local de direcciones de email
 - Procesamiento asíncrono de chequeras y cuotas vía Kafka (`send-chequera`, `send-cuota`)
 - Envío de notificaciones genéricas por HTTP (`POST /api/tesoreria/sender/correo/enviar`) y por el topic `send-correo`, con idempotencia por `eventId` y resultado en `notificacion-resultado`
+- Impresión del borrador de una chequera (`GET /api/tesoreria/sender/chequera/borrador/{borradorId}`): leyenda y marca de agua `BORRADOR`, número `S/N`, sin código de barras ni datos de pago, y sólo cuotas adeudadas
 - Creación al arrancar de los topics propios (`notificacion-resultado`) y de los DLT (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`) con particiones y replicación configurables
 - Reintentos con backoff y derivación al DLT del topic cuando falla el procesamiento de un evento de Kafka
 - Remitente lógico (`CHEQUERA`, `RECIBO`, `NOTIFICACION`) resuelto por el servicio a partir de `app.mail.*`
@@ -124,8 +125,11 @@ docker run -p 8080:8080 um.tesoreria.sender-service
 mvn test
 ```
 
-Incluye tests de casos de uso con Mockito, serialización de DTOs y las reglas de arquitectura
-(ArchUnit). No levantan infraestructura externa.
+Incluye tests de casos de uso con Mockito, serialización de DTOs, render de PDFs con OpenPDF y las
+reglas de arquitectura (ArchUnit). No levantan infraestructura externa.
+
+Los tests del generador OpenPDF renderizan con los logos institucionales: los PNG deben estar en el
+directorio de trabajo, por eso el `Dockerfile` los copia antes de `mvn clean package`.
 
 ### Integración (Failsafe)
 
@@ -199,6 +203,7 @@ src/
 │       │   └── infrastructure/            # DTOs de core, mappers, JavaMail local, Ping
 │       ├── datos/                         # Adaptadores contra otros servicios
 │       │   ├── chequera/                  # ports + ChequeraDatosService + Feign adapters
+│       │   ├── borrador/                  # snapshot de impresión de borradores (core) + Feign
 │       │   ├── facturacion/
 │       │   ├── persona/
 │       │   ├── catalogo/

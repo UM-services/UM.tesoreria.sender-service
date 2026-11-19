@@ -12,6 +12,9 @@ RUN mvn dependency:go-offline
 
 # Copiamos el resto del código fuente
 COPY src ./src
+# Los tests del generador OpenPDF renderizan con los logos: tienen que estar en el
+# directorio de trabajo igual que en la imagen final.
+COPY marca_etec.png marca_um.png marca_um_65.png medio_pago_1.png medio_pago_2.png ./
 
 # Compilamos la aplicación y generamos el JAR
 RUN mvn clean package
