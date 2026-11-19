@@ -6,6 +6,7 @@ import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudChe
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudEnvioChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.EnviarChequeraUseCase;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.EnviarCuotaUseCase;
+import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.GenerarBorradorPdfUseCase;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.GenerarChequeraPdfUseCase;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.GenerarChequeraReemplazoPdfUseCase;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.GenerarCuotaPdfUseCase;
@@ -18,6 +19,7 @@ public class ChequeraService {
     private final GenerarChequeraPdfUseCase generarChequeraPdfUseCase;
     private final GenerarChequeraReemplazoPdfUseCase generarChequeraReemplazoPdfUseCase;
     private final GenerarCuotaPdfUseCase generarCuotaPdfUseCase;
+    private final GenerarBorradorPdfUseCase generarBorradorPdfUseCase;
     private final EnviarChequeraUseCase enviarChequeraUseCase;
     private final EnviarCuotaUseCase enviarCuotaUseCase;
 
@@ -35,6 +37,14 @@ public class ChequeraService {
                                         Integer alternativaId, Integer productoId, Integer cuotaId) {
         return generarCuotaPdfUseCase.generar(facultadId, tipoChequeraId, chequeraSerieId, alternativaId, productoId,
                 cuotaId);
+    }
+
+    /**
+     * PDF del borrador con leyenda BORRADOR. Sin código de barras ni datos de pago y sin efectos
+     * sobre la base: es un documento de revisión.
+     */
+    public DocumentoPdf generarBorradorPdf(Long borradorId) {
+        return generarBorradorPdfUseCase.generar(borradorId);
     }
 
     public String enviarChequera(SolicitudEnvioChequera solicitud) {

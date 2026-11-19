@@ -14,7 +14,7 @@ graph TD
         CS["ChequeraService"]
         RS["ReciboService"]
         ES["EnlacePagoService"]
-        CUC["Casos de uso: generar PDF / enviar chequera / enviar cuota"]
+        CUC["Casos de uso: generar PDF / generar borrador / enviar chequera / enviar cuota"]
         NS["Notificación: enviar correo / procesar evento"]
     end
 
@@ -28,6 +28,7 @@ graph TD
 
     subgraph Datos["datos/* (fachadas + ports out + adapters Feign)"]
         DQ["chequera"]
+        DBO["borrador"]
         DF["facturacion"]
         DP["persona"]
         DC["catalogo"]
@@ -56,6 +57,7 @@ graph TD
     CUC --> RPDF
     CUC --> MAIL
     CUC --> DQ
+    CUC --> DBO
     CUC --> DF
     CUC --> DP
     CUC --> DC
@@ -68,6 +70,7 @@ graph TD
     KB --> CL
     KB --> NL
     DQ --> CORE[("tesoreria-core-service")]
+    DBO --> CORE
     DF --> CORE
     DP --> CORE
     DC --> CORE
@@ -80,4 +83,5 @@ graph TD
     MODEL -.-> CUC
     MODEL -.-> NS
     DTOS -.-> DQ
+    DTOS -.-> DBO
     SET -.-> NS
