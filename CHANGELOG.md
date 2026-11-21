@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-11-21
+
+### Added
+- El envío de chequera publica su resultado en el topic `notificacion-resultado` mediante el puerto `ResultadoEnvioChequeraPublisher` y el adaptador Kafka `ResultadoEnvioChequeraKafkaPublisher`, para que core cierre la fila del envío masivo (`frmCheqMail`) con el OK/ERROR de cada chequera ([ResultadoEnvioChequeraPublisher.java], [ResultadoEnvioChequeraKafkaPublisher.java])
+- `ResultadoEnvioChequeraEvent` (`eventId`, `occurredAt`, `enviado`, `error`, `referencia { tipo: "CHEQUERA", id: chequeraId }`) se declara dentro del slice `procesos/chequera` con la misma forma JSON que `ResultadoNotificacionEvent`, para no acoplar la chequera al slice de notificación genérica ([ResultadoEnvioChequeraEvent.java])
+
+### Changed
+- `EnviarChequeraUseCaseImpl` publica `enviado=false` con el motivo cuando no hay cuotas pendientes o el PDF está vacío, publica `enviado=true` después de marcar la serie como enviada, y publica `enviado=false` con el mensaje de la excepción antes de relanzar un fallo SMTP, de modo que el error handler derive el registro al DLT ([EnviarChequeraUseCaseImpl.java])
+- `EnviarChequeraUseCaseImplTest` inyecta el nuevo puerto como mock ([EnviarChequeraUseCaseImplTest.java])
+- El topic `notificacion-resultado` ahora también transporta resultados de chequera; su declaración al arrancar no cambia y sigue a cargo de `KafkaTopicsConfiguration` ([KafkaTopicsConfiguration.java])
+- Diagramas de secuencia de procesamiento de chequera (individual y bulk) y de arquitectura general actualizados para mostrar la publicación del resultado en `notificacion-resultado` ([docs/diagrams/])
+
 ## [2.7.0] - 2026-11-18
 
 ### Added

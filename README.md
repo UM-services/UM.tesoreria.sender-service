@@ -11,7 +11,7 @@
 [![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![JUnit 6](https://img.shields.io/badge/JUnit%206-6.0.3-25A162.svg?logo=junit5&logoColor=white)](https://junit.org/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Version](https://img.shields.io/badge/Version-2.7.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.8.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -30,6 +30,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Validación y procesamiento de emails de pago
 - Validación local de direcciones de email
 - Procesamiento asíncrono de chequeras y cuotas vía Kafka (`send-chequera`, `send-cuota`)
+- Publicación del resultado de cada envío de chequera en `notificacion-resultado` (`enviado`/`error` por `chequeraId`), para que core cierre la fila del envío masivo
 - Envío de notificaciones genéricas por HTTP (`POST /api/tesoreria/sender/correo/enviar`) y por el topic `send-correo`, con idempotencia por `eventId` y resultado en `notificacion-resultado`
 - Impresión del borrador de una chequera (`GET /api/tesoreria/sender/chequera/borrador/{borradorId}`): leyenda y marca de agua `BORRADOR`, número `S/N`, sin código de barras ni datos de pago, y sólo cuotas adeudadas
 - Creación al arrancar de los topics propios (`notificacion-resultado`) y de los DLT (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`) con particiones y replicación configurables
@@ -212,7 +213,7 @@ src/
 │       ├── gateways/
 │       │   └── correo/                    # Puerto/adaptador único de envío SMTP
 │       └── procesos/                      # Casos de uso de negocio
-│           ├── chequera/                  # PDFs + envío + consumidores Kafka (send-chequera, send-cuota)
+│           ├── chequera/                  # PDFs + envío + consumidores Kafka (send-chequera, send-cuota) + resultado en notificacion-resultado
 │           ├── recibo/                    # PDF AFIP + envío asíncrono
 │           ├── enlacePago/                # Enlace MercadoPago por cuota
 │           └── notificacion/              # Correo genérico (HTTP + send-correo → notificacion-resultado)
