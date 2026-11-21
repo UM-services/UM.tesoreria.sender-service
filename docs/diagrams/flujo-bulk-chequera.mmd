@@ -11,6 +11,7 @@ sequenceDiagram
     participant Pdf as ChequeraPdfGenerator
     participant Mail as CorreoService
     participant MsgChk as datos/chequera (message check)
+    participant Res as Kafka (notificacion-resultado)
 
     User->>Ctrl: GET /sendChequera/bulk/...
     activate Ctrl
@@ -46,9 +47,12 @@ sequenceDiagram
     MsgChk-->>UseCase: ok
     deactivate MsgChk
 
+    UseCase->>Res: publicar(chequeraId, enviado=true)
+
     UseCase-->>Service: "Envío de Chequera Ok!!!"
     deactivate UseCase
     Service-->>Listener: resultado
     deactivate Service
     deactivate Listener
+    Note over UseCase,Res: si el envío SMTP falla, publica enviado=false antes de relanzar
     Note over Listener,Kafka: si el envío falla, el DefaultErrorHandler reintenta con backoff y deriva a send-chequera.DLT
