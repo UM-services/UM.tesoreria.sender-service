@@ -18,6 +18,7 @@ import um.tesoreria.sender.hexagonal.procesos.chequera.application.service.Desti
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudEnvioChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.EnviarChequeraUseCase;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.ChequeraPdfGenerator;
+import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.ResultadoEnvioChequeraPublisher;
 import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraCuota;
 import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraMessageCheck;
 import um.tesoreria.sender.hexagonal.shared.domain.model.PreferenciaPago;
@@ -42,6 +43,7 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
     private final ChequeraCorreoFactory chequeraCorreoFactory;
     private final CorreoService correoService;
     private final SenderSettings senderSettings;
+    private final ResultadoEnvioChequeraPublisher resultadoChequeraPublisher;
 
     @Override
     public String enviar(SolicitudEnvioChequera solicitud) {
@@ -70,6 +72,7 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
                 .filter(cuota -> cuota != null)
                 .anyMatch(ChequeraCuota::pendienteDePago);
         if (!hayCuotas) {
+            resultadoChequeraPublisher.publicar(serie.getChequeraId(), false, "Sin cuotas para enviar");
             return SIN_CUOTAS;
         }
 
@@ -77,6 +80,7 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
         var documento = chequeraPdfGenerator.generarChequera(datos, solicitud.codigoBarras(), false);
         log.debug("Chequera enviada - filenameChequera -> {}", documento.ruta());
         if (documento.estaVacio()) {
+            resultadoChequeraPublisher.publicar(serie.getChequeraId(), false, "Documento vacío");
             return SIN_CUOTAS;
         }
 
@@ -84,10 +88,17 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
         String cuerpo = chequeraEmailComposer.cuerpoChequera(nombreAlumno, preferencias, serie);
         var destinatarios = destinatariosResolver.resolver(serie, inscripcionFull, solicitud.copiaInformes());
 
-        correoService.enviar(chequeraCorreoFactory.crear(senderSettings.fromChequera(), destinatarios,
-                ASUNTO + nombreAlumno, cuerpo, documento.ruta(), solicitud.facultadId()));
+        try {
+            correoService.enviar(chequeraCorreoFactory.crear(senderSettings.fromChequera(), destinatarios,
+                    ASUNTO + nombreAlumno, cuerpo, documento.ruta(), solicitud.facultadId()));
+        } catch (RuntimeException e) {
+            // Se informa el fallo antes de relanzar, para que el job cierre la fila como ERROR_SMTP.
+            resultadoChequeraPublisher.publicar(serie.getChequeraId(), false, e.getMessage());
+            throw e;
+        }
 
         marcarEnviada(solicitud);
+        resultadoChequeraPublisher.publicar(serie.getChequeraId(), true, null);
         return ENVIO_OK;
     }
 
