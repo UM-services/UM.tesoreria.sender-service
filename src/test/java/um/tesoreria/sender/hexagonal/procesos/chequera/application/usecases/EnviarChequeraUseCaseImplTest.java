@@ -27,6 +27,7 @@ import um.tesoreria.sender.hexagonal.procesos.chequera.application.service.Desti
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.DatosChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudEnvioChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.ChequeraPdfGenerator;
+import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.ResultadoEnvioChequeraPublisher;
 import um.tesoreria.sender.hexagonal.shared.domain.model.Carrera;
 import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraCuota;
 import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraMessageCheck;
@@ -62,6 +63,8 @@ class EnviarChequeraUseCaseImplTest {
     private CorreoService correoService;
     @Mock
     private SenderSettings senderSettings;
+    @Mock
+    private ResultadoEnvioChequeraPublisher resultadoChequeraPublisher;
 
     @InjectMocks
     private EnviarChequeraUseCaseImpl useCase;

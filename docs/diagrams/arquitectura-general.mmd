@@ -24,6 +24,7 @@ graph TD
         MAIL["gateways/correo → JavaMailCorreoEnviadorAdapter"]
         PUB["SolicitudChequera/CuotaPublisher → send-chequera · send-cuota"]
         RES["ResultadoNotificacionPublisher → notificacion-resultado"]
+        RESCH["ResultadoEnvioChequeraPublisher → notificacion-resultado"]
     end
 
     subgraph Datos["datos/* (fachadas + ports out + adapters Feign)"]
@@ -63,9 +64,12 @@ graph TD
     CUC --> DC
     CUC --> DPP
     CUC --> DV
+    CUC --> RESCH
     NS --> MAIL
     NS --> RES
     PUB --> KB[("Kafka Broker")]
+    RES --> KB
+    RESCH --> KB
     KB --> KL
     KB --> CL
     KB --> NL

@@ -7,6 +7,7 @@ sequenceDiagram
     participant Assembler as ChequeraDatosAssembler
     participant Pdf as ChequeraPdfGenerator
     participant Correo as CorreoService
+    participant Res as Kafka (notificacion-resultado)
     participant Err as DefaultErrorHandler (factory)
     participant DLT as Kafka (send-chequera.DLT)
 
@@ -20,23 +21,33 @@ sequenceDiagram
     Datos-->>UseCase: ChequeraSerie / InscripcionFull
     UseCase->>Datos: crearContexto(s) de preferencias
     Datos-->>UseCase: List~PreferenciaPago~
-    UseCase->>Assembler: armar(serie, preferencias)
-    Assembler->>Datos: persona · legajo · carrera · alternativas
-    Assembler-->>UseCase: DatosChequera
-    UseCase->>Pdf: generarChequera(datos, codigoBarras, completa=false)
-    Pdf-->>UseCase: DocumentoPdf (ruta)
-    alt envío correcto
-        UseCase->>Correo: enviar(Correo con adjunto + imágenes inline)
-        Correo-->>UseCase: void
-        UseCase->>Datos: marcarEnviada + registrar ChequeraMessageCheck
-        UseCase-->>Service: "Envío de Chequera Ok!!!"
-        Service-->>Listener: resultado
-    else fallo de procesamiento
-        UseCase-->>Service: excepción
-        Service-->>Listener: excepción (el listener no la captura)
-        Listener->>Err: la propaga al error handler de la factory
-        Note over Err: reintenta con backoff (1 s) y, agotados los intentos, deriva al DLT
-        Err->>DLT: publica el registro fallido en la misma partición
+    alt sin cuotas pendientes
+        UseCase->>Res: publicar(chequeraId, enviado=false, "Sin cuotas para enviar")
+        UseCase-->>Service: "ERROR: Sin CUOTAS para ENVIAR"
+    else con cuotas pendientes
+        UseCase->>Assembler: armar(serie, preferencias)
+        Assembler->>Datos: persona · legajo · carrera · alternativas
+        Assembler-->>UseCase: DatosChequera
+        UseCase->>Pdf: generarChequera(datos, codigoBarras, completa=false)
+        Pdf-->>UseCase: DocumentoPdf (ruta)
+        alt documento vacío
+            UseCase->>Res: publicar(chequeraId, enviado=false, "Documento vacío")
+            UseCase-->>Service: "ERROR: Sin CUOTAS para ENVIAR"
+        else envío correcto
+            UseCase->>Correo: enviar(Correo con adjunto + imágenes inline)
+            Correo-->>UseCase: void
+            UseCase->>Datos: marcarEnviada + registrar ChequeraMessageCheck
+            UseCase->>Res: publicar(chequeraId, enviado=true)
+            UseCase-->>Service: "Envío de Chequera Ok!!!"
+            Service-->>Listener: resultado
+        else fallo de envío SMTP
+            UseCase->>Res: publicar(chequeraId, enviado=false, mensaje de la excepción)
+            UseCase-->>Service: excepción (se relanza)
+            Service-->>Listener: excepción (el listener no la captura)
+            Listener->>Err: la propaga al error handler de la factory
+            Note over Err: reintenta con backoff (1 s) y, agotados los intentos, deriva al DLT
+            Err->>DLT: publica el registro fallido en la misma partición
+        end
     end
     deactivate UseCase
     deactivate Service
