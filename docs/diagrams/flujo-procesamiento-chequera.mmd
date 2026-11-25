@@ -17,8 +17,8 @@ sequenceDiagram
     activate Service
     Service->>UseCase: enviar(solicitud)
     activate UseCase
-    UseCase->>Datos: actualizarCodigosBarras + obtenerSerie + inscripción
-    Datos-->>UseCase: ChequeraSerie / InscripcionFull
+    UseCase->>Datos: actualizarCodigosBarras + obtenerSerie
+    Datos-->>UseCase: ChequeraSerie
     UseCase->>Datos: crearContexto(s) de preferencias
     Datos-->>UseCase: List~PreferenciaPago~
     alt sin cuotas pendientes

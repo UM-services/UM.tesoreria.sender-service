@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import um.tesoreria.sender.hexagonal.datos.chequera.application.service.ChequeraDatosService;
-import um.tesoreria.sender.hexagonal.datos.persona.application.service.PersonaDatosService;
 import um.tesoreria.sender.hexagonal.datos.preferenciaPago.application.service.PreferenciaPagoDatosService;
 import um.tesoreria.sender.hexagonal.gateways.correo.application.service.CorreoService;
 import um.tesoreria.sender.hexagonal.procesos.chequera.application.exception.ChequeraException;
@@ -24,7 +23,6 @@ public class EnviarCuotaUseCaseImpl implements EnviarCuotaUseCase {
     private static final String ENVIO_OK = "\n\nEnvío de Cuota Ok!!!\n\n";
 
     private final ChequeraDatosService chequeraDatosService;
-    private final PersonaDatosService personaDatosService;
     private final PreferenciaPagoDatosService preferenciaPagoDatosService;
     private final ChequeraEmailComposer chequeraEmailComposer;
     private final DestinatariosResolver destinatariosResolver;
@@ -40,14 +38,12 @@ public class EnviarCuotaUseCaseImpl implements EnviarCuotaUseCase {
         if (serie == null) {
             throw new ChequeraException("La cuota " + chequeraCuotaId + " no tiene chequera asociada");
         }
-        var inscripcionFull = personaDatosService.obtenerInscripcionFull(serie.getFacultadId(),
-                serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivoId());
         var preferencias = preferenciaPagoDatosService.crearContexto(serie.getFacultadId(),
                 serie.getTipoChequeraId(), serie.getChequeraSerieId(), serie.getAlternativaId());
 
         String nombreAlumno = Objects.requireNonNull(serie.getPersona()).apellidoNombre();
         String cuerpo = chequeraEmailComposer.cuerpoCuota(nombreAlumno, preferencias, cuota);
-        var destinatarios = destinatariosResolver.resolver(serie, inscripcionFull, false);
+        var destinatarios = destinatariosResolver.resolver(serie, false);
 
         correoService.enviar(chequeraCorreoFactory.crear(senderSettings.fromChequera(), destinatarios,
                 ASUNTO + nombreAlumno, cuerpo, null, cuota.getFacultadId()));
