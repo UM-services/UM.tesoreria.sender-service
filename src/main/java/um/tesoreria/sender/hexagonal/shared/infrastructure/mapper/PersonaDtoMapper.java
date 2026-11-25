@@ -3,12 +3,10 @@ package um.tesoreria.sender.hexagonal.shared.infrastructure.mapper;
 import org.springframework.stereotype.Component;
 import um.tesoreria.sender.hexagonal.shared.domain.model.Carrera;
 import um.tesoreria.sender.hexagonal.shared.domain.model.Domicilio;
-import um.tesoreria.sender.hexagonal.shared.domain.model.InscripcionFull;
 import um.tesoreria.sender.hexagonal.shared.domain.model.Legajo;
 import um.tesoreria.sender.hexagonal.shared.domain.model.Persona;
 import um.tesoreria.sender.hexagonal.shared.infrastructure.dto.CarreraDto;
 import um.tesoreria.sender.hexagonal.shared.infrastructure.dto.DomicilioDto;
-import um.tesoreria.sender.hexagonal.shared.infrastructure.dto.InscripcionFullDto;
 import um.tesoreria.sender.hexagonal.shared.infrastructure.dto.LegajoDto;
 import um.tesoreria.sender.hexagonal.shared.infrastructure.dto.PersonaDto;
 
@@ -38,14 +36,6 @@ public class PersonaDtoMapper {
                 .observaciones(dto.getObservaciones())
                 .emailPersonal(dto.getEmailPersonal())
                 .emailInstitucional(dto.getEmailInstitucional())
-                .build();
-    }
-
-    public InscripcionFull toDomain(InscripcionFullDto dto) {
-        if (dto == null) return null;
-        return InscripcionFull.builder()
-                .personaPago(toDomain(dto.getPersonaPago()))
-                .domicilioPago(toDomain(dto.getDomicilioPago()))
                 .build();
     }
 
