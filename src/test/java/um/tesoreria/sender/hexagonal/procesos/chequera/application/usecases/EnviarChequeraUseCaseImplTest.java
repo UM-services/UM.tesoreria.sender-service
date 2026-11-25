@@ -16,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import um.tesoreria.sender.hexagonal.datos.chequera.application.service.ChequeraDatosService;
-import um.tesoreria.sender.hexagonal.datos.persona.application.service.PersonaDatosService;
 import um.tesoreria.sender.hexagonal.datos.preferenciaPago.application.service.PreferenciaPagoDatosService;
 import um.tesoreria.sender.hexagonal.gateways.correo.application.service.CorreoService;
 import um.tesoreria.sender.hexagonal.gateways.correo.domain.model.Correo;
@@ -46,8 +45,6 @@ class EnviarChequeraUseCaseImplTest {
     @Mock
     private ChequeraDatosService chequeraDatosService;
     @Mock
-    private PersonaDatosService personaDatosService;
-    @Mock
     private PreferenciaPagoDatosService preferenciaPagoDatosService;
     @Mock
     private ChequeraDatosAssembler chequeraDatosAssembler;
@@ -73,7 +70,6 @@ class EnviarChequeraUseCaseImplTest {
     void noEnviaCuandoNoHayCuotasPendientes() {
         var serie = serie();
         when(chequeraDatosService.obtenerSerie(1, 2, 3L)).thenReturn(serie);
-        when(personaDatosService.obtenerInscripcionFull(1, serie.getPersonaId(), 123, 2026)).thenReturn(null);
         when(preferenciaPagoDatosService.crearContexto(1, 2, 3L, 1))
                 .thenReturn(List.of(preferencia((byte) 1)));
 
@@ -94,12 +90,11 @@ class EnviarChequeraUseCaseImplTest {
         var correo = Correo.builder().para(List.of("a@b.c")).build();
 
         when(chequeraDatosService.obtenerSerie(1, 2, 3L)).thenReturn(serie);
-        when(personaDatosService.obtenerInscripcionFull(1, serie.getPersonaId(), 123, 2026)).thenReturn(null);
         when(preferenciaPagoDatosService.crearContexto(1, 2, 3L, 1)).thenReturn(preferencias);
         when(chequeraDatosAssembler.armar(serie, preferencias)).thenReturn(datos);
         when(chequeraPdfGenerator.generarChequera(datos, true, false)).thenReturn(documento);
         when(chequeraEmailComposer.cuerpoChequera("Perez, Ana", preferencias, serie)).thenReturn("<html/>");
-        when(destinatariosResolver.resolver(serie, null, false)).thenReturn(List.of("a@b.c"));
+        when(destinatariosResolver.resolver(serie, false)).thenReturn(List.of("a@b.c"));
         when(senderSettings.fromChequera()).thenReturn("from@um.edu.ar");
         when(chequeraCorreoFactory.crear("from@um.edu.ar", List.of("a@b.c"),
                 "Recordatorio - Pago cuota UM -> Perez, Ana", "<html/>", "/tmp/chequera.pdf", 1)).thenReturn(correo);

@@ -11,7 +11,7 @@
 [![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![JUnit 6](https://img.shields.io/badge/JUnit%206-6.0.3-25A162.svg?logo=junit5&logoColor=white)](https://junit.org/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Version](https://img.shields.io/badge/Version-2.8.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.8.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -25,7 +25,7 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Integración con servicios de email
 - Generación de PDFs con logos institucionales
 - Sistema de deduplicación de mensajes con UUID tracking
-- Manejo de inscripciones y pagos
+- Manejo de pagos y preferencias de pago
 - Soporte para múltiples destinatarios de email (personal, institucional, copias)
 - Validación y procesamiento de emails de pago
 - Validación local de direcciones de email
