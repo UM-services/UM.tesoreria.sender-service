@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import um.tesoreria.sender.hexagonal.datos.chequera.application.service.ChequeraDatosService;
-import um.tesoreria.sender.hexagonal.datos.persona.application.service.PersonaDatosService;
 import um.tesoreria.sender.hexagonal.datos.preferenciaPago.application.service.PreferenciaPagoDatosService;
 import um.tesoreria.sender.hexagonal.gateways.correo.application.service.CorreoService;
 import um.tesoreria.sender.hexagonal.procesos.chequera.application.service.ChequeraCorreoFactory;
@@ -34,7 +33,6 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
     private static final String ENVIO_OK = "\n\nEnvío de Chequera Ok!!!\n\n";
 
     private final ChequeraDatosService chequeraDatosService;
-    private final PersonaDatosService personaDatosService;
     private final PreferenciaPagoDatosService preferenciaPagoDatosService;
     private final ChequeraDatosAssembler chequeraDatosAssembler;
     private final ChequeraPdfGenerator chequeraPdfGenerator;
@@ -59,8 +57,6 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
         }
         var serie = chequeraDatosService.obtenerSerie(solicitud.facultadId(), solicitud.tipoChequeraId(),
                 solicitud.chequeraSerieId());
-        var inscripcionFull = personaDatosService.obtenerInscripcionFull(solicitud.facultadId(),
-                serie.getPersonaId(), serie.getDocumentoId(), serie.getLectivoId());
         List<PreferenciaPago> preferencias = solicitud.bulk()
                 ? preferenciaPagoDatosService.crearContextoBulk(solicitud.facultadId(), solicitud.tipoChequeraId(),
                 solicitud.chequeraSerieId(), solicitud.alternativaId())
@@ -86,7 +82,7 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
 
         String nombreAlumno = Objects.requireNonNull(serie.getPersona()).apellidoNombre();
         String cuerpo = chequeraEmailComposer.cuerpoChequera(nombreAlumno, preferencias, serie);
-        var destinatarios = destinatariosResolver.resolver(serie, inscripcionFull, solicitud.copiaInformes());
+        var destinatarios = destinatariosResolver.resolver(serie, solicitud.copiaInformes());
 
         try {
             correoService.enviar(chequeraCorreoFactory.crear(senderSettings.fromChequera(), destinatarios,

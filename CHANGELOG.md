@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.1] - 2026-11-25
+
+### Changed
+- El envío de chequera y de cuota ya no consulta la inscripción del alumno en el core: `EnviarChequeraUseCaseImpl` y `EnviarCuotaUseCaseImpl` dejan de depender de `PersonaDatosService`, eliminando una llamada Feign por envío ([EnviarChequeraUseCaseImpl.java], [EnviarCuotaUseCaseImpl.java])
+- `DestinatariosResolver.resolver(serie, copiaInformes)` resuelve los destinatarios sólo con el domicilio de tesorería de la `ChequeraSerie` (email personal e institucional) y, cuando se pide `copiaInformes`, con el correo de copia del tipo de chequera; los correos del pagador de la facultad ya no se agregan porque provenían del sistema legacy ([DestinatariosResolver.java])
+- `PersonaDatosService` deja de exponer `obtenerInscripcionFull` y `PersonaDtoMapper` deja de mapear la inscripción ([PersonaDatosService.java], [PersonaDtoMapper.java])
+- Nuevo `DestinatariosResolverTest`: cubre el uso de los correos del domicilio, la copia opcional de informes y el caso sin domicilio ([DestinatariosResolverTest.java])
+- Diagrama de secuencia de procesamiento de chequera actualizado: la obtención de datos ya no incluye la inscripción ([docs/diagrams/flujo-procesamiento-chequera.mmd])
+
+### Removed
+- Se elimina el modelo y los DTOs de la inscripción, junto con su puerto, caso de uso y endpoint Feign: `ObtenerInscripcionFullUseCase`, `ObtenerInscripcionFullUseCaseImpl`, `InscripcionFull`, `InscripcionFullDto`, `InscripcionDto`, `InscripcionPagoDto`, `PersonaRepository.findInscripcionFull` y `PersonaClient.findInscripcionFull` ([ObtenerInscripcionFullUseCase.java], [InscripcionFull.java], [PersonaClient.java])
+
 ## [2.8.0] - 2026-11-21
 
 ### Added
