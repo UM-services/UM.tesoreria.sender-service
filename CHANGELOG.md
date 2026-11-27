@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-11-26
+
+### Added
+- Ledger de solicitudes de envío en core: nuevo puerto `EnvioSolicitudGateway` con `crear`, `reclamar`, `marcarEnviado`, `marcarFallido` y `marcarOmitida`, y su adaptador Feign `EnvioSolicitudClientAdapter` contra `/api/tesoreria/core/envio/chequera/solicitud`; se suman los modelos `EnvioSolicitudClaim`/`EnvioSolicitudResultado` y los DTOs `EnvioSolicitudDto`, `EnvioSolicitudClaimDto`, `EnvioSolicitudRequestDto`, `EnvioSolicitudFalloDto` y `EnvioSolicitudOmisionDto` ([EnvioSolicitudGateway.java], [EnvioSolicitudClientAdapter.java], [EnvioSolicitudClient.java])
+- `EnviarChequeraUseCaseImpl` reclama la solicitud antes de cualquier efecto: si el ledger responde `puedeEnviar=false` no genera PDF ni envía correo y devuelve el motivo; registra las omisiones `SIN_CUOTAS`, `OMITIDA` (documento vacío) y `SIN_CORREOS` (sin destinatarios), informa el fallo ante un error SMTP o una confirmación fallida, y confirma el envío con `marcarEnviado` después del correo exitoso ([EnviarChequeraUseCaseImpl.java])
+- `SolicitudEnvioChequera` incorpora `solicitudId` y `chequeraId`, con un constructor legacy de nueve argumentos para el shim REST, y `SendChequeraEvent` agrega `solicitudId`, `chequeraId` y `jobId` ([SolicitudEnvioChequera.java], [SendChequeraEvent.java])
+- Consumo Kafka acotado por lote: `spring.kafka.consumer.max-poll-records` (10) y `max-poll-interval-ms` (900000), configurables por `APP_KAFKA_MAX_POLL_RECORDS` y `APP_KAFKA_MAX_POLL_INTERVAL_MS`, y `AckMode.RECORD` en las factories de chequera, cuota y notificación ([bootstrap.yml], [ChequeraKafkaConfig.java], [NotificacionKafkaConfig.java])
+
+### Changed
+- Los reintentos del listener de chequera pasan a un backoff fijo de 120 s con 2 reintentos (antes 1 s con 3) para no reenviar correos en bucle; el listener de cuota conserva 1 s con 3 reintentos ([ChequeraKafkaConfig.java])
+- `spring.cloud.openfeign.client.config.default.readTimeout` baja de 300000 a 60000 ms para que un llamado lento no agote el `max.poll.interval` del lote ([bootstrap.yml])
+- Cuando el evento trae `solicitudId`, el resultado se registra en el ledger y el acuse en `notificacion-resultado` sólo se publica para eventos legacy sin identidad de solicitud; el envío tampoco marca la serie como enviada ni registra `ChequeraMessageCheck`, porque esa transición la resuelve core ([EnviarChequeraUseCaseImpl.java])
+- Tests actualizados: `EnviarChequeraUseCaseImplTest` cubre claim denegado, fallo SMTP y confirmación fallida; los stubs de integración agregan los endpoints del ledger y se verifica `sent` en lugar de `marcarEnviada`/`ChequeraMessageCheck` ([EnviarChequeraUseCaseImplTest.java], [StubsCore.java], [ChequeraIntegracionIT.java])
+- Diagramas de secuencia de procesamiento de chequera (individual y bulk) actualizados con el reclamo, las omisiones y la confirmación en el ledger ([docs/diagrams/])
+
 ## [2.8.1] - 2026-11-25
 
 ### Changed
