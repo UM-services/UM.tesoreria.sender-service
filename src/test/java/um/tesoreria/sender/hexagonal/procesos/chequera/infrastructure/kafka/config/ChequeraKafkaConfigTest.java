@@ -3,6 +3,7 @@ package um.tesoreria.sender.hexagonal.procesos.chequera.infrastructure.kafka.con
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,13 @@ class ChequeraKafkaConfigTest {
         ReflectionTestUtils.setField(config, "bootstrapServers", "kafka:9092");
         ReflectionTestUtils.setField(config, "groupId", "test-group");
         factory = (DefaultKafkaConsumerFactory<String, SendChequeraEvent>) config.consumerFactory();
+    }
+
+    @Test
+    void limitaElLoteYElIntervaloDePollParaEvitarReenviosMasivos() {
+        assertThat(factory.getConfigurationProperties())
+                .containsEntry(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10)
+                .containsEntry(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 900_000);
     }
 
     @Test

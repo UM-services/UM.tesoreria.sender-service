@@ -42,7 +42,8 @@ spring:
         config:
           default:
             connectTimeout: 15000
-            readTimeout: 300000
+            # Un solo llamado lento no puede comerse el max.poll.interval del lote.
+            readTimeout: 60000
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     admin:
@@ -53,6 +54,9 @@ spring:
       # latest: si el grupo no tiene offsets (nuevo o expirados) no se reenvían correos viejos.
       # Las factories de Kafka leen esta propiedad; los tests la sobreescriben a earliest.
       auto-offset-reset: latest
+      # Lote chico + intervalo amplio: un lote de correos nunca supera el max.poll.interval.
+      max-poll-records: ${APP_KAFKA_MAX_POLL_RECORDS:10}
+      max-poll-interval-ms: ${APP_KAFKA_MAX_POLL_INTERVAL_MS:900000}
   mail:
     host: ${app.mail.host}
     port: 587

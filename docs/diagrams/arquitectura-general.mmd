@@ -23,6 +23,7 @@ graph TD
         RPDF["ReciboPdfGenerator → OpenPdfReciboGenerator + QrAfipGenerator"]
         MAIL["gateways/correo → JavaMailCorreoEnviadorAdapter"]
         PUB["SolicitudChequera/CuotaPublisher → send-chequera · send-cuota"]
+        LEDGER["EnvioSolicitudGateway → EnvioSolicitudClientAdapter"]
         RES["ResultadoNotificacionPublisher → notificacion-resultado"]
         RESCH["ResultadoEnvioChequeraPublisher → notificacion-resultado"]
     end
@@ -64,6 +65,7 @@ graph TD
     CUC --> DC
     CUC --> DPP
     CUC --> DV
+    CUC --> LEDGER
     CUC --> RESCH
     NS --> MAIL
     NS --> RES
@@ -75,6 +77,7 @@ graph TD
     KB --> NL
     DQ --> CORE[("tesoreria-core-service")]
     DBO --> CORE
+    LEDGER --> CORE
     DF --> CORE
     DP --> CORE
     DC --> CORE
