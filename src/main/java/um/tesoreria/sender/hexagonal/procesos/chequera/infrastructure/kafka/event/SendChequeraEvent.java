@@ -12,6 +12,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SendChequeraEvent implements Serializable {
 
+    /** Solicitud idempotente creada por core; nula en eventos legacy (el sender la crea). */
+    private String solicitudId;
+    /** Clave de chequera_serie; única para el ledger. */
+    private Long chequeraId;
+    /** Job de envío masivo que originó la solicitud, si aplica. */
+    private Long jobId;
     private Integer facultadId;
     private Integer tipoChequeraId;
     private Long chequeraSerieId;

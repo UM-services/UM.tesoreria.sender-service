@@ -1,0 +1,20 @@
+package um.tesoreria.sender.hexagonal.shared.infrastructure.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class EnvioSolicitudRequestDto {
+
+    private Integer facultadId;
+    private Integer tipoChequeraId;
+    private Long chequeraSerieId;
+    private Long jobId;
+    private String origen;
+
+}

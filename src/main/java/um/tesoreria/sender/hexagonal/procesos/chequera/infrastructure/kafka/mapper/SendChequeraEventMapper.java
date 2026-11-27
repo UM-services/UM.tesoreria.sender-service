@@ -9,6 +9,8 @@ public class SendChequeraEventMapper {
 
     public SolicitudEnvioChequera toSolicitud(SendChequeraEvent event) {
         return new SolicitudEnvioChequera(
+                event.getSolicitudId(),
+                event.getChequeraId(),
                 event.getFacultadId(),
                 event.getTipoChequeraId(),
                 event.getChequeraSerieId(),
@@ -22,6 +24,8 @@ public class SendChequeraEventMapper {
 
     public SendChequeraEvent toEvent(SolicitudEnvioChequera solicitud) {
         return SendChequeraEvent.builder()
+                .solicitudId(solicitud.solicitudId())
+                .chequeraId(solicitud.chequeraId())
                 .facultadId(solicitud.facultadId())
                 .tipoChequeraId(solicitud.tipoChequeraId())
                 .chequeraSerieId(solicitud.chequeraSerieId())
