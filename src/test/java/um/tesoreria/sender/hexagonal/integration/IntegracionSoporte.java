@@ -44,6 +44,7 @@ public abstract class IntegracionSoporte {
             "chequeraSerieReemplazoClient",
             "chequeraCuotaReemplazoClient",
             "chequeraMessageCheckClient",
+            "envioSolicitudClient",
             "facturacionElectronicaClient",
             "comprobanteClient",
             "reciboMessageCheckClient",

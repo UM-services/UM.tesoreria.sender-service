@@ -11,7 +11,7 @@
 [![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![JUnit 6](https://img.shields.io/badge/JUnit%206-6.0.3-25A162.svg?logo=junit5&logoColor=white)](https://junit.org/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Version](https://img.shields.io/badge/Version-2.8.1-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
+[![Version](https://img.shields.io/badge/Version-2.9.0-success.svg)](https://github.com/UM-services/UM.tesoreria.sender-service/releases)
 
 Servicio encargado del envío de recibos y formularios de pago para la Tesorería de la Universidad de Mendoza.
 
@@ -30,7 +30,9 @@ Servicio encargado del envío de recibos y formularios de pago para la Tesorerí
 - Validación y procesamiento de emails de pago
 - Validación local de direcciones de email
 - Procesamiento asíncrono de chequeras y cuotas vía Kafka (`send-chequera`, `send-cuota`)
-- Publicación del resultado de cada envío de chequera en `notificacion-resultado` (`enviado`/`error` por `chequeraId`), para que core cierre la fila del envío masivo
+- Reclamo idempotente de cada envío en el ledger de core (`/envio/chequera/solicitud`): si la solicitud ya fue enviada, está en curso o no admite más intentos, el evento es un no-op; las omisiones (`SIN_CUOTAS`, `OMITIDA`, `SIN_CORREOS`) y los fallos quedan registrados
+- Consumo Kafka por lote chico (`max-poll-records` 10) con commit por registro y `max-poll.interval` amplio, para que un rebalanceo no reenvíe cientos de correos
+- Publicación del resultado de cada envío de chequera en `notificacion-resultado` (`enviado`/`error` por `chequeraId`) para eventos legacy sin `solicitudId`, para que core cierre la fila del envío masivo
 - Envío de notificaciones genéricas por HTTP (`POST /api/tesoreria/sender/correo/enviar`) y por el topic `send-correo`, con idempotencia por `eventId` y resultado en `notificacion-resultado`
 - Impresión del borrador de una chequera (`GET /api/tesoreria/sender/chequera/borrador/{borradorId}`): leyenda y marca de agua `BORRADOR`, número `S/N`, sin código de barras ni datos de pago, y sólo cuotas adeudadas
 - Creación al arrancar de los topics propios (`notificacion-resultado`) y de los DLT (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`) con particiones y replicación configurables
@@ -70,6 +72,8 @@ um.tesoreria.core-service.url=http://core-service:8080
 spring.kafka.bootstrap-servers=${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
 spring.kafka.consumer.group-id=tesoreria-sender-group
 spring.kafka.consumer.auto-offset-reset=latest
+spring.kafka.consumer.max-poll-records=${APP_KAFKA_MAX_POLL_RECORDS:10}
+spring.kafka.consumer.max-poll-interval-ms=${APP_KAFKA_MAX_POLL_INTERVAL_MS:900000}
 spring.kafka.admin.fail-fast=true
 spring.kafka.admin.modify-topic-configs=true
 
@@ -82,6 +86,18 @@ El consumidor arranca con `auto-offset-reset: latest`: si el grupo no tiene offs
 expirados) no se reenvían correos históricos. Los tests lo sobreescriben a `earliest` en
 `src/test/resources/bootstrap.yml` para no perder el evento publicado al arrancar el contexto.
 
+Las factories leen `max-poll-records` (10) y `max-poll-interval-ms` (900000) y confirman cada
+registro (`AckMode.RECORD`): un lote de chequeras nunca supera el intervalo de poll y un
+rebalanceo no reenvía decenas de correos. El `readTimeout` de Feign por defecto es de 60000 ms
+para que un llamado lento al core no agote ese intervalo.
+
+El envío de chequera reclama la solicitud en el ledger de core antes de generar el PDF o enviar
+el correo: si la solicitud ya fue enviada, está en curso o no admite más intentos, el evento no
+produce efectos y responde con el motivo. Las omisiones (`SIN_CUOTAS`, `OMITIDA`, `SIN_CORREOS`)
+y los fallos (`failed`) quedan registrados en el ledger, y el correo exitoso se confirma con
+`sent`. Cuando el evento no trae `solicitudId` (legacy o shim REST), el servicio crea la
+solicitud y mantiene además el acuse en `notificacion-resultado`.
+
 El servicio declara los topics de los que es dueño y los crea al arrancar con el `KafkaAdmin`
 auto-configurado: `notificacion-resultado` y los DLT `send-chequera.DLT`, `send-cuota.DLT` y
 `send-correo.DLT` (retención de 14 días). Los topics principales (`send-chequera`, `send-cuota`,
@@ -93,7 +109,9 @@ sus topics.
 
 Si el procesamiento de un evento falla, la excepción se propaga al `DefaultErrorHandler` de la
 factory del listener: el registro se reintenta con backoff y, agotados los intentos, se publica
-en el DLT de su topic (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`).
+en el DLT de su topic (`send-chequera.DLT`, `send-cuota.DLT`, `send-correo.DLT`). El listener de
+chequera espera 120 s entre intentos con 2 reintentos, porque cada reintento puede reenviar un
+correo; el de cuota mantiene 1 s con 3 reintentos.
 
 El descubrimiento por Consul usa `spring.cloud.consul.discovery.query-passing: true`: los clientes
 Feign/LoadBalancer sólo resuelven instancias cuyos health checks están en `passing`.
@@ -149,8 +167,8 @@ Corre los `*IT` con infraestructura en proceso (sin Docker ni base de datos):
 
 Cobertura funcional:
 
-- `ChequeraIntegracionIT`: envío completo (PDF, adjunto, logo e imágenes inline, `mark/sent`,
-  `ChequeraMessageCheck`), sin cuotas pendientes y descarga de PDF por HTTP.
+- `ChequeraIntegracionIT`: envío completo (PDF, adjunto, logo e imágenes inline, `crear`/`claim`/`sent`
+  del ledger), sin cuotas pendientes y descarga de PDF por HTTP.
 - `ReciboIntegracionIT`: PDF ORIGINAL + DUPLICADO con QR AFIP, envío asíncrono, round-trip del PUT
   de facturación (conserva campos no modificados) y reintentos sin e-mails.
 - `EnlacePagoIntegracionIT`: enlace de MercadoPago en el cuerpo HTML y caso sin e-mails.
@@ -213,7 +231,7 @@ src/
 │       ├── gateways/
 │       │   └── correo/                    # Puerto/adaptador único de envío SMTP
 │       └── procesos/                      # Casos de uso de negocio
-│           ├── chequera/                  # PDFs + envío + consumidores Kafka (send-chequera, send-cuota) + resultado en notificacion-resultado
+│           ├── chequera/                  # PDFs + envío + consumidores Kafka (send-chequera, send-cuota) + ledger de solicitud + resultado en notificacion-resultado
 │           ├── recibo/                    # PDF AFIP + envío asíncrono
 │           ├── enlacePago/                # Enlace MercadoPago por cuota
 │           └── notificacion/              # Correo genérico (HTTP + send-correo → notificacion-resultado)

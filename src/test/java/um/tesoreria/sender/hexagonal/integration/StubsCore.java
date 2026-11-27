@@ -41,6 +41,11 @@ public final class StubsCore {
     public static final String CHEQUERA_CHECK = "/api/tesoreria/core/chequeraMessageCheck/";
     public static final String RECIBO_CHECK = "/api/tesoreria/core/reciboMessageCheck/";
     public static final String MAIL_VALIDATE = "/api/tesoreria/core/tool/mailvalidate";
+    public static final String SOLICITUD = "/api/tesoreria/core/envio/chequera/solicitud";
+    public static final String SOLICITUD_CLAIM = SOLICITUD + "/sol-1/claim";
+    public static final String SOLICITUD_SENT = SOLICITUD + "/sol-1/sent";
+    public static final String SOLICITUD_FAILED = SOLICITUD + "/sol-1/failed";
+    public static final String SOLICITUD_OMITIDA = SOLICITUD + "/sol-1/omitida";
 
     private static final String GEOGRAFICA =
             "{\"geograficaId\":1,\"nombre\":\"Sede Centro\",\"sinChequera\":0}";
@@ -57,6 +62,7 @@ public final class StubsCore {
     }
 
     public static void chequeraCompleta(boolean conCuotasPendientes) {
+        stubSolicitud();
         stubGet(CHEQUERA_SERIE, serieJson(true, "ana@example.com", ""));
         stubGet(UPDATE_BARRAS, "[]");
         stubPost(CHEQUERA_SERIE_MARK, serieJson(true, "ana@example.com", ""));
@@ -196,6 +202,31 @@ public final class StubsCore {
     private static void stubPut(String path, String body) {
         CORE.stubFor(put(urlEqualTo(path)).willReturn(okJson(body)));
     }
+
+    private static void stubSolicitud() {
+        stubPost(SOLICITUD, SOLICITUD_JSON);
+        stubPost(SOLICITUD_CLAIM, SOLICITUD_CLAIM_JSON);
+        stubPostNoContent(SOLICITUD_SENT);
+        stubPost(SOLICITUD_FAILED, SOLICITUD_FALLIDA_JSON);
+        stubPostNoContent(SOLICITUD_OMITIDA);
+    }
+
+    private static void stubPostNoContent(String path) {
+        CORE.stubFor(post(urlEqualTo(path)).willReturn(aResponse().withStatus(204)));
+    }
+
+    public static final String SOLICITUD_JSON =
+            "{\"solicitudId\":\"sol-1\",\"chequeraId\":10,\"facultadId\":1,\"tipoChequeraId\":2,"
+                    + "\"chequeraSerieId\":3,\"lectivoId\":2026,\"estado\":\"PENDIENTE\","
+                    + "\"intentos\":0}";
+
+    public static final String SOLICITUD_CLAIM_JSON =
+            "{\"solicitudId\":\"sol-1\",\"puedeEnviar\":true,\"estado\":\"ENVIANDO\","
+                    + "\"intentos\":1}";
+
+    public static final String SOLICITUD_FALLIDA_JSON =
+            "{\"solicitudId\":\"sol-1\",\"chequeraId\":10,\"estado\":\"FALLIDO\","
+                    + "\"intentos\":1,\"ultimoError\":\"error\"}";
 
     public static final String PERSONA_JSON =
             "{\"personaId\":1,\"documentoId\":123,\"apellido\":\"Perez\",\"nombre\":\"Ana\"}";

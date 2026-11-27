@@ -32,6 +32,13 @@ class NotificacionKafkaConfigTest {
     }
 
     @Test
+    void limitaElLoteYElIntervaloDePollParaEvitarReenviosMasivos() {
+        assertThat(factory.getConfigurationProperties())
+                .containsEntry(org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10)
+                .containsEntry(org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 900_000);
+    }
+
+    @Test
     void deserializaElEnvelopeCompleto() {
         var event = deserializar(new RecordHeaders());
 
