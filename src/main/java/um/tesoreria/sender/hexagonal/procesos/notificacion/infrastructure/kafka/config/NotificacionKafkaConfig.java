@@ -15,6 +15,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
@@ -43,6 +44,12 @@ public class NotificacionKafkaConfig {
     @Value("${spring.kafka.consumer.auto-offset-reset:latest}")
     private String autoOffsetReset = "latest";
 
+    @Value("${spring.kafka.consumer.max-poll-records:10}")
+    private int maxPollRecords = 10;
+
+    @Value("${spring.kafka.consumer.max-poll-interval-ms:900000}")
+    private int maxPollIntervalMs = 900_000;
+
     @Bean
     public ConsumerFactory<String, CorreoEvent> correoEventConsumerFactory() {
         log.info("Inicializando consumer de {} con bootstrapServers={} y groupId={}", TOPIC, bootstrapServers, groupId);
@@ -50,6 +57,8 @@ public class NotificacionKafkaConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollIntervalMs);
         // Las instancias de deserializador se pasan al factory, no se declaran clases acá.
 
         JsonMapper objectMapper = JsonMapper.builder()
@@ -70,6 +79,7 @@ public class NotificacionKafkaConfig {
             KafkaTemplate<String, byte[]> dltKafkaTemplate) {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, CorreoEvent>();
         factory.setConsumerFactory(correoEventConsumerFactory());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
         factory.setCommonErrorHandler(errorHandler(kafkaTemplate, dltKafkaTemplate));
         return factory;
     }

@@ -54,8 +54,7 @@ class ChequeraIntegracionIT extends IntegracionSoporte {
             assertTrue(texto.contains("Chequera"));
         }
 
-        CORE.verify(postRequestedFor(urlEqualTo(StubsCore.CHEQUERA_SERIE_MARK)));
-        CORE.verify(postRequestedFor(urlEqualTo(StubsCore.CHEQUERA_CHECK)));
+        CORE.verify(postRequestedFor(urlEqualTo(StubsCore.SOLICITUD_SENT)));
     }
 
     @Test

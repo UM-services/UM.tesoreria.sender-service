@@ -7,10 +7,10 @@ sequenceDiagram
     participant Listener as ChequeraEventListener
     participant Service as ChequeraService
     participant UseCase as EnviarChequeraUseCase
+    participant Ledger as core · ledger de solicitud
     participant Pref as datos/preferenciaPago
     participant Pdf as ChequeraPdfGenerator
     participant Mail as CorreoService
-    participant MsgChk as datos/chequera (message check)
     participant Res as Kafka (notificacion-resultado)
 
     User->>Ctrl: GET /sendChequera/bulk/...
@@ -26,33 +26,50 @@ sequenceDiagram
     activate Service
     Service->>UseCase: enviar(solicitud)
     activate UseCase
-    UseCase->>Pref: crearContextoBulk(...)
-    activate Pref
-    Pref-->>UseCase: List~PreferenciaPago~
-    deactivate Pref
+    UseCase->>Ledger: crear (sin solicitudId) + claim(solicitudId)
+    activate Ledger
+    Ledger-->>UseCase: EnvioSolicitudClaim
+    deactivate Ledger
 
-    UseCase->>Pdf: generarChequera(datos, codigoBarras, false)
-    activate Pdf
-    Pdf->>Pdf: resolver alternativas en memoria + fallback por producto
-    Pdf-->>UseCase: DocumentoPdf (ruta)
-    deactivate Pdf
+    alt el ledger no permite enviar
+        UseCase-->>Service: "Envío no realizado: motivo"
+    else el ledger permite enviar
+        UseCase->>Pref: crearContextoBulk(...)
+        activate Pref
+        Pref-->>UseCase: List~PreferenciaPago~
+        deactivate Pref
 
-    UseCase->>Mail: enviar(correo con adjunto)
-    activate Mail
-    Mail-->>UseCase: void
-    deactivate Mail
+        alt sin cuotas pendientes
+            UseCase->>Ledger: omitida(SIN_CUOTAS)
+            UseCase->>Res: publicar(chequeraId, enviado=false) sólo si es legacy
+            UseCase-->>Service: "ERROR: Sin CUOTAS para ENVIAR"
+        else con cuotas pendientes
+            UseCase->>Pdf: generarChequera(datos, codigoBarras, false)
+            activate Pdf
+            Pdf->>Pdf: resolver alternativas en memoria + fallback por producto
+            Pdf-->>UseCase: DocumentoPdf (ruta)
+            deactivate Pdf
 
-    UseCase->>MsgChk: marcarEnviada + registrar message check
-    activate MsgChk
-    MsgChk-->>UseCase: ok
-    deactivate MsgChk
+            alt documento vacío o sin destinatarios válidos
+                UseCase->>Ledger: omitida(OMITIDA · SIN_CORREOS)
+                UseCase->>Res: publicar(chequeraId, enviado=false) sólo si es legacy
+                UseCase-->>Service: mensaje de la omisión
+            else envío correcto
+                UseCase->>Mail: enviar(correo con adjunto)
+                activate Mail
+                Mail-->>UseCase: void
+                deactivate Mail
 
-    UseCase->>Res: publicar(chequeraId, enviado=true)
+                UseCase->>Ledger: sent(solicitudId)
+                UseCase->>Res: publicar(chequeraId, enviado=true) sólo si es legacy
 
-    UseCase-->>Service: "Envío de Chequera Ok!!!"
+                UseCase-->>Service: "Envío de Chequera Ok!!!"
+                Service-->>Listener: resultado
+            end
+        end
+    end
     deactivate UseCase
-    Service-->>Listener: resultado
     deactivate Service
     deactivate Listener
-    Note over UseCase,Res: si el envío SMTP falla, publica enviado=false antes de relanzar
-    Note over Listener,Kafka: si el envío falla, el DefaultErrorHandler reintenta con backoff y deriva a send-chequera.DLT
+    Note over UseCase,Res: el ledger es la autoridad · el acuse en notificacion-resultado queda para eventos legacy
+    Note over Listener,Kafka: si el envío SMTP falla, marca failed y el DefaultErrorHandler reintenta con backoff (120 s, 2) y deriva a send-chequera.DLT

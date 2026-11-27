@@ -1,9 +1,7 @@
 package um.tesoreria.sender.hexagonal.procesos.chequera.application.usecases;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,9 +15,9 @@ import um.tesoreria.sender.hexagonal.procesos.chequera.application.service.Desti
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.model.SolicitudEnvioChequera;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.in.EnviarChequeraUseCase;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.ChequeraPdfGenerator;
+import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.EnvioSolicitudGateway;
 import um.tesoreria.sender.hexagonal.procesos.chequera.domain.ports.out.ResultadoEnvioChequeraPublisher;
 import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraCuota;
-import um.tesoreria.sender.hexagonal.shared.domain.model.ChequeraMessageCheck;
 import um.tesoreria.sender.hexagonal.shared.domain.model.PreferenciaPago;
 import um.tesoreria.sender.hexagonal.shared.domain.ports.out.SenderSettings;
 
@@ -30,6 +28,7 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
 
     private static final String ASUNTO = "Recordatorio - Pago cuota UM -> ";
     private static final String SIN_CUOTAS = "\n\nERROR: Sin CUOTAS para ENVIAR\n\n";
+    private static final String SIN_CORREOS = "\n\nERROR: Sin CORREOS para ENVIAR\n\n";
     private static final String ENVIO_OK = "\n\nEnvío de Chequera Ok!!!\n\n";
 
     private final ChequeraDatosService chequeraDatosService;
@@ -42,6 +41,7 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
     private final CorreoService correoService;
     private final SenderSettings senderSettings;
     private final ResultadoEnvioChequeraPublisher resultadoChequeraPublisher;
+    private final EnvioSolicitudGateway solicitudGateway;
 
     @Override
     public String enviar(SolicitudEnvioChequera solicitud) {
@@ -50,6 +50,14 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
                 solicitud.facultadId(), solicitud.tipoChequeraId(), solicitud.chequeraSerieId(),
                 solicitud.alternativaId(), solicitud.copiaInformes(), solicitud.codigoBarras(),
                 solicitud.incluyeMatricula());
+
+        String solicitudId = resolverSolicitud(solicitud);
+        var claim = solicitudGateway.reclamar(solicitudId);
+        if (!claim.puedeEnviar()) {
+            log.info("Chequera {}/{}/{} no se envía: {}", solicitud.facultadId(), solicitud.tipoChequeraId(),
+                    solicitud.chequeraSerieId(), claim.motivo());
+            return "\n\nEnvío no realizado: " + claim.motivo() + "\n\n";
+        }
 
         if (solicitud.actualizarCodigosBarras()) {
             chequeraDatosService.actualizarCodigosBarras(solicitud.facultadId(), solicitud.tipoChequeraId(),
@@ -68,7 +76,8 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
                 .filter(cuota -> cuota != null)
                 .anyMatch(ChequeraCuota::pendienteDePago);
         if (!hayCuotas) {
-            resultadoChequeraPublisher.publicar(serie.getChequeraId(), false, "Sin cuotas para enviar");
+            solicitudGateway.marcarOmitida(solicitudId, "SIN_CUOTAS", "Sin cuotas para enviar");
+            publicarResultadoLegacy(solicitud, serie.getChequeraId(), false, "Sin cuotas para enviar");
             return SIN_CUOTAS;
         }
 
@@ -76,37 +85,67 @@ public class EnviarChequeraUseCaseImpl implements EnviarChequeraUseCase {
         var documento = chequeraPdfGenerator.generarChequera(datos, solicitud.codigoBarras(), false);
         log.debug("Chequera enviada - filenameChequera -> {}", documento.ruta());
         if (documento.estaVacio()) {
-            resultadoChequeraPublisher.publicar(serie.getChequeraId(), false, "Documento vacío");
+            solicitudGateway.marcarOmitida(solicitudId, "OMITIDA", "Documento vacío");
+            publicarResultadoLegacy(solicitud, serie.getChequeraId(), false, "Documento vacío");
             return SIN_CUOTAS;
         }
 
         String nombreAlumno = Objects.requireNonNull(serie.getPersona()).apellidoNombre();
         String cuerpo = chequeraEmailComposer.cuerpoChequera(nombreAlumno, preferencias, serie);
         var destinatarios = destinatariosResolver.resolver(serie, solicitud.copiaInformes());
+        if (destinatarios.isEmpty()) {
+            solicitudGateway.marcarOmitida(solicitudId, "SIN_CORREOS", "Sin destinatarios válidos");
+            publicarResultadoLegacy(solicitud, serie.getChequeraId(), false, "Sin destinatarios válidos");
+            return SIN_CORREOS;
+        }
 
         try {
             correoService.enviar(chequeraCorreoFactory.crear(senderSettings.fromChequera(), destinatarios,
                     ASUNTO + nombreAlumno, cuerpo, documento.ruta(), solicitud.facultadId()));
         } catch (RuntimeException e) {
-            // Se informa el fallo antes de relanzar, para que el job cierre la fila como ERROR_SMTP.
-            resultadoChequeraPublisher.publicar(serie.getChequeraId(), false, e.getMessage());
+            // Se informa el fallo antes de relanzar, para que Kafka reintente respetando el ledger.
+            marcarFallidoSinRomper(solicitudId, e.getMessage());
+            publicarResultadoLegacy(solicitud, serie.getChequeraId(), false, e.getMessage());
             throw e;
         }
 
-        marcarEnviada(solicitud);
-        resultadoChequeraPublisher.publicar(serie.getChequeraId(), true, null);
+        try {
+            solicitudGateway.marcarEnviado(solicitudId);
+        } catch (RuntimeException e) {
+            // El correo salió pero no se pudo confirmar: política "nunca perder" -> reintento.
+            marcarFallidoSinRomper(solicitudId, "Enviado sin confirmar: " + e.getMessage());
+            publicarResultadoLegacy(solicitud, serie.getChequeraId(), false,
+                    "Enviado sin confirmar: " + e.getMessage());
+            throw e;
+        }
+        publicarResultadoLegacy(solicitud, serie.getChequeraId(), true, null);
         return ENVIO_OK;
     }
 
-    private void marcarEnviada(SolicitudEnvioChequera solicitud) {
-        var serie = chequeraDatosService.marcarEnviada(solicitud.facultadId(), solicitud.tipoChequeraId(),
+    /** El ledger es la autoridad; el evento legacy (sin solicitudId) mantiene el acuse por Kafka. */
+    private void publicarResultadoLegacy(SolicitudEnvioChequera solicitud, Long chequeraId,
+                                         boolean enviado, String error) {
+        if (solicitud.solicitudId() == null || solicitud.solicitudId().isBlank()) {
+            resultadoChequeraPublisher.publicar(chequeraId, enviado, error);
+        }
+    }
+
+    private String resolverSolicitud(SolicitudEnvioChequera solicitud) {
+        if (solicitud.solicitudId() != null && !solicitud.solicitudId().isBlank()) {
+            return solicitud.solicitudId();
+        }
+        return solicitudGateway.crear(solicitud.facultadId(), solicitud.tipoChequeraId(),
                 solicitud.chequeraSerieId());
-        chequeraDatosService.registrarMessageCheck(ChequeraMessageCheck.builder()
-                .chequeraMessageCheckId(UUID.randomUUID())
-                .facultadId(serie.getFacultadId())
-                .tipoChequeraId(serie.getTipoChequeraId())
-                .chequeraSerieId(serie.getChequeraSerieId())
-                .build());
+    }
+
+    private void marcarFallidoSinRomper(String solicitudId, String error) {
+        try {
+            solicitudGateway.marcarFallido(solicitudId, error);
+        } catch (RuntimeException e) {
+            // Core caído: la solicitud queda ENVIANDO; el próximo claim con lock vencido reintenta.
+            log.warn("Chequera: no se pudo registrar el fallo de la solicitud {}: {}", solicitudId,
+                    e.getMessage());
+        }
     }
 
 }
